@@ -1,0 +1,12 @@
+/* Experience 组件样式 */
+.experience{padding-bottom:130px}
+.experience-list{border-top:1px solid #38393c}
+.experience-item{display:grid;grid-template-columns:17% 25% 1fr;gap:30px;padding:31px 0;border-bottom:1px solid #38393c;transition:padding .3s,background .3s}
+.experience-item:hover{padding-left:24px;background:#111215}
+.experience-period{font:11px 'DM Mono';color:#c9ff53;padding-top:5px}
+.experience-title p{font-size:13px;color:#a7a8aa;margin:0 0 8px}
+.experience-title h3{font-size:23px;letter-spacing:-.045em;margin:0}
+.experience-detail{display:grid;grid-template-columns:190px 1fr;gap:28px}
+.experience-detail>p{margin:0;color:#a4a5a8;font-size:14px;line-height:1.85}
+.tag-list{display:flex;flex-wrap:wrap;align-content:flex-start;gap:7px}
+.tag-list span{font:10px 'DM Mono';color:#c4c5c6;border:1px solid #4c4d50;padding:7px 8px}

@@ -1,0 +1,27 @@
+/* Media 组件样式 */
+.media-copy a{display:inline-block;margin-top:13px;font:11px 'DM Mono';color:#c9ff53}
+.resource-bar{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding:20px 23px;border:1px solid #38393c;background:#121316}
+.resource-bar div{display:flex;align-items:center;gap:18px}
+.resource-bar span{font:10px 'DM Mono';color:#c9ff53}
+.resource-bar b{font-size:15px;font-weight:500}
+.resource-bar>a{font:12px 'DM Mono'}
+.media-card video{opacity:1!important}
+.media{padding-bottom:170px}
+.media-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.media-card{position:relative;overflow:hidden;background:#181a1e;min-height:350px}
+.media-card img,.media-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.media-card video{z-index:2;opacity:0}
+.media-card video:focus,.media-card video:hover{opacity:1}
+.media-card:hover img{transform:scale(1.04)}
+.media-card img{filter:grayscale(1);transition:transform .7s,filter .7s}
+.media-card:hover img{filter:grayscale(.2)}
+.media-tint{position:absolute;inset:0;z-index:1;background:linear-gradient(0deg,rgba(5,6,8,.94),rgba(5,6,8,.08) 68%)}
+.media-video{grid-column:span 7;aspect-ratio:16/9}
+.media-photo{grid-column:span 5;aspect-ratio:4/3}
+.media-copy{position:absolute;z-index:3;left:23px;bottom:20px;right:20px}
+.media-copy span{font:10px 'DM Mono';letter-spacing:1px;color:#c9ff53}
+.media-copy h3{font-size:24px;letter-spacing:-.055em;margin:9px 0 5px}
+.media-copy p{font-size:11px;color:#b1b2b4;margin:0;font-family:'DM Mono'}
+.play-mark{position:absolute;z-index:3;right:23px;top:20px;width:42px;height:42px;border:1px solid #d7d8d9;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.media-help{color:#96979b;font-size:12px;margin:23px 0 0}
+.media-help code{color:#c9ff53;font-family:'DM Mono'}

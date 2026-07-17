@@ -1,0 +1,36 @@
+// 精选项目数据
+export const projects = [
+  {
+    index: '01',
+    title: '虎扑 CSGO 上海 Major',
+    subtitle: '赛事内容宣发 / 账号运营',
+    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1800&q=85',
+    stat: '70W+',
+    label: '系列总浏览',
+    background: '借助赛事热度放大虎扑新媒体账号、产品与社群增长。',
+    responsibility: '统筹多平台宣发节奏，剪辑赛事高光素材与文案；协同团队开展用户调研，参与种子用户分层运营。',
+    result: '更新 8 条内容，总点赞 2.6W+；单条最高获赞 1.5W、互动率 12%，单月新增用户 620+，社群日均活跃提升 60%。',
+  },
+  {
+    index: '02',
+    title: '抖音小火人世界',
+    subtitle: '创作者生态 / 内容增长',
+    image: 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?auto=format&fit=crop&w=1800&q=85',
+    stat: '100W+',
+    label: '单作品平均播放',
+    background: '从零构建虚拟世界创作者生态，提升创作者数量与项目曝光。',
+    responsibility: '每日建联 30–40 名创作者，跟进创作问题与项目进度，协助完成内容落地。',
+    result: '触达创作者 1000+、成功建联 100+；推动 12 组完成内容产出，上线 6 个优质虚拟世界。',
+  },
+  {
+    index: '03',
+    title: '弥勒市春节联欢晚会',
+    subtitle: '视觉设计 / 现场执行',
+    image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=85',
+    stat: '500W+',
+    label: '全网总曝光',
+    background: '以地域文化与乡村振兴为主题，完成市级春晚的筹备与线下落地。',
+    responsibility: '完成舞台场地 3D 视觉设计；统筹抖音、微信等五大平台宣发，管控直播流程与现场资源协调。',
+    result: '全网曝光 500W+，直播累计观看 60W，互动量 120W+；完成整场活动高效落地。',
+  },
+]
