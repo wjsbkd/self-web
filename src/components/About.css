@@ -23,3 +23,14 @@
 .metrics div{border-left:1px solid #36373a;padding-left:22px}
 .metrics b{font-size:46px;letter-spacing:-.06em;font-weight:500;display:block}
 .metrics span{font-size:12px;color:#97989b;margin-top:9px;display:block}
+
+/* 新 about 布局 */
+.about-grid{grid-template-columns:38% 1fr;gap:10%}
+.about-left{display:flex;flex-direction:column;gap:34px}
+.about-contact-big{display:flex;flex-direction:column;gap:16px;font-size:15px}
+.about-contact-big a{font-family:'DM Mono';display:flex;align-items:center;gap:6px}
+.about-contact-big .dl-btn{border:1px solid #c9ff53;padding:8px 12px;border-radius:4px;width:fit-content;color:#c9ff53;transition:background .2s}
+.about-contact-big .dl-btn:hover{background:rgba(201,255,83,.12)}
+.campus-block{margin-top:80px;border-top:1px solid #38393c;padding-top:50px;display:grid}
+.campus-block .campus-grid{display:grid;grid-template-columns:1fr auto;gap:36px;align-items:center}
+@media(max-width:800px){.about-grid{grid-template-columns:1fr}.about-left{gap:22px}.campus-block{margin-top:48px;padding-top:32px}.about-contact-big{gap:10px}.about-contact-big a{font-size:13px}}
