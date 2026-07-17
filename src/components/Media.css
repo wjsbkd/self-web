@@ -25,3 +25,14 @@
 .play-mark{position:absolute;z-index:3;right:23px;top:20px;width:42px;height:42px;border:1px solid #d7d8d9;border-radius:50%;display:grid;place-items:center;font-size:12px}
 .media-help{color:#96979b;font-size:12px;margin:23px 0 0}
 .media-help code{color:#c9ff53;font-family:'DM Mono'}
+
+/* 作品集 PDF 入口卡片 */
+.media-portfolio{grid-column:span 12;min-height:auto;background:linear-gradient(135deg,#1a1c20,#0c0d10);border:1px solid #c9ff53;display:flex;align-items:stretch}
+.media-portfolio-inner{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:50px 40px;width:100%;position:relative}
+.portfolio-icon{font:700 56px 'DM Mono';letter-spacing:-.04em;color:#c9ff53;border:2px solid #c9ff53;padding:18px 22px;border-radius:6px;height:fit-content}
+.media-portfolio .media-copy{position:static;padding:0}
+.media-portfolio .media-copy h3{font-size:38px;letter-spacing:-.05em;margin:12px 0 6px}
+.media-portfolio .media-copy p{font-size:13px;color:#b1b2b4;margin-bottom:14px}
+.media-portfolio .media-copy a{font:12px 'DM Mono';color:#c9ff53;border:1px solid #c9ff53;padding:10px 16px;border-radius:4px;display:inline-block;transition:background .2s}
+.media-portfolio .media-copy a:hover{background:rgba(201,255,83,.12)}
+@media(max-width:800px){.media-portfolio-inner{grid-template-columns:1fr;padding:32px 22px;gap:16px}.portfolio-icon{font-size:38px;padding:12px 16px}.media-portfolio .media-copy h3{font-size:26px}}
