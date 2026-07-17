@@ -10,3 +10,10 @@
 .experience-detail>p{margin:0;color:#a4a5a8;font-size:14px;line-height:1.85}
 .tag-list{display:flex;flex-wrap:wrap;align-content:flex-start;gap:7px}
 .tag-list span{font:10px 'DM Mono';color:#c4c5c6;border:1px solid #4c4d50;padding:7px 8px}
+
+.experience-header{cursor:pointer;display:grid;grid-template-columns:1fr 2fr auto;padding:24px 0;border-bottom:1px solid #38393c;transition:background .2s}
+.experience-header:hover{background:rgba(201,255,83,.04)}
+.experience-stat{font:12px 'DM Mono';color:#c9ff53;text-align:right;padding-right:12px}
+.experience-item.expanded .experience-header{background:rgba(201,255,83,.06)}
+.experience-detail{padding:0 0 24px;border-bottom:1px solid #38393c}
+@media(max-width:800px){.experience-header{grid-template-columns:1fr;gap:12px}.experience-stat{text-align:left;padding-right:0}}
