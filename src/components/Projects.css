@@ -21,9 +21,3 @@
 .project-foot p b{color:#c9ff53}
 .project-foot a{font-size:35px;width:48px;height:48px;border:1px solid #aaa;border-radius:50%;text-align:center;line-height:40px}
 .project-foot .arrow{margin:0}
-
-.project-card{cursor:pointer}
-.project-toggle{font-size:27px;width:48px;height:48px;border:1px solid #c9ff53;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#c9ff53}
-.project-card.active .project-toggle{background:rgba(201,255,83,.12)}
-.expanded-story{padding-top:60px;border-bottom:2px solid #c9ff53}
-@media(max-width:800px){.expanded-story{padding-top:38px}}
