@@ -16,3 +16,9 @@ Thumbs.db
 # 日志
 *.log
 npm-debug.log*
+
+# 本地 git 仓库目录（持久化存放，非标准 .git）
+.githome/
+
+# 便捷 git 包装脚本日志
+*.gitw.log

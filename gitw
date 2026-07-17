@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# gitw: 使用项目内 .githome 作为 git 仓库的便捷包装
+# 用法与 git 一致，例如: ./gitw log  /  ./gitw status  /  ./gitw add -A
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec git --git-dir="$DIR/.githome" --work-tree="$DIR" "$@"
