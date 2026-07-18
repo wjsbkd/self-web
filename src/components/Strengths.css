@@ -1,9 +1,52 @@
 /* Strengths 组件样式 */
-.strength{padding-bottom:180px}
-.strength-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #38393c;border-left:1px solid #38393c}
-.strength-grid article{min-height:285px;padding:22px;border-right:1px solid #38393c;border-bottom:1px solid #38393c;position:relative;transition:background .3s}
-.strength-grid article:hover{background:#17191b}
-.strength-grid article>span{font:10px 'DM Mono';color:#c9ff53}
-.strength-grid article>.arrow{position:absolute;right:20px;top:21px;color:#c9ff53}
-.strength-grid h3{font-size:25px;letter-spacing:-.05em;margin:90px 0 14px}
-.strength-grid p{font-size:13px;line-height:1.8;color:#96979b;max-width:270px}
+.strength {
+  padding-bottom: 180px;
+}
+.strength-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.strength-grid article {
+  min-height: 285px;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  transition: background 0.3s;
+}
+.strength-grid article:hover {
+  background: #17191b;
+}
+.strength-grid article > span {
+  font: 10px 'DM Mono';
+  color: var(--accent);
+}
+.strength-grid article > .arrow {
+  position: absolute;
+  right: 20px;
+  top: 21px;
+  color: var(--accent);
+}
+.strength-grid h3 {
+  font-size: 25px;
+  letter-spacing: -0.05em;
+  margin: 90px 0 14px;
+}
+.strength-grid p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-dim);
+  max-width: 270px;
+}
+
+/* 响应式 —— 800px 断点 */
+@media (max-width: 800px) {
+  .strength-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .strength-grid article {
+    min-height: 245px;
+  }
+}

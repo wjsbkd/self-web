@@ -1,38 +1,231 @@
 /* Media 组件样式 */
-.media-copy a{display:inline-block;margin-top:13px;font:11px 'DM Mono';color:#c9ff53}
-.resource-bar{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding:20px 23px;border:1px solid #38393c;background:#121316}
-.resource-bar div{display:flex;align-items:center;gap:18px}
-.resource-bar span{font:10px 'DM Mono';color:#c9ff53}
-.resource-bar b{font-size:15px;font-weight:500}
-.resource-bar>a{font:12px 'DM Mono'}
-.media-card video{opacity:1!important}
-.media{padding-bottom:170px}
-.media-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
-.media-card{position:relative;overflow:hidden;background:#181a1e;min-height:350px}
-.media-card img,.media-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.media-card video{z-index:2;opacity:0}
-.media-card video:focus,.media-card video:hover{opacity:1}
-.media-card:hover img{transform:scale(1.04)}
-.media-card img{filter:grayscale(1);transition:transform .7s,filter .7s}
-.media-card:hover img{filter:grayscale(.2)}
-.media-tint{position:absolute;inset:0;z-index:1;background:linear-gradient(0deg,rgba(5,6,8,.94),rgba(5,6,8,.08) 68%)}
-.media-video{grid-column:span 7;aspect-ratio:16/9}
-.media-photo{grid-column:span 5;aspect-ratio:4/3}
-.media-copy{position:absolute;z-index:3;left:23px;bottom:20px;right:20px}
-.media-copy span{font:10px 'DM Mono';letter-spacing:1px;color:#c9ff53}
-.media-copy h3{font-size:24px;letter-spacing:-.055em;margin:9px 0 5px}
-.media-copy p{font-size:11px;color:#b1b2b4;margin:0;font-family:'DM Mono'}
-.play-mark{position:absolute;z-index:3;right:23px;top:20px;width:42px;height:42px;border:1px solid #d7d8d9;border-radius:50%;display:grid;place-items:center;font-size:12px}
-.media-help{color:#96979b;font-size:12px;margin:23px 0 0}
-.media-help code{color:#c9ff53;font-family:'DM Mono'}
+.media-copy a {
+  display: inline-block;
+  margin-top: 13px;
+  font: 11px 'DM Mono';
+  color: var(--accent);
+}
+.resource-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding: 20px 23px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev-1);
+}
+.resource-bar div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.resource-bar span {
+  font: 10px 'DM Mono';
+  color: var(--accent);
+}
+.resource-bar b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.resource-bar > a {
+  font: 12px 'DM Mono';
+}
+.media-card video {
+  opacity: 1 !important;
+}
+.media {
+  padding-bottom: 170px;
+}
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 18px;
+}
+.media-card {
+  position: relative;
+  overflow: hidden;
+  background: #181a1e;
+  min-height: 350px;
+}
+.media-card img,
+.media-card video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-card video {
+  z-index: 2;
+  opacity: 0;
+}
+.media-card video:focus,
+.media-card video:hover {
+  opacity: 1;
+}
+.media-card:hover img {
+  transform: scale(1.04);
+}
+.media-card img {
+  filter: grayscale(1);
+  transition:
+    transform 0.7s,
+    filter 0.7s;
+}
+.media-card:hover img {
+  filter: grayscale(0.2);
+}
+.media-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(0deg, rgba(5, 6, 8, 0.94), rgba(5, 6, 8, 0.08) 68%);
+}
+.media-video {
+  grid-column: span 7;
+  aspect-ratio: 16/9;
+}
+.media-photo {
+  grid-column: span 5;
+  aspect-ratio: 4/3;
+}
+.media-copy {
+  position: absolute;
+  z-index: 3;
+  left: 23px;
+  bottom: 20px;
+  right: 20px;
+}
+.media-copy span {
+  font: 10px 'DM Mono';
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+.media-copy h3 {
+  font-size: 24px;
+  letter-spacing: -0.055em;
+  margin: 9px 0 5px;
+}
+.media-copy p {
+  font-size: 11px;
+  color: #b1b2b4;
+  margin: 0;
+  font-family: 'DM Mono';
+}
+.play-mark {
+  position: absolute;
+  z-index: 3;
+  right: 23px;
+  top: 20px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #d7d8d9;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+.media-help {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin: 23px 0 0;
+}
+.media-help code {
+  color: var(--accent);
+  font-family: 'DM Mono';
+}
 
 /* 作品集 PDF 入口卡片 */
-.media-portfolio{grid-column:span 12;min-height:auto;background:linear-gradient(135deg,#1a1c20,#0c0d10);border:1px solid #c9ff53;display:flex;align-items:stretch}
-.media-portfolio-inner{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:50px 40px;width:100%;position:relative}
-.portfolio-icon{font:700 56px 'DM Mono';letter-spacing:-.04em;color:#c9ff53;border:2px solid #c9ff53;padding:18px 22px;border-radius:6px;height:fit-content}
-.media-portfolio .media-copy{position:static;padding:0}
-.media-portfolio .media-copy h3{font-size:38px;letter-spacing:-.05em;margin:12px 0 6px}
-.media-portfolio .media-copy p{font-size:13px;color:#b1b2b4;margin-bottom:14px}
-.media-portfolio .media-copy a{font:12px 'DM Mono';color:#c9ff53;border:1px solid #c9ff53;padding:10px 16px;border-radius:4px;display:inline-block;transition:background .2s}
-.media-portfolio .media-copy a:hover{background:rgba(201,255,83,.12)}
-@media(max-width:800px){.media-portfolio-inner{grid-template-columns:1fr;padding:32px 22px;gap:16px}.portfolio-icon{font-size:38px;padding:12px 16px}.media-portfolio .media-copy h3{font-size:26px}}
+.media-portfolio {
+  grid-column: span 12;
+  min-height: auto;
+  background: linear-gradient(135deg, #1a1c20, #0c0d10);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: stretch;
+}
+.media-portfolio-inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 30px;
+  align-items: center;
+  padding: 50px 40px;
+  width: 100%;
+  position: relative;
+}
+.portfolio-icon {
+  font: 700 56px 'DM Mono';
+  letter-spacing: -0.04em;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 18px 22px;
+  border-radius: 6px;
+  height: fit-content;
+}
+.media-portfolio .media-copy {
+  position: static;
+  padding: 0;
+}
+.media-portfolio .media-copy h3 {
+  font-size: 38px;
+  letter-spacing: -0.05em;
+  margin: 12px 0 6px;
+}
+.media-portfolio .media-copy p {
+  font-size: 13px;
+  color: #b1b2b4;
+  margin-bottom: 14px;
+}
+.media-portfolio .media-copy a {
+  font: 12px 'DM Mono';
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 10px 16px;
+  border-radius: 4px;
+  display: inline-block;
+  transition: background 0.2s;
+}
+.media-portfolio .media-copy a:hover {
+  background: rgba(201, 255, 83, 0.12);
+}
+/* 响应式 —— 800px 断点 */
+@media (max-width: 800px) {
+  .media {
+    padding-bottom: 90px;
+  }
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+  .media-video,
+  .media-photo {
+    grid-column: span 1;
+    aspect-ratio: 4/3;
+  }
+  .media-copy h3 {
+    font-size: 21px;
+  }
+  .resource-bar {
+    align-items: flex-start;
+    gap: 18px;
+    flex-direction: column;
+  }
+  .resource-bar div {
+    display: block;
+  }
+  .resource-bar b {
+    display: block;
+    margin-top: 6px;
+  }
+  .media-portfolio-inner {
+    grid-template-columns: 1fr;
+    padding: 32px 22px;
+    gap: 16px;
+  }
+  .portfolio-icon {
+    font-size: 38px;
+    padding: 12px 16px;
+  }
+  .media-portfolio .media-copy h3 {
+    font-size: 26px;
+  }
+}
