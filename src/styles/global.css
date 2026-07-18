@@ -1,21 +1,117 @@
 /* 全局样式：字体导入、reset、跨组件共享类 */
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
 
-/* 项目文字案例 */
-.project-stories{margin-top:72px;border-top:1px solid #38393c}
-:root{font-family:'Noto Sans SC',Arial,sans-serif;color:#f2f1ed;background:#090a0d;font-synthesis:none;scroll-behavior:smooth}
-*{box-sizing:border-box}
-body{margin:0;background:#090a0d}
-a{color:inherit;text-decoration:none}
-.wrap{width:min(1700px,calc(100% - 120px));margin:auto}
-.arrow{font-size:20px;line-height:0;margin-left:8px;display:inline-block;transition:transform .3s}
-.eyebrow,.section-kicker{font:11px 'DM Mono';letter-spacing:1.7px}
-.eyebrow{color:#c9ff53;margin:0 0 23px}
-.side-note{z-index:1;position:absolute;right:22px;bottom:42px;writing-mode:vertical-rl;font:9px 'DM Mono';letter-spacing:1px;color:#aaa}
-.side-note span{height:40px;width:1px;display:inline-block;background:#aaa;margin:11px 4px}
-.section{padding:170px 0}
-.section-kicker{color:#9a9a9b;display:flex;gap:25px;align-items:center;margin-bottom:75px}
-.section-kicker span{color:#c9ff53}
-.heading-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:75px}
-.heading-row h2{font-size:clamp(42px,4.1vw,76px)}
-.heading-row p{font-size:14px;line-height:1.8;color:#96979b;margin:0 4% 10px 0}
+/* 项目文字案例（项目叙述区上边框） */
+.project-stories {
+  margin-top: 72px;
+  border-top: 1px solid var(--line);
+}
+
+/* ── Design Tokens ── */
+:root {
+  /* 强调色 */
+  --accent: #c9ff53;
+
+  /* 文字色阶（按亮度递减） */
+  --text-bright: #f4f4ee; /* 极亮标题 */
+  --text-base: #f2f1ed; /* 默认正文 */
+  --text-dim: #96979b; /* 次级说明 */
+  --text-muted: #8d8e91; /* 辅助说明 */
+
+  /* 边框 / 分割线 */
+  --line: #38393c; /* 主分割线 */
+  --line-soft: #36373a; /* 次分割线 */
+  --line-tag: #4c4d50; /* 标签边框（与 #424346 仅 ±2 差异） */
+
+  /* 背景层级（按深度递增） */
+  --bg-base: #090a0d; /* 页面底色 */
+  --bg-elev-1: #121316; /* 浮层（footer/resource-bar） */
+  --bg-elev-2: #151619; /* 章节深底（work 区） */
+
+  font-family: 'Noto Sans SC', Arial, sans-serif;
+  color: var(--text-base);
+  background: var(--bg-base);
+  font-synthesis: none;
+  scroll-behavior: smooth;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg-base);
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+.wrap {
+  width: min(1700px, calc(100% - 120px));
+  margin: auto;
+}
+.arrow {
+  font-size: 20px;
+  line-height: 0;
+  margin-left: 8px;
+  display: inline-block;
+  transition: transform 0.3s;
+}
+.eyebrow,
+.section-kicker {
+  font: 11px 'DM Mono';
+  letter-spacing: 1.7px;
+}
+.eyebrow {
+  color: var(--accent);
+  margin: 0 0 23px;
+}
+.side-note {
+  z-index: 1;
+  position: absolute;
+  right: 22px;
+  bottom: 42px;
+  writing-mode: vertical-rl;
+  font: 9px 'DM Mono';
+  letter-spacing: 1px;
+  color: #aaa;
+}
+.side-note span {
+  height: 40px;
+  width: 1px;
+  display: inline-block;
+  background: #aaa;
+  margin: 11px 4px;
+}
+.section {
+  padding: 170px 0;
+}
+.section-kicker {
+  color: #9a9a9b;
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  margin-bottom: 75px;
+}
+.section-kicker span {
+  color: var(--accent);
+}
+.heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 75px;
+}
+.heading-row h2 {
+  font-size: clamp(42px, 4.1vw, 76px);
+}
+.heading-row p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-dim);
+  margin: 0 4% 10px 0;
+}
+.nav-contact:hover .arrow,
+.contact-row a:hover .arrow,
+.email:hover .arrow {
+  transform: translate(3px, -3px);
+}

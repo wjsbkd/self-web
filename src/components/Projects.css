@@ -1,23 +1,146 @@
 /* Projects 组件样式 */
-.project-story{display:grid;grid-template-columns:31% 1fr;padding:34px 0;border-bottom:1px solid #38393c;gap:45px;scroll-margin-top:20px}
-.story-title>span{font:10px 'DM Mono';color:#c9ff53}
-.story-title h3{font-size:27px;letter-spacing:-.055em;margin:12px 0 7px}
-.story-title p{font-size:12px;color:#9b9ca0;margin:0}
-.story-content{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
-.story-content p{margin:0;font-size:13px;line-height:1.85;color:#aeb0b2}
-.story-content b{display:block;font:10px 'DM Mono';letter-spacing:.7px;color:#c9ff53;margin-bottom:10px}
-.work{background:#151619;padding:170px 0}
-.project-list{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.project-card{position:relative;height:min(37vw,620px);min-height:420px;overflow:hidden}
-.project-card img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);transition:transform .7s,filter .7s}
-.project-card:hover img{transform:scale(1.05);filter:grayscale(.2)}
-.project-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.87),transparent 55%)}
-.project-head,.project-foot{position:absolute;z-index:1;left:24px;right:24px;display:flex;justify-content:space-between}
-.project-head{top:22px;font:10px 'DM Mono';letter-spacing:.7px}
-.project-head span:last-child{color:#ddd}
-.project-foot{bottom:25px;align-items:end}
-.project-foot h3{font-size:25px;letter-spacing:-.06em;margin:0 0 7px}
-.project-foot p{font-size:12px;color:#bbb;margin:0}
-.project-foot p b{color:#c9ff53}
-.project-foot a{font-size:35px;width:48px;height:48px;border:1px solid #aaa;border-radius:50%;text-align:center;line-height:40px}
-.project-foot .arrow{margin:0}
+.project-story {
+  display: grid;
+  grid-template-columns: 31% 1fr;
+  padding: 34px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 45px;
+  scroll-margin-top: 20px;
+}
+.story-title > span {
+  font: 10px 'DM Mono';
+  color: var(--accent);
+}
+.story-title h3 {
+  font-size: 27px;
+  letter-spacing: -0.055em;
+  margin: 12px 0 7px;
+}
+.story-title p {
+  font-size: 12px;
+  color: #9b9ca0;
+  margin: 0;
+}
+.story-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+}
+.story-content p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #aeb0b2;
+}
+.story-content b {
+  display: block;
+  font: 10px 'DM Mono';
+  letter-spacing: 0.7px;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.work {
+  background: var(--bg-elev-2);
+  padding: 170px 0;
+}
+.project-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.project-card {
+  position: relative;
+  height: min(37vw, 620px);
+  min-height: 420px;
+  overflow: hidden;
+}
+.project-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+  transition:
+    transform 0.7s,
+    filter 0.7s;
+}
+.project-card:hover img {
+  transform: scale(1.05);
+  filter: grayscale(0.2);
+}
+.project-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.87), transparent 55%);
+}
+.project-head,
+.project-foot {
+  position: absolute;
+  z-index: 1;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+}
+.project-head {
+  top: 22px;
+  font: 10px 'DM Mono';
+  letter-spacing: 0.7px;
+}
+.project-head span:last-child {
+  color: #ddd;
+}
+.project-foot {
+  bottom: 25px;
+  align-items: end;
+}
+.project-foot h3 {
+  font-size: 25px;
+  letter-spacing: -0.06em;
+  margin: 0 0 7px;
+}
+.project-foot p {
+  font-size: 12px;
+  color: #bbb;
+  margin: 0;
+}
+.project-foot p b {
+  color: var(--accent);
+}
+.project-foot a {
+  font-size: 35px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #aaa;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 40px;
+}
+.project-foot .arrow {
+  margin: 0;
+}
+
+/* 响应式 —— 800px 断点 */
+@media (max-width: 800px) {
+  .project-stories {
+    margin-top: 42px;
+  }
+  .project-story {
+    grid-template-columns: 1fr;
+    gap: 23px;
+    padding: 27px 0;
+  }
+  .story-content {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+  .story-title h3 {
+    font-size: 23px;
+  }
+  .project-list {
+    grid-template-columns: 1fr;
+  }
+  .project-card {
+    height: 85vw;
+    min-height: 360px;
+  }
+}

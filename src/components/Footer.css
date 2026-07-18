@@ -1,8 +1,60 @@
 /* Footer 组件样式 */
-.footer{min-height:100vh;display:flex;position:relative;overflow:hidden;background:#121316}
-.footer-glow{width:78vw;height:78vw;position:absolute;right:-20vw;top:-15vw;background:radial-gradient(circle,rgba(174,255,43,.17),transparent 60%)}
-.footer-inner{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;padding:100px 0}
-.footer h2{font-size:clamp(55px,6.5vw,118px)}
-.email{font-size:clamp(17px,2vw,32px);font-family:'DM Mono';border-bottom:1px solid #c9ff53;padding-bottom:14px;width:max-content;margin-top:75px;color:#c9ff53}
-.footer-bottom{margin-top:auto;padding-top:150px;display:flex;gap:30px;font:10px 'DM Mono';color:#8d8e91}
-.footer-bottom a{margin-left:auto;color:#eee}
+.footer {
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-elev-1);
+}
+.footer-glow {
+  width: 78vw;
+  height: 78vw;
+  position: absolute;
+  right: -20vw;
+  top: -15vw;
+  background: radial-gradient(circle, rgba(174, 255, 43, 0.17), transparent 60%);
+}
+.footer-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 0;
+}
+.footer h2 {
+  font-size: clamp(55px, 6.5vw, 118px);
+}
+.email {
+  font-size: clamp(17px, 2vw, 32px);
+  font-family: 'DM Mono';
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 14px;
+  width: max-content;
+  margin-top: 75px;
+  color: var(--accent);
+}
+.footer-bottom {
+  margin-top: auto;
+  padding-top: 150px;
+  display: flex;
+  gap: 30px;
+  font: 10px 'DM Mono';
+  color: var(--text-muted);
+}
+.footer-bottom a {
+  margin-left: auto;
+  color: #eee;
+}
+
+/* 响应式 —— 800px 断点 */
+@media (max-width: 800px) {
+  .footer-bottom {
+    padding-top: 100px;
+    flex-wrap: wrap;
+  }
+  .footer-bottom a {
+    margin-left: 0;
+    width: 100%;
+  }
+}
