@@ -1,11 +1,29 @@
 import './Hero.css'
+import { useRef, useCallback } from 'react'
 import Nav from '@/components/Nav.jsx'
 import Arrow from '@/components/Arrow.jsx'
 
 // 首屏：编辑式分屏构图
 export default function Hero() {
+  const ringRef = useRef(null)
+
+  // 圆环随鼠标微移：把鼠标在窗口的相对位置映射为 ±15px 偏移
+  const handleMouseMove = useCallback((e) => {
+    const el = ringRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    // 鼠标在 pane 内的相对位置 (0~1)
+    const rx = (e.clientX - rect.left) / rect.width
+    const ry = (e.clientY - rect.top) / rect.height
+    // 映射到 ±15px（鼠标靠左→圆环向右，鼠标靠右→圆环向左）
+    const dx = (rx - 0.5) * -30
+    const dy = (ry - 0.5) * -30
+    el.style.setProperty('--ring-x', `${dx.toFixed(1)}px`)
+    el.style.setProperty('--ring-y', `${dy.toFixed(1)}px`)
+  }, [])
+
   return (
-    <section className="hero" id="top">
+    <section className="hero" id="top" onMouseMove={handleMouseMove}>
       <video
         className="hero-video"
         autoPlay
@@ -20,7 +38,7 @@ export default function Hero() {
       <Nav />
       <div className="hero-frame" aria-hidden="true">
         <div className="hero-left-pane" />
-        <div className="hero-right-pane">
+        <div className="hero-right-pane" ref={ringRef}>
           <span>
             CONTENT
             <br />

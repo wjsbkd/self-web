@@ -53,6 +53,7 @@
   height: min(37vw, 620px);
   min-height: 420px;
   overflow: hidden;
+  cursor: crosshair;
 }
 .project-card img {
   width: 100%;

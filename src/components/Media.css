@@ -43,6 +43,7 @@
   overflow: hidden;
   background: #181a1e;
   min-height: 350px;
+  cursor: crosshair;
 }
 .media-card img {
   position: absolute;
