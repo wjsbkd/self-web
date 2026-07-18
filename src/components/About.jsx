@@ -9,7 +9,7 @@ export default function About() {
     <section className="about section wrap" id="about">
       <SectionHeading num="01" kicker="ABOUT ME" />
       <div className="about-grid">
-        <div className="about-left">
+        <div>
           {/* 照片占位区 */}
           <div className="portrait">
             <img
@@ -19,14 +19,14 @@ export default function About() {
             <span>LIZONGHENG</span>
           </div>
           {/* 联系信息突出展示 */}
-          <div className="about-contact-big">
+          <div>
             <a href="mailto:lizongheng2025@163.com">
               lizongheng2025@163.com <Arrow />
             </a>
             <a href="tel:15087322631">
               150 8732 2631 <Arrow />
             </a>
-            <a className="dl-btn" href="/assets/李纵横15087322631.pdf" target="_blank">
+            <a href="/assets/李纵横15087322631.pdf" target="_blank">
               下载简历 PDF <Arrow />
             </a>
           </div>
