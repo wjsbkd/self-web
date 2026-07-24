@@ -3,50 +3,42 @@ import { tools } from '@/data'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 
-// 关于我：整合校园实践 + 照片占位 + 突出联系 + 简历下载
 export default function About() {
   return (
     <section className="about section wrap" id="about">
       <SectionHeading num="01" kicker="ABOUT ME" />
-      <div className="about-grid">
-        <div>
-          {/* 照片占位区 */}
-          <div className="portrait">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=85"
-              alt=""
-            />
-            <span>LIZONGHENG</span>
-          </div>
-          {/* 联系信息突出展示 */}
-          <div>
-            <a href="mailto:lizongheng2025@163.com">
-              lizongheng2025@163.com <Arrow />
-            </a>
-            <a href="tel:15087322631">
-              150 8732 2631 <Arrow />
-            </a>
-            <a href="/assets/李纵横15087322631.pdf" target="_blank">
-              下载简历 PDF <Arrow />
-            </a>
-          </div>
-        </div>
-        <div className="about-copy">
-          <p className="lead">
-            我是李纵横，一名关注内容、人与体验的<span>AI 内容运营与视觉创作者</span>。
-          </p>
-          <p>
-            从 AI
-            赛事到产品推广，从节目现场到城市晚会，我始终在创意与执行的交界处工作。擅长用内容建立连接，用结构化的方法推动事情发生。
-          </p>
-          <div className="tool-list">
-            {tools.map((tool) => (
-              <span key={tool}>{tool}</span>
-            ))}
-          </div>
+      <div className="about-links">
+        <a href="mailto:lizongheng2025@163.com">
+          lizongheng2025@163.com <Arrow />
+        </a>
+        <a href="tel:+8615087322631">
+          150 8732 2631 <Arrow />
+        </a>
+        <span className="wechat-line">微信（同号）：15087322631</span>
+      </div>
+      <div className="about-copy">
+        <p className="lead">
+          我是李纵横，一名关注内容、人与体验的<span>AI 内容运营与视觉创作者</span>。
+        </p>
+        <p>
+          从 AI 赛事到产品推广，从节目现场到城市晚会，我始终在创意与执行的交界处工作。
+          擅长用内容建立连接，用结构化的方法推动事情发生。
+        </p>
+      </div>
+
+      {/* 个人优势 */}
+      <div className="advantages-section">
+        <h3 className="advantages-heading">个人优势</h3>
+        <div className="advantages-list">
+          {tools.map((tool) => (
+            <div key={tool.name} className="advantage-item">
+              <span className="advantage-name">{tool.name}</span>
+              <p className="advantage-desc">{tool.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
-      {/* 校园实践整合 */}
+
       <div className="campus-block">
         <div className="campus-grid">
           <div>
@@ -58,7 +50,8 @@ export default function About() {
           <div>
             <h3>校园宣传与跨部门协同</h3>
             <p>
-              参与校运会宣传，通过公众号推送与校内传播扩大活动触达；开学期间参与校刊制作，以板报和推文配合发行，完成从内容制作到线下落地的闭环。
+              参与校运会宣传，通过公众号推送与校内传播扩大活动触达；开学期间参与校刊制作，
+              以板报和推文配合发行，完成从内容制作到线下落地的闭环。
             </p>
           </div>
           <div className="campus-tags">
@@ -69,6 +62,24 @@ export default function About() {
           </div>
         </div>
       </div>
+
+      <div className="education-block">
+        <div className="education-grid">
+          <div className="education-period">
+            <p>2022.09 — 2026.06</p>
+          </div>
+          <div className="education-detail">
+            <h3>吉林建筑大学</h3>
+            <p className="education-sub">
+              记者团宣传部干事 · 2026年应届生
+            </p>
+            <p className="education-skills">
+              技能特长：精通 Excel（数据透视表）、Word、ppt、Ps、CATIA、Revit、SketchUp和CAD
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="metrics">
         <div>
           <b>3+</b>
