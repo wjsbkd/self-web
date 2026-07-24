@@ -41,6 +41,52 @@
   color: var(--text-bright);
   border-bottom-color: var(--text-bright);
 }
+.footer-social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 36px;
+}
+.social-btn {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #d6d7d4;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+.social-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.social-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(201, 255, 83, 0.08);
+  transform: translateY(-3px);
+}
+.social-wechat {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: 6px;
+  padding: 11px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 30px;
+  font: 12px 'DM Mono';
+  color: #d6d7d4;
+}
+.social-wechat svg {
+  width: 18px;
+  height: 18px;
+}
 .footer-bottom {
   margin-top: auto;
   padding-top: 150px;
