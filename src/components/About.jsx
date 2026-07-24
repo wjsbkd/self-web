@@ -15,6 +15,15 @@ export default function About() {
         <a href="tel:+8615087322631" aria-label="拨打 150 8732 2631">
           150 8732 2631 <Arrow />
         </a>
+        <a
+          href="/assets/李纵横15087322631.pdf"
+          target="_blank"
+          rel="noreferrer"
+          download
+          aria-label="下载李纵横简历 PDF"
+        >
+          下载简历 PDF <Arrow />
+        </a>
         <span className="wechat-line">微信（同号）：15087322631</span>
       </div>
       <div className="about-copy">
