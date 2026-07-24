@@ -1,15 +1,24 @@
-/* Nav 组件样式 */
+/* Nav 组件样式 —— 全局固定导航 */
 .nav {
-  position: absolute;
-  z-index: 2;
+  position: fixed;
+  z-index: 50;
   top: 0;
   left: 0;
   right: 0;
-  height: 110px;
+  height: 88px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid transparent;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    backdrop-filter 0.3s ease;
+}
+.nav.scrolled {
+  background: rgba(9, 10, 13, 0.72);
+  backdrop-filter: blur(14px);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 .brand {
   font-family: 'DM Mono';
@@ -24,33 +33,125 @@
 }
 .nav-links {
   display: flex;
-  gap: 42px;
+  align-items: center;
+  gap: 28px;
   font-size: 14px;
 }
 .nav-links a {
   opacity: 0.75;
-  transition: 0.2s;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
 }
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-links a.active {
   opacity: 1;
+  color: var(--accent);
+}
+.nav-links a:before {
+  content: '•';
+  color: rgba(255, 255, 255, 0.4);
+  margin-right: 8px;
+  transition: color 0.25s ease;
+}
+.nav-links a:hover:before,
+.nav-links a.active:before {
+  color: var(--accent);
+}
+.nav-status {
+  margin-left: 4px;
+  font: 9px 'DM Mono';
+  letter-spacing: 0.8px;
+  color: var(--accent);
 }
 .nav-contact {
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 30px;
   padding: 12px 18px;
   font-size: 13px;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.nav-contact:hover {
+  border-color: var(--accent);
+  background: rgba(201, 255, 83, 0.1);
+}
+
+/* 移动端汉堡按钮（默认隐藏） */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: #fff;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.nav.open .nav-toggle span:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+.nav.open .nav-toggle span:nth-child(2) {
+  opacity: 0;
+}
+.nav.open .nav-toggle span:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
 }
 
 /* 响应式 —— 800px 断点 */
 @media (max-width: 800px) {
   .nav {
-    height: 80px;
+    height: 72px;
+  }
+  .nav-toggle {
+    display: flex;
+    z-index: 2;
   }
   .nav-links {
-    display: none;
+    position: fixed;
+    inset: 72px 0 auto 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 18px 24px 26px;
+    background: rgba(9, 10, 13, 0.96);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateY(-12px);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.25s ease,
+      opacity 0.25s ease;
+  }
+  .nav.open .nav-links {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nav-links a {
+    font-size: 16px;
+    padding: 10px 0;
+  }
+  .nav-links a:before {
+    margin-right: 10px;
+  }
+  .nav-status {
+    margin: 10px 0 4px;
   }
   .nav-contact {
-    font-size: 11px;
-    padding: 9px 12px;
+    margin-top: 12px;
+    font-size: 13px;
+    padding: 12px 18px;
   }
 }

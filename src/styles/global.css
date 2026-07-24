@@ -45,6 +45,11 @@ a {
   color: inherit;
   text-decoration: none;
 }
+/* 锚点跳转时为固定导航留出空间 */
+section[id],
+footer[id] {
+  scroll-margin-top: 88px;
+}
 .wrap {
   width: min(1700px, calc(100% - 120px));
   margin: auto;
@@ -117,6 +122,25 @@ a {
 }
 
 /* ── 全局动效 ── */
+
+/* 尊重系统“减少动态效果”偏好：关闭所有非必要动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 键盘焦点可见性 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
 
 /* section-kicker 序号微微呼吸（每 3s 浮起 5px） */
 @keyframes breathe {

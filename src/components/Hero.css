@@ -44,37 +44,6 @@
     ),
     linear-gradient(0deg, rgba(5, 6, 8, 0.7), transparent 55%);
 }
-.hero .nav {
-  height: 88px;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-.hero .nav-links {
-  gap: 28px;
-  font: 10px 'DM Mono';
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.hero .nav-links a:before {
-  content: '•';
-  color: rgba(255, 255, 255, 0.4);
-  margin-right: 8px;
-  transition: color 0.25s ease;
-}
-.hero .nav-links a:hover:before {
-  color: var(--accent);
-}
-.nav-status {
-  margin-left: auto;
-  margin-right: 24px;
-  font: 9px 'DM Mono';
-  letter-spacing: 0.8px;
-  color: var(--accent);
-}
-.hero .nav-contact {
-  font: 10px 'DM Mono';
-  letter-spacing: 0.7px;
-  padding: 10px 15px;
-}
 .hero-frame {
   position: absolute;
   inset: 88px 0 0;
@@ -294,12 +263,6 @@
 
 /* 响应式 —— 800px 断点 */
 @media (max-width: 800px) {
-  .hero .nav {
-    height: 72px;
-  }
-  .nav-status {
-    display: none;
-  }
   .hero .hero-frame {
     inset: 72px 0 0;
     grid-template-columns: 62% 38%;
