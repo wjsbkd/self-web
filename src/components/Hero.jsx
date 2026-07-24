@@ -25,6 +25,7 @@ export default function Hero() {
         muted
         loop
         playsInline
+        preload="metadata"
         poster="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2000&q=85"
       >
         <source

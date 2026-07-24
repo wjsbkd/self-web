@@ -1,5 +1,6 @@
 /* 全局样式：字体导入、reset、跨组件共享类 */
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
+/* 使用国内镜像 fonts.googleapis.cn，避免 Google Fonts 在天朝网络下超时导致首屏白屏 */
+@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
 
 /* 项目文字案例（项目叙述区上边框） */
 .project-stories {
