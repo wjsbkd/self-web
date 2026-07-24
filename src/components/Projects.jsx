@@ -24,7 +24,7 @@ export default function Projects() {
       <div className="project-list wrap">
         {projects.map((project) => (
           <article className="project-card" key={project.index}>
-            <img src={project.image} alt="" />
+            <img src={project.image} alt={`${project.title} — ${project.subtitle}`} loading="lazy" />
             <div className="project-overlay" />
             <div className="project-head">
               <span>{project.index}</span>

@@ -2,16 +2,17 @@ import './About.css'
 import { tools } from '@/data'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
+import CountUpGroup from '@/components/CountUp.jsx'
 
 export default function About() {
   return (
     <section className="about section wrap" id="about">
       <SectionHeading num="01" kicker="ABOUT ME" />
       <div className="about-links">
-        <a href="mailto:lizongheng2025@163.com">
+        <a href="mailto:lizongheng2025@163.com" aria-label="发送邮件到 lizongheng2025@163.com">
           lizongheng2025@163.com <Arrow />
         </a>
-        <a href="tel:+8615087322631">
+        <a href="tel:+8615087322631" aria-label="拨打 150 8732 2631">
           150 8732 2631 <Arrow />
         </a>
         <span className="wechat-line">微信（同号）：15087322631</span>
@@ -80,24 +81,24 @@ export default function About() {
         </div>
       </div>
 
-      <div className="metrics">
+      <CountUpGroup className="metrics">
         <div>
-          <b>3+</b>
+          <CountUpGroup.Item target={3} suffix="+" />
           <span>互联网 / 内容实习</span>
         </div>
         <div>
-          <b>270W+</b>
+          <CountUpGroup.Item target={270} suffix="W+" />
           <span>单条最高播放</span>
         </div>
         <div>
-          <b>1000W+</b>
+          <CountUpGroup.Item target={1000} suffix="W+" />
           <span>内容累计播放</span>
         </div>
         <div>
-          <b>50+</b>
+          <CountUpGroup.Item target={50} suffix="+" />
           <span>直播切片产出</span>
         </div>
-      </div>
+      </CountUpGroup>
     </section>
   )
 }
