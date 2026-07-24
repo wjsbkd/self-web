@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Children, createContext, useContext } from 'react'
+import { useEffect, useRef, useState, createContext, useContext } from 'react'
 
 const CountUpContext = createContext(false)
 

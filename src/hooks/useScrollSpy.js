@@ -6,7 +6,6 @@ export default function useScrollSpy(ids, { rootMargin = '-45% 0px -45% 0px' } =
   const [active, setActive] = useState(ids[0] || '')
 
   useEffect(() => {
-    const key = ids.join(',')
     const sections = ids
       .map((id) => document.getElementById(id))
       .filter(Boolean)
