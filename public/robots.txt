@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lizongheng.example.com/sitemap.xml
