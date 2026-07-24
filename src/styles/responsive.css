@@ -1,23 +1,76 @@
 /* 响应式覆盖：全局共享 class 的媒体查询 */
+@media (max-width: 1024px) {
+.wrap {
+width: calc(100% - 80px);
+}
+}
 @media (max-width: 800px) {
-  .wrap {
-    width: calc(100% - 40px);
-  }
-  .section,
-  .work {
-    padding: 90px 0;
-  }
-  .section-kicker {
-    margin-bottom: 42px;
-  }
-  .heading-row {
-    display: block;
-    margin-bottom: 43px;
-  }
-  .heading-row p {
-    margin-top: 24px;
-  }
-  .side-note {
-    display: none;
-  }
+.wrap {
+width: calc(100% - 40px);
+}
+.section,
+.work {
+padding: 80px 0;
+}
+.section-kicker {
+margin-bottom: 40px;
+}
+.heading-row {
+display: block;
+margin-bottom: 40px;
+}
+.heading-row p {
+margin-top: 20px;
+}
+.side-note {
+display: none;
+}
+}
+@media (max-width: 600px) {
+.wrap {
+width: calc(100% - 28px);
+}
+.section,
+.work {
+padding: 60px 0;
+}
+.section-kicker {
+margin-bottom: 30px;
+}
+.heading-row {
+margin-bottom: 30px;
+}
+.about-copy p {
+font-size: 14px;
+line-height: 1.8;
+}
+.advantages-section {
+margin-top: 40px;
+padding-top: 28px;
+}
+.metrics {
+margin-top: 50px;
+gap: 16px;
+}
+.metrics b {
+font-size: 30px;
+}
+.metrics span {
+font-size: 10px;
+}
+.campus-block {
+margin-top: 46px;
+padding-top: 32px;
+}
+.campus-block .campus-grid,
+.education-grid {
+gap: 28px;
+}
+.campus-block .campus-number {
+font-size: 40px;
+}
+.education-block {
+margin-top: 32px;
+padding-top: 24px;
+}
 }

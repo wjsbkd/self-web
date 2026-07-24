@@ -168,7 +168,12 @@
     transform: none;
   }
 }
+.hero-index {
+  animation: fadeUp 0.6s 0.65s ease both;
+}
 .hero-info-card {
+  animation: fadeUp 0.6s 1s ease both;
+  position: absolute;
   position: absolute;
   left: 0;
   bottom: 58px;

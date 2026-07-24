@@ -115,3 +115,59 @@ a {
 .email:hover .arrow {
   transform: translate(3px, -3px);
 }
+
+/* ── 全局动效 ── */
+
+/* section-kicker 序号微微呼吸（每 3s 浮起 5px） */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.section-kicker span {
+  display: inline-block;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* 各 section 网格/列表在滚入视口时淡入上浮 */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.about-grid,
+.campus-block,
+.metrics,
+.experience-list,
+.project-list,
+.project-stories,
+.media-grid,
+.resource-bar,
+.strength-grid {
+  opacity: 1;
+}
+
+@supports (animation-timeline: view()) {
+  .about-grid,
+  .campus-block,
+  .metrics,
+  .experience-list,
+  .project-list,
+  .project-stories,
+  .media-grid,
+  .resource-bar,
+  .strength-grid {
+    animation: reveal 0.6s ease both;
+    animation-timeline: view();
+    animation-range: entry 8% entry 80%;
+  }
+}
