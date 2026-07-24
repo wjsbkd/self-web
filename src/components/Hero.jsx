@@ -1,6 +1,5 @@
 import './Hero.css'
 import { useRef, useCallback } from 'react'
-import Nav from '@/components/Nav.jsx'
 import Arrow from '@/components/Arrow.jsx'
 
 export default function Hero() {
@@ -34,7 +33,6 @@ export default function Hero() {
         />
       </video>
       <div className="hero-shade" />
-      <Nav />
       <div className="hero-frame" aria-hidden="true">
         <div className="hero-left-pane" />
         <div className="hero-right-pane" ref={ringRef}>
