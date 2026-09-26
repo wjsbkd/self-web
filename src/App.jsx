@@ -4,25 +4,39 @@ import About from '@/components/About.jsx'
 import Experience from '@/components/Experience.jsx'
 import Projects from '@/components/Projects.jsx'
 import Media from '@/components/Media.jsx'
+import AccountOperations from '@/components/AccountOperations.jsx'
 import Strengths from '@/components/Strengths.jsx'
 import Footer from '@/components/Footer.jsx'
+import CursorGlow from '@/components/CursorGlow.jsx'
+import SectionDots from '@/components/SectionDots.jsx'
 import useScrollSpy from '@/hooks/useScrollSpy.js'
+import useKeyboardNav from '@/hooks/useKeyboardNav.js'
 import { navLinks } from '@/data/nav.js'
 
 // 应用根组件：固定导航 + 按页面结构顺序组合各区块
 export default function App() {
-  const active = useScrollSpy(navLinks.map((l) => l.id))
+  const ids = navLinks.map((l) => l.id)
+  const active = useScrollSpy(['top', ...ids])
+
+  // 键盘导航：方向键跳转章节（含 Hero 顶部）
+  useKeyboardNav(['top', ...ids])
+
+  // SectionDots 数据（与导航一致）
+  const dotSections = [{ id: 'top', label: '首页' }, ...navLinks.map((l) => ({ id: l.id, label: l.label }))]
 
   return (
     <>
+      <CursorGlow />
       <Nav active={active} />
+      <SectionDots sections={dotSections} active={active} />
       <main>
         <Hero />
         <About />
+        <Strengths />
         <Experience />
         <Projects />
         <Media />
-        <Strengths />
+        <AccountOperations />
         <Footer />
       </main>
     </>
