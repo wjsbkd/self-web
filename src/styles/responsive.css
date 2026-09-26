@@ -44,10 +44,6 @@ margin-bottom: 30px;
 font-size: 14px;
 line-height: 1.8;
 }
-.advantages-section {
-margin-top: 40px;
-padding-top: 28px;
-}
 .metrics {
 margin-top: 50px;
 gap: 16px;
@@ -57,17 +53,6 @@ font-size: 30px;
 }
 .metrics span {
 font-size: 10px;
-}
-.campus-block {
-margin-top: 46px;
-padding-top: 32px;
-}
-.campus-block .campus-grid,
-.education-grid {
-gap: 28px;
-}
-.campus-block .campus-number {
-font-size: 40px;
 }
 .education-block {
 margin-top: 32px;

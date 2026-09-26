@@ -1,282 +1,191 @@
-/* About 组件样式 */
+/* About 组件样式 —— Claude 暖调融入 */
 .tool-list {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 30px;
 }
 .tool-list span {
-font: 11px/1.5 'DM Mono';
-color: #a8b5e2;
-border: 1px solid #5b6abf;
-padding: 7px 10px;
-background: rgba(91, 106, 191, 0.18);
+  font: 11px/1.5 var(--font-mono);
+  color: var(--accent-bright);
+  border: 1px solid var(--accent-deep);
+  padding: 7px 10px;
+  background: rgba(108, 106, 100, 0.22);
 }
 
 .about-links {
-display: flex;
-flex-wrap: wrap;
-align-items: center;
-gap: 12px;
-margin-bottom: 50px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 50px;
 }
 .about-links a {
-display: inline-flex;
-align-items: center;
-gap: 10px;
-font: 13px 'DM Mono';
-border-bottom: 1px solid var(--line-soft);
-padding-bottom: 3px;
-margin-right: 0;
-transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 13px var(--font-mono);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 3px;
+  margin-right: 0;
+  transition: color 0.3s var(--ease-claude);
 }
 .about-links a:hover {
-color: var(--accent);
+  color: var(--accent);
 }
 .wechat-line {
-font: 13px 'DM Mono';
-color: #9e9fa3;
-padding-bottom: 3px;
+  font: 13px var(--font-mono);
+  color: var(--text-dim);
+  padding-bottom: 3px;
 }
 
 .about-copy {
-margin-top: 50px;
-max-width: 750px;
+  margin-top: 50px;
+  max-width: 750px;
 }
 .lead {
-font-size: clamp(26px, 2.2vw, 43px) !important;
-line-height: 1.48 !important;
-letter-spacing: -0.045em;
+  /* Claude 风格：lead 段落用衬线字体，赋予"论文摘要"般的编辑式分量 */
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 2.2vw, 43px) !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  color: var(--text-bright);
 }
 .about-copy p {
-font-size: 16px;
-line-height: 2;
-color: #9e9fa3;
-max-width: 630px;
-margin-top: 20px;
+  font-size: 16px;
+  line-height: 2;
+  color: var(--text-dim);
+  max-width: 630px;
+  margin-top: 20px;
 }
 .about-copy p span {
-color: var(--accent);
-}
-
-/* 个人优势 */
-.advantages-section {
-margin-top: 60px;
-border-top: 1px solid var(--line-soft);
-padding-top: 40px;
-}
-.advantages-heading {
-font-size: 22px;
-font-weight: 500;
-letter-spacing: -0.02em;
-margin-bottom: 28px;
-display: flex;
-align-items: center;
-gap: 12px;
-}
-.advantages-list {
-display: flex;
-flex-direction: column;
-gap: 0;
-}
-.advantage-item {
-padding: 24px 0;
-border-bottom: 1px solid var(--line-soft);
-}
-.advantage-item:last-child {
-border-bottom: none;
-}
-.advantage-name {
-font-size: 22px;
-font-weight: 600;
-letter-spacing: -0.01em;
-color: var(--text-bright);
-margin-bottom: 8px;
-display: block;
-}
-.advantage-desc {
-font-size: 15px;
-line-height: 1.8;
-color: #9e9fa3;
-max-width: 800px;
+  /* 词重音：关键词用衬线 + 更重字重 + 陶土橙，作为正文中的编辑式重音
+     中文不用 italic（避免假斜体），改用字重 500 + 色彩强调 */
+  font-family: var(--font-serif);
+  font-weight: 500;
+  color: var(--accent-warm);
 }
 
 .metrics {
-border-top: 1px solid var(--line-soft);
-margin-top: 80px;
-padding-top: 30px;
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 24px;
+  border-top: 1px solid var(--line-soft);
+  margin-top: 80px;
+  padding-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 .metrics div {
-border-left: 1px solid var(--line-soft);
-padding-left: 24px;
-position: relative;
+  border-left: 1px solid var(--line-soft);
+  padding-left: 24px;
+  position: relative;
 }
 .metrics div:first-child {
-border-left: none;
-padding-left: 0;
+  border-left: none;
+  padding-left: 0;
 }
 .metrics b {
-font-size: 42px;
-letter-spacing: -0.06em;
-font-weight: 500;
-color: var(--text-bright);
-display: flex;
-align-items: baseline;
-gap: 3px;
+  /* Claude 风格：关键数字用衬线字体 + 陶土橙，"书籍页码"般的分量感 */
+  font-family: var(--font-serif);
+  font-size: 42px;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  color: var(--accent-warm);
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-optical-sizing: auto;
 }
 .metrics b:after {
-content: '';
+  content: '';
 }
 .metrics span {
-font-size: 11px;
-color: var(--text-muted);
-margin-top: 10px;
-display: block;
-letter-spacing: 0.3px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  display: block;
+  letter-spacing: 0.3px;
 }
 
 .about {
-padding-top: 130px;
-padding-bottom: 60px;
+  padding-top: 130px;
+  padding-bottom: 60px;
 }
 
-.campus-block {
-margin-top: 70px;
-padding-top: 46px;
-border-top: 1px solid var(--line-soft);
-}
-.campus-block .campus-grid {
-display: grid;
-grid-template-columns: 1fr 2fr;
-gap: 60px;
-align-items: start;
-}
-.campus-block .campus-grid > div:first-child {
-padding-right: 60px;
-border-right: 1px solid var(--line);
-}
-.campus-block .campus-number {
-font-size: 64px;
-letter-spacing: -0.06em;
-color: var(--accent);
-line-height: 1;
-}
-.campus-block .campus-number span {
-font-size: 0.5em;
-vertical-align: super;
-}
-.campus-block .campus-grid > div:nth-child(2) h3 {
-font-size: 20px;
-font-weight: 600;
-letter-spacing: -0.02em;
-margin: 0 0 10px;
-color: var(--text-bright);
-}
-.campus-block .campus-grid > div:nth-child(2) p {
-font-size: 14px;
-line-height: 1.85;
-color: #9e9fa3;
-margin: 0;
-}
-.campus-block .campus-tags span {
-font: 10px 'DM Mono';
-border: 1px solid #5b6abf;
-padding: 7px 10px;
-color: #a8b5e2;
-background: rgba(91, 106, 191, 0.18);
-}
-.campus-block .campus-tags {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-justify-self: end;
-margin-top: 34px;
-}
 
 .education-block {
-margin-top: 50px;
-padding-top: 36px;
-border-top: 1px solid var(--line-soft);
+  margin-top: 50px;
+  padding-top: 36px;
+  border-top: 1px solid var(--line-soft);
 }
 .education-grid {
-display: grid;
-grid-template-columns: 1fr 2fr;
-gap: 60px;
-align-items: start;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 60px;
+  align-items: start;
 }
 .education-period {
-padding-right: 60px;
-border-right: 1px solid var(--line);
-font: 13px 'DM Mono';
-color: var(--text-muted);
+  padding-right: 60px;
+  border-right: 1px solid var(--line);
+  font: 13px var(--font-mono);
+  color: var(--text-muted);
 }
 .education-detail h3 {
-font-size: 22px;
-font-weight: 500;
-letter-spacing: -0.02em;
-margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 .education-sub {
-font-size: 14px;
-color: var(--text-muted);
-margin-top: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 8px;
 }
 .education-skills {
-font-size: 14px;
-color: #9e9fa3;
-margin-top: 12px;
-line-height: 1.7;
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 12px;
+  line-height: 1.7;
 }
 
 /* 响应式 */
 @media (max-width: 800px) {
-.metrics {
-grid-template-columns: 1fr 1fr;
-gap: 20px;
-margin-top: 50px;
-}
-.metrics div {
-border-left: none;
-padding-left: 0;
-}
-.metrics div:nth-child(2n) {
-border-left: 1px solid var(--line-soft);
-padding-left: 20px;
-}
-.campus-block .campus-grid,
-.education-grid {
-grid-template-columns: 1fr;
-gap: 30px;
-}
-.campus-block .campus-grid > div:first-child,
-.education-period {
-padding-right: 0;
-border-right: none;
-}
-.campus-block .campus-tags {
-justify-self: start;
-margin-top: 18px;
-}
-.campus-block .campus-number {
-font-size: 46px;
-}
-.wechat-line {
-margin-left: 0;
-}
-.about-links a {
-margin-right: 0;
-}
-.metrics {
-margin-top: 60px;
-}
-.metrics b {
-font-size: 34px;
-}
-.about {
-padding-top: 100px;
-padding-bottom: 40px;
-}
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 50px;
+  }
+  .metrics div {
+    border-left: none;
+    padding-left: 0;
+  }
+  .metrics div:nth-child(2n) {
+    border-left: 1px solid var(--line-soft);
+    padding-left: 20px;
+  }
+  .education-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .education-period {
+    padding-right: 0;
+    border-right: none;
+  }
+  .wechat-line {
+    margin-left: 0;
+  }
+  .about-links a {
+    margin-right: 0;
+  }
+  .metrics {
+    margin-top: 60px;
+  }
+  .metrics b {
+    font-size: 34px;
+  }
+  .about {
+    padding-top: 100px;
+    padding-bottom: 40px;
+  }
 }

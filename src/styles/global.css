@@ -1,6 +1,8 @@
 /* 全局样式：字体导入、reset、跨组件共享类 */
 /* 使用国内镜像 fonts.googleapis.cn，避免 Google Fonts 在天朝网络下超时导致首屏白屏 */
-@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
+/* 字体策略借鉴 Claude 官网：衬线 Display（Fraunces，类 Tiempos/Copernicus）做标题与斜体重音，
+   人文无衬线（Noto Sans SC，类 Styrene）做正文/UI，等宽（DM Mono）做编辑式标签 */
+@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500;1,9..144,600&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600&display=swap');
 
 /* 项目文字案例（项目叙述区上边框） */
 .project-stories {
@@ -9,31 +11,85 @@
 }
 
 /* ── Design Tokens ── */
+/* 色系定位：Claude 羊皮纸亮调画布 × Apple 极简净白卡片
+   主基调取自 Claude 官网 #faf9f5 暖米白（非纯白），传递"纸张/书籍"质感；
+   卡片/浮层取 Apple #ffffff 净白，营造产品级精致感；
+   主强调沿用 Claude 陶土橙 #cc785c，文字用 Claude 暖近黑 #1f1915（非刺眼纯黑）。
+   所有中性色均带黄棕底色，杜绝冷蓝灰，整体明亮但不冰冷。 */
 :root {
-  /* 强调色 */
-  --accent: #c9ff53;
+  /* 主强调 —— 陶土橙（Claude 标志性 #cc785c）
+     用于链接、活动态、序号、边框着色等高频使用 */
+  --accent: #cc785c;
+  /* 主强调激活态（更深陶土，按压/active） */
+  --accent-active: #a9583e;
+  /* 暖强调 —— 珊瑚橙（Claude #d97757）
+     用于 CTA、关键数字、点睛处 */
+  --accent-warm: #d97757;
+  /* 柔强调 —— 暖银灰（Claude #b0aea5）
+     用于 eyebrow、副标题、轻量装饰 */
+  --accent-soft: #b0aea5;
+  /* 深强调 —— 深陶土（亮背景上需要更深 contrasts，替代原浅雾蓝） */
+  --accent-bright: #c4553d;
+  /* 中性暖灰（Claude #8a8279，深色文字/分隔） */
+  --accent-deep: #8a8279;
 
-  /* 文字色阶（按亮度递减） */
-  --text-bright: #f4f4ee; /* 极亮标题 */
-  --text-base: #f2f1ed; /* 默认正文 */
-  --text-dim: #96979b; /* 次级说明 */
-  --text-muted: #8d8e91; /* 辅助说明 */
+  /* 文字色阶（Claude 亮模式暖近黑系，非刺眼纯黑）
+     Claude 亮模式：#1f1915 / #2d2825 / #6c6a64 / #8a8279 */
+  --text-bright: #1f1915; /* 极亮标题（Claude 暖近黑，主标题） */
+  --text-base: #2d2825; /* 默认正文（暖深灰） */
+  --text-dim: #6c6a64; /* 次级说明（暖灰） */
+  --text-muted: #8a8279; /* 辅助说明（暖浅灰） */
 
-  /* 边框 / 分割线 */
-  --line: #38393c; /* 主分割线 */
-  --line-soft: #36373a; /* 次分割线 */
-  --line-tag: #4c4d50; /* 标签边框（与 #424346 仅 ±2 差异） */
+  /* 边框 / 分割线（Claude 亮模式 cream border，极淡暖灰）
+     Claude 亮模式 border: #e8e6dc / #f0eee6 */
+  --line: #e8e6dc; /* 主分割线（暖奶油灰） */
+  --line-soft: #f0eee6; /* 次分割线（极淡奶油） */
+  --line-tag: #d6d3cc; /* 标签边框（暖灰） */
 
-  /* 背景层级（按深度递增） */
-  --bg-base: #090a0d; /* 页面底色 */
-  --bg-elev-1: #121316; /* 浮层（footer/resource-bar） */
-  --bg-elev-2: #151619; /* 章节深底（work 区） */
+  /* 背景层级（Claude 羊皮纸 + Apple 净白双层体系）
+     Claude 亮模式：#faf9f5 / #f5f3ed / #ebe8e2 */
+  --bg-base: #faf9f5; /* 页面底色（Claude 羊皮纸，温暖米白） */
+  --bg-elev-1: #ffffff; /* 浮层（Apple 净白卡片，最高对比） */
+  --bg-elev-2: #f5f3ed; /* 章节深底（Claude cream-deep，柔和区隔） */
+  --bg-deep: #ebe8e2; /* 更深层背景（work 区/特定强调） */
 
-  font-family: 'Noto Sans SC', Arial, sans-serif;
+  /* ── Claude 风格字体栈 ── */
+  /* 衬线 Display：Fraunces（拉丁字符，类 Tiempos/Copernicus）+ Noto Serif SC（中文字符，思源宋体）
+     两者搭配：拉丁字母用 Fraunces 的光学尺寸变体，中文用 Noto Serif SC 的现代宋体，统一"书籍封面"质感 */
+  --font-serif: 'Fraunces', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+  /* 人文无衬线：Noto Sans SC（思源黑体，类 Styrene），用于正文/UI/中文 */
+  --font-sans: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Segoe UI', Arial, sans-serif;
+  /* 等宽：DM Mono，用于编辑式标签、序号、技术性元数据 */
+  --font-mono: 'DM Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── Claude 风格环形阴影系统 ── */
+  /* 用 ring（0 0 0 1px）替代可见边框，营造"无边的边界感"深度 */
+  --ring-soft: 0 0 0 1px rgba(31, 25, 21, 0.08); /* 柔和环（亮调适配） */
+  --ring-warm: 0 0 0 1px rgba(204, 120, 92, 0.28); /* 暖环（hover） */
+  --ring-card: 0 0 0 1px rgba(31, 25, 21, 0.06); /* 卡片环 */
+  /* 暖色柔光阴影（亮调下更柔和） */
+  --shadow-soft: 0 4px 24px rgba(31, 25, 21, 0.06);
+  --shadow-card: 0 1px 2px rgba(31, 25, 21, 0.04), 0 8px 32px rgba(31, 25, 21, 0.06);
+  --shadow-warm-glow: 0 0 80px rgba(204, 120, 92, 0.1);
+
+  /* ── Apple 风格缓动曲线 ── */
+  /* 主缓动：丝滑 ease-out，用于绝大多数过渡与揭示 */
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  /* 弹性缓动：用于回弹/磁性微交互 */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 标准 ease-in-out */
+  --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Claude 风格沉思缓动：更慢的 ease-out，赋予"呼吸式"宁静节奏 */
+  --ease-claude: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  font-family: var(--font-sans);
   color: var(--text-base);
   background: var(--bg-base);
   font-synthesis: none;
   scroll-behavior: smooth;
+  /* Claude 标志性：暖色抗锯齿，让字体边缘更柔润 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 * {
   box-sizing: border-box;
@@ -41,10 +97,32 @@
 body {
   margin: 0;
   background: var(--bg-base);
+  /* Claude + Apple 融合：羊皮纸底 + 顶部极淡暖色光晕，让亮背景不死板 */
+  background-image:
+    radial-gradient(
+      ellipse 90% 50% at 50% 0%,
+      rgba(204, 120, 92, 0.06),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 100%,
+      rgba(217, 119, 87, 0.04),
+      transparent 70%
+    );
+  background-attachment: fixed;
 }
 a {
   color: inherit;
   text-decoration: none;
+}
+/* ── Claude 标志性：暖陶土橙文本选区（亮调下加深透明度）── */
+::selection {
+  background: rgba(204, 120, 92, 0.28);
+  color: var(--text-bright);
+}
+::-moz-selection {
+  background: rgba(204, 120, 92, 0.28);
+  color: var(--text-bright);
 }
 /* 锚点跳转时为固定导航留出空间 */
 section[id],
@@ -60,11 +138,11 @@ footer[id] {
   line-height: 0;
   margin-left: 8px;
   display: inline-block;
-  transition: transform 0.3s;
+  transition: transform 0.3s var(--ease-claude);
 }
 .eyebrow,
 .section-kicker {
-  font: 11px 'DM Mono';
+  font: 11px var(--font-mono);
   letter-spacing: 1.7px;
 }
 .eyebrow {
@@ -77,22 +155,23 @@ footer[id] {
   right: 22px;
   bottom: 42px;
   writing-mode: vertical-rl;
-  font: 9px 'DM Mono';
+  font: 9px var(--font-mono);
   letter-spacing: 1px;
-  color: #aaa;
+  color: var(--text-dim);
 }
 .side-note span {
   height: 40px;
   width: 1px;
   display: inline-block;
-  background: #aaa;
+  background: var(--text-dim);
   margin: 11px 4px;
 }
 .section {
+  /* Claude 杂志式节奏：段落间距保持慷慨，营造沉浸阅读的呼吸感 */
   padding: 170px 0;
 }
 .section-kicker {
-  color: #9a9a9b;
+  color: var(--text-dim);
   display: flex;
   gap: 25px;
   align-items: center;
@@ -109,6 +188,31 @@ footer[id] {
 }
 .heading-row h2 {
   font-size: clamp(42px, 4.1vw, 76px);
+  /* Claude 标志性：大标题改用衬线 Display 字体，赋予"书名般分量感" */
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  font-optical-sizing: auto;
+}
+/* 标题中的词重音（<i> 或 <span>）—— 中英文差异化处理：
+   拉丁文用 Fraunces 真斜体（font-style: italic，Claude 招牌）；
+   中文无真斜体，改用"字重对比 + 陶土橙"做编辑式重音（弱化"高声叫卖"），
+   刻意不用 font-style: italic 以避免中文被浏览器合成"假斜体"（笔画粗细不自然）。 */
+.heading-row h2 i,
+.footer h2 i,
+.hero h1 i {
+  font-family: var(--font-serif);
+  font-weight: 400; /* 比标题 500 更轻，形成"低语"般的词重音 */
+  color: var(--accent-warm);
+  letter-spacing: -0.005em;
+  /* 中文字符不做倾斜；仅对拉丁字符启用真斜体（CJK 字体无斜体字形会被合成） */
+}
+/* 拉丁字符的 <i> 才启用真斜体（:lang 选择器 + unicode-range 天然隔离 CJK） */
+.heading-row h2 i:lang(en),
+.footer h2 i:lang(en),
+.hero h1 i:lang(en) {
+  font-style: italic;
 }
 .heading-row p {
   font-size: 14px;
@@ -143,26 +247,27 @@ footer[id] {
   border-radius: 2px;
 }
 
-/* section-kicker 序号微微呼吸（每 3s 浮起 5px） */
+/* section-kicker 序号微微呼吸（Claude 风格：放慢至 4.5s，幅度减半，更"沉思"） */
 @keyframes breathe {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
   }
 }
 .section-kicker span {
   display: inline-block;
-  animation: breathe 3s ease-in-out infinite;
+  animation: breathe 4.5s var(--ease-claude) infinite;
 }
 
-/* 各 section 网格/列表在滚入视口时淡入上浮 */
+/* 各 section 网格/列表在滚入视口时淡入上浮
+   Claude 风格：位移幅度减小、时长拉长，营造"缓慢浮现"的冥想节奏 */
 @keyframes reveal {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -191,8 +296,157 @@ footer[id] {
   .media-grid,
   .resource-bar,
   .strength-grid {
-    animation: reveal 0.6s ease both;
+    /* Claude 风格：揭示时长拉长至 0.9s，使用沉思缓动 */
+    animation: reveal 0.9s var(--ease-claude) both;
     animation-timeline: view();
     animation-range: entry 8% entry 80%;
   }
 }
+
+/* ── Reveal 组件：滚动揭示动画（苹果官网标志性效果 + Claude 沉思节奏）── */
+/* 由 IntersectionObserver 触发 .reveal-in，GPU 加速 + Claude 沉思缓动 */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 1s var(--ease-claude) var(--reveal-delay, 0s),
+    transform 1.1s var(--ease-claude) var(--reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+.reveal.reveal-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+/* 交错模式：父容器不动画，仅直接子节点依次登场 */
+.reveal.reveal-stagger {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 0.9s var(--ease-claude) var(--reveal-delay, 0s),
+    transform 1s var(--ease-claude) var(--reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+.reveal-stagger.reveal-in > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+/* 尊重减少动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── 液态玻璃增强（Liquid Glass 灵感 + Claude 暖色折射，亮调版）── */
+/* 为已有 backdrop-filter 的浮层叠加动态高光与边框折射感
+   Claude 风格：高光改为暖奶油色，营造"温润石材"的触感 */
+.hero-info-card,
+.nav.scrolled,
+.media-card,
+.footer {
+  position: relative;
+}
+.hero-info-card::before,
+.nav.scrolled::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(204, 120, 92, 0.04) 100%
+  );
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-claude);
+}
+.nav.scrolled::after {
+  inset: 0;
+  border-radius: 0;
+}
+
+/* ── 光标氛围光晕（CursorGlow · Claude 氛围感）── */
+/* 暖色径向光晕跟随光标，增强而非替换原生光标 */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+.cursor-glow-dot,
+.cursor-glow-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-claude);
+  will-change: transform, opacity;
+}
+/* 内层小点：陶土橙实心，瞬时贴合光标 */
+.cursor-glow-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--accent);
+}
+/* 外层光晕：柔和大圆，缓动跟随营造拖尾 */
+.cursor-glow-ring {
+  width: 280px;
+  height: 280px;
+  margin: -140px 0 0 -140px;
+  background: radial-gradient(
+    circle,
+    rgba(204, 120, 92, 0.12) 0%,
+    rgba(204, 120, 92, 0.04) 40%,
+    transparent 70%
+  );
+}
+/* 触屏设备隐藏 */
+@media (hover: none) {
+  .cursor-glow {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-glow {
+    display: none;
+  }
+}
+
+/* ── TiltCard 3D 倾斜卡片光泽（Apple 产品卡风格）── */
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+}
+/* 光泽扫过效果：随光标位置移动的高光 */
+.tilt-glare::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle 200px at var(--glare-x, 50%) var(--glare-y, 50%),
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 60%
+  );
+  opacity: var(--glare-opacity, 0);
+  transition: opacity 0.4s var(--ease-claude);
+  mix-blend-mode: overlay;
+}
+
+

@@ -1,4 +1,4 @@
-/* Nav 组件样式 —— 全局固定导航 */
+/* Nav 组件样式 —— 全局固定导航（Claude 羊皮纸亮调 + Apple 玻璃） */
 .nav {
   position: fixed;
   z-index: 50;
@@ -11,25 +11,63 @@
   justify-content: space-between;
   border-bottom: 1px solid transparent;
   transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    backdrop-filter 0.3s ease;
+    background 0.45s var(--ease-claude),
+    border-color 0.45s var(--ease-claude),
+    backdrop-filter 0.45s var(--ease-claude),
+    transform 0.55s var(--ease-claude);
 }
 .nav.scrolled {
-  background: rgba(9, 10, 13, 0.72);
-  backdrop-filter: blur(14px);
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  /* Claude 风格：羊皮纸半透明玻璃底，替代原冷靛蓝暗底 */
+  background: rgba(250, 249, 245, 0.82);
+  backdrop-filter: blur(16px) saturate(1.1);
+  border-bottom-color: rgba(31, 25, 21, 0.08);
+}
+/* 向下滚动隐藏、向上滚动显现（iOS 26 标签栏行为） */
+.nav.nav-hidden {
+  transform: translateY(-100%);
+}
+
+/* 顶部滚动进度条（Claude 风格：陶土橙暖色渐变） */
+.nav-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nav-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent-bright),
+    var(--accent-warm)
+  );
+  transition: transform 0.1s linear;
+}
+
+/* 磁性包裹元素：GPU 加速 + 平滑回弹（Claude 沉思缓动） */
+.magnetic {
+  display: inline-block;
+  will-change: transform;
+  transition: transform 0.5s var(--ease-claude);
+}
+.magnetic > * {
+  transition: transform 0.5s var(--ease-claude);
 }
 .brand {
-  font-family: 'DM Mono';
-  font-size: 26px;
-  letter-spacing: -2px;
+  display: flex;
+  align-items: center;
 }
-.brand span {
-  font-size: 8px;
-  vertical-align: top;
-  margin-left: 4px;
-  letter-spacing: 0;
+.brand .brand-mark {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 .nav-links {
   display: flex;
@@ -38,10 +76,10 @@
   font-size: 14px;
 }
 .nav-links a {
-  opacity: 0.75;
+  opacity: 0.7;
   transition:
-    opacity 0.2s,
-    color 0.2s;
+    opacity 0.25s var(--ease-claude),
+    color 0.25s var(--ease-claude);
 }
 .nav-links a:hover,
 .nav-links a.active {
@@ -50,9 +88,9 @@
 }
 .nav-links a:before {
   content: '•';
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(31, 25, 21, 0.3);
   margin-right: 8px;
-  transition: color 0.25s ease;
+  transition: color 0.3s var(--ease-claude);
 }
 .nav-links a:hover:before,
 .nav-links a.active:before {
@@ -60,22 +98,26 @@
 }
 .nav-status {
   margin-left: 4px;
-  font: 9px 'DM Mono';
+  font: 9px var(--font-mono);
   letter-spacing: 0.8px;
   color: var(--accent);
 }
 .nav-contact {
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  /* Claude 风格：胶囊按钮用环形暖边框 */
+  border: 1px solid rgba(31, 25, 21, 0.28);
   border-radius: 30px;
   padding: 12px 18px;
   font-size: 13px;
+  color: var(--text-base);
   transition:
-    border-color 0.2s,
-    background 0.2s;
+    border-color 0.3s var(--ease-claude),
+    background 0.3s var(--ease-claude),
+    color 0.3s var(--ease-claude);
 }
 .nav-contact:hover {
   border-color: var(--accent);
-  background: rgba(201, 255, 83, 0.1);
+  background: var(--accent);
+  color: #fff;
 }
 
 /* 移动端汉堡按钮（默认隐藏） */
@@ -95,8 +137,8 @@
   display: block;
   width: 22px;
   height: 1.5px;
-  background: #fff;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  background: var(--text-bright);
+  transition: transform 0.35s var(--ease-claude), opacity 0.35s var(--ease-claude);
 }
 .nav.open .nav-toggle span:nth-child(1) {
   transform: translateY(6.5px) rotate(45deg);
@@ -124,15 +166,17 @@
     align-items: flex-start;
     gap: 4px;
     padding: 18px 24px 26px;
-    background: rgba(9, 10, 13, 0.96);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Claude 风格：羊皮纸玻璃下拉，替代原暗底 */
+    background: rgba(250, 249, 245, 0.97);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(31, 25, 21, 0.08);
+    box-shadow: 0 16px 40px rgba(31, 25, 21, 0.08);
     transform: translateY(-12px);
     opacity: 0;
     pointer-events: none;
     transition:
-      transform 0.25s ease,
-      opacity 0.25s ease;
+      transform 0.3s var(--ease-claude),
+      opacity 0.3s var(--ease-claude);
   }
   .nav.open .nav-links {
     transform: none;
@@ -153,5 +197,39 @@
     margin-top: 12px;
     font-size: 13px;
     padding: 12px 18px;
+  }
+}
+
+/* 滑动指示条（Apple 风格）：在 active 导航项下方平滑滑动的暖色胶囊 */
+.nav-links {
+  position: relative;
+}
+.nav-links a {
+  position: relative;
+  z-index: 1;
+}
+.nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: rgba(204, 120, 92, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(204, 120, 92, 0.26);
+  transition:
+    transform 0.55s var(--ease-apple),
+    width 0.55s var(--ease-apple),
+    height 0.55s var(--ease-apple),
+    opacity 0.3s var(--ease-claude);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform, width, height;
+}
+.nav-indicator--show {
+  opacity: 1;
+}
+@media (max-width: 800px) {
+  .nav-indicator {
+    display: none;
   }
 }

@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { contactEmail } from '@/data/nav.js'
 
 // 全局错误边界：任一区块渲染崩溃时显示兜底提示，避免整页白屏
 export default class ErrorBoundary extends Component {
@@ -13,6 +14,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     // 生产环境可在此上报到监控服务
+    // eslint-disable-next-line no-console
     console.error('页面渲染出错：', error, info)
   }
 
@@ -29,21 +31,21 @@ export default class ErrorBoundary extends Component {
             gap: '16px',
             padding: '40px',
             textAlign: 'center',
-            background: 'var(--bg-base, #090a0d)',
-            color: '#f2f1ed',
+            background: 'var(--bg-base, #2e365a)',
+            color: '#ece9e4',
             fontFamily: "'Noto Sans SC', sans-serif",
           }}
         >
           <h1 style={{ fontSize: '28px', margin: 0 }}>页面出了点问题</h1>
-          <p style={{ color: '#9e9fa3', maxWidth: '420px', lineHeight: 1.7 }}>
-            部分内容加载失败，请刷新重试。若问题持续，请联系 lizongheng2025@163.com。
+          <p style={{ color: '#9d9893', maxWidth: '420px', lineHeight: 1.7 }}>
+            部分内容加载失败，请刷新重试。若问题持续，请联系 {contactEmail}。
           </p>
           <button
             onClick={() => window.location.reload()}
             style={{
-              border: '1px solid #c9ff53',
+              border: '1px solid #bd6c73',
               background: 'transparent',
-              color: '#c9ff53',
+              color: '#bd6c73',
               padding: '12px 22px',
               borderRadius: '30px',
               cursor: 'pointer',

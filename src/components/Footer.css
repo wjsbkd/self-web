@@ -1,10 +1,11 @@
-/* Footer 组件样式 */
+/* Footer 组件样式 —— Claude 羊皮纸亮调 + Apple 极简联系区 */
 .footer {
   min-height: 100vh;
   display: flex;
   position: relative;
   overflow: hidden;
-  background: var(--bg-elev-1);
+  /* Claude 风格：footer 用暖奶油底，柔和收束，替代原暗底 */
+  background: var(--bg-elev-2);
 }
 .footer-glow {
   width: 78vw;
@@ -12,7 +13,8 @@
   position: absolute;
   right: -20vw;
   top: -15vw;
-  background: radial-gradient(circle, rgba(174, 255, 43, 0.17), transparent 60%);
+  /* Claude 风格：陶土橙辉光，更暖更"沉思" */
+  background: radial-gradient(circle, rgba(217, 119, 87, 0.16), transparent 60%);
 }
 .footer-inner {
   position: relative;
@@ -23,23 +25,32 @@
   padding: 100px 0;
 }
 .footer h2 {
+  /* Claude 风格：footer 大标题用衬线 Display 字体 */
+  font-family: var(--font-serif);
   font-size: clamp(55px, 6.5vw, 118px);
+  font-weight: 500;
+  letter-spacing: -0.02em; /* 中文不宜过紧，与 hero/section 标题统一 */
+  line-height: 1.05;
+  font-optical-sizing: auto;
+  color: var(--text-bright);
 }
 .email {
   font-size: clamp(17px, 2vw, 32px);
-  font-family: 'DM Mono';
-  border-bottom: 1px solid var(--accent);
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--accent-warm);
   padding-bottom: 14px;
   width: max-content;
-  margin-top: 75px;
-  color: var(--accent);
+  color: var(--accent-warm);
   transition:
-    color 0.3s ease,
-    border-color 0.3s ease;
+    color 0.3s var(--ease-claude),
+    border-color 0.3s var(--ease-claude);
+}
+.footer-email-wrap {
+  margin-top: 75px;
 }
 .email:hover {
-  color: var(--text-bright);
-  border-bottom-color: var(--text-bright);
+  color: var(--accent-active);
+  border-bottom-color: var(--accent-active);
 }
 .footer-social {
   display: flex;
@@ -51,16 +62,17 @@
 .social-btn {
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(31, 25, 21, 0.18);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  color: #d6d7d4;
+  color: var(--text-base);
+  background: var(--bg-elev-1);
   transition:
-    border-color 0.25s ease,
-    color 0.25s ease,
-    background 0.25s ease,
-    transform 0.25s ease;
+    border-color 0.3s var(--ease-claude),
+    color 0.3s var(--ease-claude),
+    background 0.3s var(--ease-claude),
+    transform 0.3s var(--ease-claude);
 }
 .social-btn svg {
   width: 20px;
@@ -69,7 +81,7 @@
 .social-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(201, 255, 83, 0.08);
+  background: rgba(204, 120, 92, 0.08);
   transform: translateY(-3px);
 }
 .social-wechat {
@@ -78,10 +90,11 @@
   gap: 9px;
   margin-left: 6px;
   padding: 11px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(31, 25, 21, 0.18);
   border-radius: 30px;
-  font: 12px 'DM Mono';
-  color: #d6d7d4;
+  font: 12px var(--font-mono);
+  color: var(--text-base);
+  background: var(--bg-elev-1);
 }
 .social-wechat svg {
   width: 18px;
@@ -91,13 +104,24 @@
   margin-top: auto;
   padding-top: 150px;
   display: flex;
+  align-items: center;
   gap: 30px;
-  font: 10px 'DM Mono';
+  font: 10px var(--font-mono);
   color: var(--text-muted);
 }
 .footer-bottom a {
   margin-left: auto;
-  color: #eee;
+  color: var(--accent);
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-brand .footer-mark {
+  height: 22px;
+  width: auto;
+  display: block;
 }
 
 /* 响应式 —— 800px 断点 */

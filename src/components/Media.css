@@ -1,154 +1,48 @@
-/* Media 组件样式 */
-.media-copy a {
-  display: inline-block;
-  margin-top: 13px;
-  font: 11px 'DM Mono';
-  color: var(--accent);
+/* Media 组件样式 —— Claude 羊皮纸亮调 + Apple 横向滚动视频轨道 */
+.media {
+  padding-bottom: 170px;
 }
-.resource-bar {
+
+/* 完整作品集 PDF 入口条 */
+.portfolio-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 18px;
   padding: 20px 23px;
-  border: 1px solid var(--line);
-  background: var(--bg-elev-1);
+  border: 1px solid var(--accent);
+  background: linear-gradient(135deg, var(--bg-elev-1), var(--bg-elev-2));
+  box-shadow: var(--shadow-warm-glow);
+  border-radius: 4px;
 }
-.resource-bar div {
+.portfolio-bar div {
   display: flex;
   align-items: center;
   gap: 18px;
 }
-.resource-bar span {
-  font: 10px 'DM Mono';
+.portfolio-bar span {
+  font: 10px var(--font-mono);
   color: var(--accent);
 }
-.resource-bar b {
+.portfolio-bar b {
   font-size: 15px;
   font-weight: 500;
+  color: var(--text-bright);
 }
-.resource-bar > a {
-  font: 12px 'DM Mono';
-}
-.media {
-  padding-bottom: 170px;
-}
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 18px;
-}
-.media-card {
-  position: relative;
-  overflow: hidden;
-  background: #181a1e;
-  min-height: 350px;
-  cursor: crosshair;
-}
-.media-card img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.media-card:hover img {
-  transform: scale(1.04);
-}
-.media-card img {
-  filter: grayscale(1);
-  transition:
-    transform 0.7s,
-    filter 0.7s;
-}
-.media-card:hover img {
-  filter: grayscale(0.2);
-}
-.media-tint {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(0deg, rgba(5, 6, 8, 0.94), rgba(5, 6, 8, 0.08) 68%);
-}
-.media-video {
-  grid-column: span 7;
-  aspect-ratio: 16/9;
-}
-.media-photo {
-  grid-column: span 5;
-  aspect-ratio: 4/3;
-}
-.media-copy {
-  position: absolute;
-  z-index: 3;
-  left: 23px;
-  bottom: 20px;
-  right: 20px;
-}
-.media-copy span {
-  font: 10px 'DM Mono';
-  letter-spacing: 1px;
-  color: var(--accent);
-}
-.media-copy h3 {
-  font-size: 24px;
-  letter-spacing: -0.055em;
-  margin: 9px 0 5px;
-}
-.media-copy p {
-  font-size: 11px;
-  color: #b1b2b4;
-  margin: 0;
-  font-family: 'DM Mono';
-}
-.play-mark {
-  position: absolute;
-  z-index: 3;
-  right: 23px;
-  top: 20px;
-  width: 42px;
-  height: 42px;
-  border: 1px solid #d7d8d9;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-}
-
-/* 作品集 PDF 入口卡片 */
-.media-portfolio {
-  grid-column: span 12;
-  min-height: auto;
-  background: linear-gradient(135deg, #1a1c20, #0c0d10);
-  border: 1px solid var(--accent);
-  display: flex;
-  align-items: stretch;
-}
-.media-portfolio-inner {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 30px;
-  align-items: center;
-  padding: 50px 40px;
-  width: 100%;
-  position: relative;
-}
-.portfolio-icon {
-  font: 700 56px 'DM Mono';
-  letter-spacing: -0.04em;
-  color: var(--accent);
-  border: 2px solid var(--accent);
-  padding: 18px 22px;
-  border-radius: 6px;
-  height: fit-content;
+.portfolio-bar > a {
+  font: 12px var(--font-mono);
+  color: var(--accent-warm);
 }
 
 /* 运营账号区块 */
 .account-section {
   margin-top: 70px;
   padding: 36px 28px;
+  /* Claude 风格：净白卡片 + 暖边框 */
   border: 1px solid var(--line);
   background: var(--bg-elev-1);
+  box-shadow: var(--shadow-soft);
+  border-radius: 4px;
 }
 .account-title {
   font-size: 22px;
@@ -158,6 +52,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  color: var(--text-bright);
 }
 .account-icon {
   font-size: 20px;
@@ -169,8 +64,8 @@
   align-items: start;
 }
 .account-info {
-  font: 13px 'DM Mono';
-  color: #9e9fa3;
+  font: 13px var(--font-mono);
+  color: var(--text-dim);
 }
 .account-name {
   font-size: 15px;
@@ -187,7 +82,7 @@
   word-break: break-all;
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
+  transition: border-color 0.3s var(--ease-claude);
 }
 .account-url:hover {
   border-bottom-color: var(--accent);
@@ -200,141 +95,50 @@
 .stat-item {
   text-align: center;
   padding: 16px 10px;
-  border: 1px solid var(--line-soft);
-  background: #0e0f12;
+  border: 1px solid var(--line);
+  /* Claude 风格：stat 卡用暖奶油底，替代原深暖炭 */
+  background: var(--bg-elev-2);
+  border-radius: 4px;
 }
 .stat-item b {
   display: block;
+  /* Claude 风格：数字用衬线字体 */
+  font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
-  color: var(--accent);
-  letter-spacing: -0.04em;
+  color: var(--accent-warm);
+  letter-spacing: -0.03em;
+  font-optical-sizing: auto;
 }
 .stat-item span {
   display: block;
-  font: 10px 'DM Mono';
-  color: #9e9fa3;
+  font: 10px var(--font-mono);
+  color: var(--text-dim);
   margin-top: 6px;
 }
 
-/* 视频链接区块 */
-.video-links-section {
-  margin-top: 36px;
-}
-.video-links-title {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin-bottom: 22px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.video-links-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.video-link-card {
-  padding: 18px;
-  border: 1px solid var(--line-soft);
-  background: var(--bg-elev-1);
-  transition: border-color 0.2s;
-}
-.video-link-card:hover {
-  border-color: var(--line);
-}
-.video-link-card h4 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 4px;
-}
-.video-link-desc {
-  font: 11px 'DM Mono';
-  color: #9e9fa3;
-  margin-bottom: 12px;
-}
-.video-link-a {
-  font: 10px 'DM Mono';
-  color: var(--accent);
-  word-break: break-all;
-  display: block;
-  line-height: 1.5;
-  text-decoration: none;
-}
-.video-link-a:hover {
-  text-decoration: underline;
-}
-.video-link-pwd {
-  font: 10px 'DM Mono';
-  color: #6b6d72;
-  margin-top: 6px;
-}
-.media-portfolio .media-copy {
-  position: static;
-  padding: 0;
-}
-.media-portfolio .media-copy h3 {
-  font-size: 38px;
-  letter-spacing: -0.05em;
-  margin: 12px 0 6px;
-}
-.media-portfolio .media-copy p {
-  font-size: 13px;
-  color: #b1b2b4;
-  margin-bottom: 14px;
-}
-.media-portfolio .media-copy a {
-  font: 12px 'DM Mono';
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 10px 16px;
-  border-radius: 4px;
-  display: inline-block;
-  transition: background 0.2s;
-}
-.media-portfolio .media-copy a:hover {
-  background: rgba(201, 255, 83, 0.12);
-}
 /* 响应式 —— 800px 断点 */
 @media (max-width: 800px) {
   .media {
     padding-bottom: 90px;
   }
-  .media-grid {
+  .account-content {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
-  .media-video,
-  .media-photo {
-    grid-column: span 1;
-    aspect-ratio: 4/3;
+  .account-stats {
+    grid-template-columns: repeat(3, 1fr);
   }
-  .media-copy h3 {
-    font-size: 21px;
-  }
-  .resource-bar {
+  .portfolio-bar {
     align-items: flex-start;
     gap: 18px;
     flex-direction: column;
   }
-  .resource-bar div {
+  .portfolio-bar div {
     display: block;
   }
-  .resource-bar b {
+  .portfolio-bar b {
     display: block;
     margin-top: 6px;
-  }
-  .media-portfolio-inner {
-    grid-template-columns: 1fr;
-    padding: 32px 22px;
-    gap: 16px;
-  }
-  .portfolio-icon {
-    font-size: 38px;
-    padding: 12px 16px;
-  }
-  .media-portfolio .media-copy h3 {
-    font-size: 26px;
   }
 }
