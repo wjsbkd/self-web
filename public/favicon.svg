@@ -1,6 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#090a0d"/>
-  <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-        font-family="'DM Mono', ui-monospace, monospace" font-size="34" font-weight="700"
-        fill="#c9ff53">L</text>
+  <rect width="64" height="64" rx="14" fill="#1a1816"/>
+  <text x="32" y="42" text-anchor="middle" fill="#e8e6df" fontFamily="Inter,Helvetica Neue,Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="30" letterSpacing="-1">LZH</text>
 </svg>
