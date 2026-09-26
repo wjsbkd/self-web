@@ -1,0 +1,84 @@
+/* SectionDots —— 侧边章节指示器（Apple 产品页风格） */
+.section-dots {
+  position: fixed;
+  z-index: 40;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  pointer-events: none;
+}
+.section-dot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 4px 0;
+}
+/* 圆点 */
+.section-dot-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-deep);
+  background: transparent;
+  transition:
+    width 0.4s var(--ease-claude),
+    height 0.4s var(--ease-claude),
+    background 0.4s var(--ease-claude),
+    border-color 0.4s var(--ease-claude);
+}
+/* 活动章节：圆点放大并填充陶土橙 */
+.section-dot.active .section-dot-mark {
+  width: 22px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+/* 标签：默认隐藏，hover 或 active 时展开 */
+.section-dot-label {
+  font: 10px var(--font-mono);
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(6px);
+  transition:
+    opacity 0.4s var(--ease-claude),
+    transform 0.4s var(--ease-claude);
+}
+.section-dot:hover .section-dot-label,
+.section-dot.active .section-dot-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.section-dot.active .section-dot-label {
+  color: var(--accent);
+}
+
+/* 响应式：窄屏隐藏标签，仅保留圆点 */
+@media (max-width: 1024px) {
+  .section-dots {
+    right: 14px;
+    gap: 14px;
+  }
+}
+@media (max-width: 800px) {
+  .section-dots {
+    display: none;
+  }
+}
+
+/* 尊重减少动效 */
+@media (prefers-reduced-motion: reduce) {
+  .section-dot-mark,
+  .section-dot-label {
+    transition: none;
+  }
+}

@@ -1,0 +1,171 @@
+/* AccountOperations —— 账号运营板块
+ *
+ * 设计融合：
+ * - Claude 官网：衬线 Display 标题、mono 标签、暖羊皮纸底、编辑式间距
+ * - Apple 产品宣发：3D 螺旋照片墙（SpiralGallery）、scroll-reveal、springy hover
+ * ─────────────────────────────────────────────── */
+
+/* ── Section 容器 ── */
+.account-ops {
+  /* 比主背景略深，营造"独立板块"的层次感 */
+  background: var(--bg-elev-2);
+  position: relative;
+}
+
+/* 顶部极淡暖色分隔光晕 */
+.account-ops::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line) 20%,
+    var(--line) 80%,
+    transparent
+  );
+}
+
+/* ── 账号身份卡片（Apple 净白卡片）── */
+.identity-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 28px 32px;
+  margin-top: 50px;
+  background: var(--bg-elev-1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow 0.5s var(--ease-claude),
+    transform 0.4s var(--ease-claude);
+}
+.identity-card:hover {
+  box-shadow: var(--shadow-warm-glow);
+  transform: translateY(-2px);
+}
+
+.identity-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.identity-platform {
+  font: 10px var(--font-mono);
+  letter-spacing: 1.7px;
+  color: var(--accent);
+  padding: 5px 12px;
+  border: 1px solid var(--line-tag);
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+
+.identity-name {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-bright);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.3s var(--ease-claude);
+}
+.identity-name:hover {
+  color: var(--accent);
+}
+.identity-name .arrow {
+  font-size: 14px;
+  opacity: 0.6;
+  transition:
+    transform 0.4s var(--ease-apple),
+    opacity 0.3s var(--ease-claude);
+}
+.identity-name:hover .arrow {
+  transform: translate(3px, -3px);
+  opacity: 1;
+}
+
+/* 统计数字（Claude 衬线数字风格） */
+.identity-stats {
+  display: flex;
+  gap: 6px;
+}
+.id-stat {
+  text-align: center;
+  padding: 16px 22px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  min-width: 110px;
+}
+.id-stat b {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--accent-warm);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.id-stat span {
+  display: block;
+  font: 10px var(--font-mono);
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 1024px) {
+  .identity-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .identity-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .identity-stats {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 800px) {
+  .account-ops {
+    padding: 90px 0;
+  }
+  .id-stat {
+    min-width: 88px;
+    padding: 12px 14px;
+  }
+  .id-stat b {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .identity-stats {
+    gap: 4px;
+  }
+  .id-stat {
+    padding: 10px 8px;
+    min-width: auto;
+  }
+}
+
+/* 减少动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .identity-card {
+    transition: none;
+  }
+  .identity-card:hover {
+    transform: none;
+  }
+}
