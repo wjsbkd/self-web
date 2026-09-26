@@ -1,117 +1,57 @@
+import { useState } from 'react'
 import './Media.css'
-import { mediaWorks } from '@/data'
-import { douyinStats, douyinProfile, videoLinks } from '@/data/mediaLinks.js'
+import { videos } from '@/data/videos.js'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
+import Reveal from '@/components/Reveal.jsx'
+import WorkModal from '@/components/WorkModal.jsx'
+import VideoRail from '@/components/VideoRail.jsx'
 
 export default function Media() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [activeVideo, setActiveVideo] = useState(null)
+
+  const openVideo = (video) => {
+    setActiveVideo(video)
+    setModalOpen(true)
+  }
+
   return (
     <section className="media section wrap" id="media">
-      <SectionHeading num="04" kicker="MEDIA ARCHIVE">
+      <SectionHeading num="05" kicker="MEDIA ARCHIVE">
         <h2>
           留给作品，
           <br />
           <span>更大的展示空间。</span>
         </h2>
         <p>
-          视频与视觉案例的一手呈现
+          视频案例的 Apple 风格陈列
           <br />
-          部分完整作品可通过下方链接查看。
+          点击卡片预览，完整作品可通过弹窗中的网盘链接查看。
         </p>
       </SectionHeading>
 
-      <div className="media-grid">
-        {mediaWorks.map((work) => (
-          <article className={`media-card ${work.className}`} key={work.title}>
-            <img src={work.cover} alt={work.title} loading="lazy" />
-            <div className="media-tint" />
-            <div className="media-copy">
-              <span>{work.type}</span>
-              <h3>{work.title}</h3>
-              <p>{work.note}</p>
-              {work.link && (
-                <a href={work.link} target="_blank" rel="noreferrer">
-                  查看完整作品 <Arrow />
-                </a>
-              )}
-            </div>
-            {work.link && <span className="play-mark">↗</span>}
-          </article>
-        ))}
-        <article className="media-card media-portfolio">
-          <div className="media-portfolio-inner">
-            <span className="portfolio-icon">PDF</span>
-            <div className="media-copy">
-              <span>PORTFOLIO / FULL</span>
-              <h3>完整作品集</h3>
-              <p>策划 · 视频 · 视觉 · 全集</p>
-              <a href="/assets/作品集.pdf" target="_blank" rel="noreferrer">
-                在线查看 PDF <Arrow />
-              </a>
-            </div>
-          </div>
-        </article>
-      </div>
+      {/* Apple 风格横向滚动视频轨道，可承载 10+ 个视频 */}
+      <VideoRail items={videos} onSelect={openVideo} />
 
-      {/* 运营账号 */}
-      <div className="account-section">
-        <h3 className="account-title">
-          <span className="account-icon">📱</span>
-          运营账号
-        </h3>
-        <div className="account-content">
-          <div className="account-info">
-            <p className="account-name">抖音名称：{douyinProfile.name}</p>
-            <p className="account-link">主页链接：</p>
-            <a
-              className="account-url"
-              href={douyinProfile.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {douyinProfile.url}
-            </a>
-          </div>
-          <div className="account-stats">
-            {douyinStats.map((s) => (
-              <div key={s.label} className="stat-item">
-                <b>{s.value}</b>
-                <span>{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <WorkModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        type="video"
+        item={activeVideo}
+      />
 
-      {/* 视频链接 */}
-      <div className="video-links-section">
-        <h3 className="video-links-title">
-          <span className="account-icon">📹</span>
-          视频链接
-        </h3>
-        <div className="video-links-grid">
-          {videoLinks.map((v) => (
-            <div key={v.title} className="video-link-card">
-              <h4>{v.title}</h4>
-              <p className="video-link-desc">{v.desc}</p>
-              <a href={v.href} target="_blank" rel="noreferrer" className="video-link-a">
-                {v.href}
-              </a>
-              <p className="video-link-pwd">{v.pwd}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="resource-bar">
+      {/* 完整作品集 PDF 入口 */}
+      <Reveal className="portfolio-bar" once>
         <div>
-          <span>DOUYIN</span>
-          <b>{douyinProfile.name}</b>
+          <span>PORTFOLIO / FULL</span>
+          <b>完整作品集 PDF</b>
         </div>
-        <a href={douyinProfile.url} target="_blank" rel="noreferrer">
-          访问抖音主页 <Arrow />
+        <a href="/assets/作品集.pdf" target="_blank" rel="noreferrer">
+          在线查看 <Arrow />
         </a>
-      </div>
+      </Reveal>
+
     </section>
   )
 }
