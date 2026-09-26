@@ -3,6 +3,7 @@ node_modules/
 
 # 构建产物
 dist/
+dist-verify/
 
 # 编辑器/系统文件
 .vscode/
@@ -14,8 +15,22 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# 本地 git 仓库目录（持久化存放，非标准 .git）
+# 本地 git 仓库目录（本仓库用 .githome 代替 .git）
 .githome/
 
 # 便捷 git 包装脚本日志
 *.gitw.log
+
+# 大体积源素材：806MB 作品集 PPT 与根目录简历副本
+# 站点实际使用的 PDF 已随 public/ 入库，根目录这两份只是编辑源文件。
+# 必须排除：一旦进入 git 历史，删除提交也无法收回体积。
+/作品集.pptx
+/李纵横15087322631.pdf
+
+# 各 AI 工具在本项目留下的私有目录（对话归档、部署中间产物、配置）
+.claude/
+.workbuddy/
+.deploy-tmp/
+
+# 重构前的手工代码快照，git 历史已覆盖同类内容
+backups/
