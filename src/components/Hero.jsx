@@ -17,6 +17,21 @@ export default function Hero() {
   const globeBodyRef = useRef(null) // 灯泡光晕 SVG 主体：JS 驱动自转（旋转辐射光）
   const bulbRef = useRef(null) // 灯泡本体：hover 命中区
 
+  // 「减少动效」偏好在系统设置里可随时切换，用 ref 持有最新值供下面的 effect 读取
+  const reduceMotionRef = useRef(
+    typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = (e) => {
+      reduceMotionRef.current = e.matches
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
   // Hero 运动 loop：光晕视差 + 内容视差/退出 + 反色光标 + 地球仪速度自转
   useEffect(() => {
     const hero = heroRef.current
@@ -29,7 +44,9 @@ export default function Hero() {
 
     // 仅自动视差/滚动退出尊重「减少动效」；光标反色与地球仪交互是用户主动触发，
     // 不受此限制（否则开了减少动效的用户会完全看不到效果）。
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // 注意：下面各分支直接读 reduceMotionRef.current（而非挂载时取一次），
+    // 这样用户在系统设置里切换该偏好后，无需刷新即可生效。
+    const reduceMotion = () => reduceMotionRef.current
 
     let raf = 0
 
@@ -121,7 +138,7 @@ export default function Hero() {
       lastT = null
     }
 
-    if (!reduceMotion) {
+    if (!reduceMotion()) {
       apply()
       window.addEventListener('scroll', onScroll, { passive: true })
       window.addEventListener('resize', onScroll, { passive: true })
@@ -131,6 +148,8 @@ export default function Hero() {
 
     // === 右侧灯泡：命令式 rAF 自转（绕 Z 轴，驱动光晕/放射线）+ 倾斜回正 ===
     // 监听已移至整屏 hero，故这里只负责惯性/阻尼推进与空闲慢转。
+    // 用 IntersectionObserver 启停：hero 滚出视口后逐帧写 transform 纯属空耗，
+    // 而上方视差循环本就随滚动停止，两者原本不一致。
     let rafGlobe = 0
     const globeLoop = () => {
       // 角速度平滑追上鼠标瞬时速度
@@ -138,7 +157,7 @@ export default function Hero() {
       // 阻尼（惯性衰减）
       velocity *= 0.94
       // 极低速时给一个微小的 idle 自转，让球不会死寂
-      if (!reduceMotion && Math.abs(velocity) < 0.03) {
+      if (!reduceMotion() && Math.abs(velocity) < 0.03) {
         velocity += 0.015
       }
       rotation += velocity
@@ -150,15 +169,28 @@ export default function Hero() {
       targetVelocity *= 0.9
       rafGlobe = requestAnimationFrame(globeLoop)
     }
+    const stopGlobe = () => {
+      if (rafGlobe) cancelAnimationFrame(rafGlobe)
+      rafGlobe = 0
+    }
+    const startGlobe = () => {
+      if (!rafGlobe) rafGlobe = requestAnimationFrame(globeLoop)
+    }
     globeLoop()
+    const visObs = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? startGlobe() : stopGlobe()),
+      { threshold: 0 }
+    )
+    visObs.observe(hero)
 
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       hero.removeEventListener('mousemove', onHeroMove)
       hero.removeEventListener('mouseleave', onHeroLeave)
+      visObs.disconnect()
       if (raf) cancelAnimationFrame(raf)
-      if (rafGlobe) cancelAnimationFrame(rafGlobe)
+      stopGlobe()
     }
   }, [])
 

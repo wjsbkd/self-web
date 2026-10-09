@@ -51,11 +51,15 @@
   transition: transform 0.1s linear;
 }
 
-/* 磁性包裹元素：GPU 加速 + 平滑回弹（Claude 沉思缓动） */
+/* 磁性包裹元素：JS 逐帧写入位移，CSS 过渡负责离开后的平滑回弹 */
 .magnetic {
   display: inline-block;
-  will-change: transform;
   transition: transform 0.5s var(--ease-claude);
+}
+/* 跟手期间关掉过渡：否则 JS 每帧写 transform 与 CSS 0.5s 过渡是两套时钟互相拉扯，
+   元素明显滞后于光标（发涩）。离开时移除 is-tracking，恢复过渡做回弹。 */
+.magnetic.is-tracking {
+  transition: none;
 }
 .magnetic > * {
   transition: transform 0.5s var(--ease-claude);

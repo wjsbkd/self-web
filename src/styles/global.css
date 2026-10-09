@@ -228,14 +228,18 @@ footer[id] {
 
 /* ── 全局动效 ── */
 
-/* 尊重系统“减少动态效果”偏好：关闭所有非必要动画 */
+/* 尊重系统“减少动态效果”偏好：关闭所有非必要动画
+   animation-delay 也需归零：只压 duration 时，带 1.2s 延迟的入场元素会在
+   加载瞬间跳到终态却仍等满延迟，造成一帧闪烁 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
@@ -274,44 +278,24 @@ footer[id] {
     transform: none;
   }
 }
-.about-grid,
-.campus-block,
-.metrics,
-.experience-list,
-.project-list,
-.project-stories,
-.media-grid,
-.resource-bar,
-.strength-grid {
-  opacity: 1;
-}
 
-@supports (animation-timeline: view()) {
-  .about-grid,
-  .campus-block,
-  .metrics,
-  .experience-list,
-  .project-list,
-  .project-stories,
-  .media-grid,
-  .resource-bar,
-  .strength-grid {
-    /* Claude 风格：揭示时长拉长至 0.9s，使用沉思缓动 */
-    animation: reveal 0.9s var(--ease-claude) both;
-    animation-timeline: view();
-    animation-range: entry 8% entry 80%;
-  }
-}
+/* 说明：此处原有的 @supports (animation-timeline: view()) 滚动驱动揭示已整体移除。
+   其选择器（.about-grid / .campus-block / .strength-grid / .project-list /
+   .project-stories / .media-grid / .resource-bar）在当前组件结构中 9 个已不存在
+   （各板块改用 Reveal 组件后未同步清理），仅 .metrics 与 .experience-list 命中；
+   而这两个恰好与 Reveal 的 opacity/transform 过渡作用在同一元素上，两套机制互相覆盖，
+   且 view() 时间线不受全局 reduce-motion 块约束。相关内容现统一由 Reveal 负责。 */
 
 /* ── Reveal 组件：滚动揭示动画（苹果官网标志性效果 + Claude 沉思节奏）── */
-/* 由 IntersectionObserver 触发 .reveal-in，GPU 加速 + Claude 沉思缓动 */
+/* 由 IntersectionObserver 触发 .reveal-in，GPU 加速 + Claude 沉思缓动。
+   不设 will-change：元素揭示后即停在终态，常驻图层只会白占合成器内存。
+   translate3d 本身已能触发提升，够用。 */
 .reveal {
   opacity: 0;
   transform: translate3d(0, 22px, 0);
   transition:
     opacity 1s var(--ease-claude) var(--reveal-delay, 0s),
     transform 1.1s var(--ease-claude) var(--reveal-delay, 0s);
-  will-change: opacity, transform;
 }
 .reveal.reveal-in {
   opacity: 1;
@@ -329,7 +313,6 @@ footer[id] {
   transition:
     opacity 0.9s var(--ease-claude) var(--reveal-delay, 0s),
     transform 1s var(--ease-claude) var(--reveal-delay, 0s);
-  will-change: opacity, transform;
 }
 .reveal-stagger.reveal-in > * {
   opacity: 1;
