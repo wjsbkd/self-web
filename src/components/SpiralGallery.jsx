@@ -21,6 +21,7 @@ export default function SpiralGallery({ works, onSelect }) {
   const currentRot = useRef(0)
   const rafId = useRef(null)
   const running = useRef(false)
+  const lastFrameTs = useRef(0) // 上一帧时间戳：插值换算为帧率无关的时间驱动
 
   // ── 螺旋几何参数 ──
   // 单圈圆柱（正前方唯一大图）+ y 沿"距正前方的张数"线性阶梯 → 真螺旋
@@ -35,9 +36,17 @@ export default function SpiralGallery({ works, onSelect }) {
   // ── 核心：根据当前旋转角，直接写每张卡片的 DOM 栀式 ──
   // 用 ref 持有 render 供 rAF 递归调用，避免函数自引用触发 lint/重渲染问题
   const renderRef = useRef(null)
-  const render = useCallback(() => {
+  const render = useCallback((now) => {
+    // 帧率无关插值：原「每帧逼近 8.5%」以 60fps 为基准换算为指数衰减，
+    // 避免 120/144Hz 高刷屏上吸附速度成倍变快、手感发冲
+    const ts = typeof now === 'number' ? now : performance.now()
+    const dt = lastFrameTs.current
+      ? Math.min((ts - lastFrameTs.current) / 1000, 0.05) // 掉帧/切后台回来不跳变
+      : 1 / 60
+    lastFrameTs.current = ts
+    const ease = 1 - Math.pow(1 - 0.085, dt * 60)
     const diff = targetRot.current - currentRot.current
-    const rot = currentRot.current + diff * 0.085
+    const rot = currentRot.current + diff * ease
     currentRot.current = rot
 
     // 卡片实际高度（响应式自适应），单圈螺旋升幅
@@ -88,9 +97,10 @@ export default function SpiralGallery({ works, onSelect }) {
     }
 
     if (Math.abs(targetRot.current - currentRot.current) > 0.0002) {
-      rafId.current = requestAnimationFrame(() => renderRef.current?.())
+      rafId.current = requestAnimationFrame((t) => renderRef.current?.(t))
     } else {
       running.current = false
+      lastFrameTs.current = 0 // 停下后重置时间基准，下次启动不吃掉首帧
     }
   }, [total, theta, radius, climbDefault, climbPerTurn])
 
@@ -102,7 +112,7 @@ export default function SpiralGallery({ works, onSelect }) {
   const startLoop = useCallback(() => {
     if (!running.current) {
       running.current = true
-      rafId.current = requestAnimationFrame(() => renderRef.current?.())
+      rafId.current = requestAnimationFrame((t) => renderRef.current?.(t))
     }
   }, [])
 
@@ -121,16 +131,23 @@ export default function SpiralGallery({ works, onSelect }) {
   // 每次滚轮触发一次吸附，停在该方向最近一张图的严格正前方
   // （用 rAF lerp 平滑插值，所以看起来是"扭转→停→扭转→停"）
   // reduce-motion 时不 preventDefault（保留整页滚动），也不启动扭转动画。
+  //
+  // 端点释放：扭转界定在首~末一张（0..total-1）。到达端点后不再拦截滚轮
+  // → 页面继续正常滚动。原实现无限旋转且恒 preventDefault，而照片墙 92vh
+  // 近满屏，光标悬于墙上时整页「被困死」在本板块，上下都滚不出去。
   const onWheel = useCallback((e) => {
     if (!wheelEnabled) return
-    e.preventDefault()
     const dir = e.deltaY > 0 ? 1 : -1
     // 从"目标角度"算最近 idx（rAF 收敛时 targetRot≈currentRot）
     const currentIdx = Math.round(targetRot.current / theta)
-    targetRot.current = (currentIdx + dir) * theta
+    const nextIdx = currentIdx + dir
+    // 端点外：放行滚轮事件，页面继续滚动
+    if (nextIdx < 0 || nextIdx > total - 1) return
+    e.preventDefault()
+    targetRot.current = nextIdx * theta
     startLoop()
     containerRef.current?.classList.add('scrolled')
-  }, [theta, startLoop, wheelEnabled])
+  }, [theta, startLoop, wheelEnabled, total])
 
   // ── 触屏/拖拽支持 ──
   const drag = useRef({ active: false, startX: 0, startRot: 0 })
@@ -141,9 +158,11 @@ export default function SpiralGallery({ works, onSelect }) {
   const onPointerMove = useCallback((e) => {
     if (!drag.current.active || !wheelEnabled) return
     const dx = e.clientX - drag.current.startX
-    targetRot.current = drag.current.startRot + dx * 0.006
+    // 拖拽同样界定在首~末一张内，与滚轮端点释放保持一致
+    const maxRot = (total - 1) * theta
+    targetRot.current = Math.max(0, Math.min(maxRot, drag.current.startRot + dx * 0.006))
     startLoop()
-  }, [startLoop, wheelEnabled])
+  }, [startLoop, wheelEnabled, total, theta])
   const onPointerUp = useCallback((e) => {
     if (!drag.current.active) return
     drag.current.active = false

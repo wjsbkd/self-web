@@ -81,6 +81,14 @@
   transition:
     transform 0.5s var(--ease-claude),
     box-shadow 0.5s var(--ease-claude);
+}
+/* 入场交错：原先这段动画直接写在卡片上、挂载即播，而轨道位于首屏之下 6000px+，
+   用户滚到时 22 张卡的动画早已播完，交错等于没生效。
+   改为由 JS 在轨道首次进入视口时给 .video-rail 加 .is-in，再统一触发。 */
+.video-rail:not(.is-in) .video-rail-card {
+  opacity: 0;
+}
+.video-rail.is-in .video-rail-card {
   animation: rail-card-in 0.8s var(--ease-claude) both;
   animation-delay: var(--rail-delay, 0s);
 }
@@ -169,7 +177,7 @@
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 8px 0 6px;
-  color: var(--text-main);
+  color: var(--text-base);
 }
 .video-rail-info p {
   font-size: 12px;
@@ -186,7 +194,7 @@
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--bg-elev-1);
-  color: var(--text-main);
+  color: var(--text-base);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -207,12 +215,42 @@
   order: -1;
 }
 
+/* 自动滚动开关：与左右箭头同族的圆形小按钮 */
+.video-rail-play-toggle {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background 0.3s var(--ease-claude),
+    border-color 0.3s var(--ease-claude),
+    color 0.3s var(--ease-claude);
+}
+.video-rail-play-toggle:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.video-rail-play-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* 移动端：隐藏按钮，依赖手势滑动 */
 @media (max-width: 800px) {
   .video-rail {
     gap: 0;
   }
   .video-rail-btn {
+    display: none;
+  }
+  .video-rail-play-toggle {
     display: none;
   }
   .video-rail-frame::before,
@@ -232,6 +270,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .video-rail-card {
-    animation: none;
+    transition: none;
   }
 }

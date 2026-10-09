@@ -411,9 +411,12 @@
 /* === 滚动提示（Apple 风格极简指示器 + 流动光点） === */
 .hero .hero-scroll-cue {
   position: absolute;
-  left: 50%;
+  /* 居中刻意不用 translateX(-50%)：heroFadeUp 的结束态是 transform:none，
+     带 forwards 的动画会覆盖基础 transform 并抹掉这半格自身宽度的位移。
+     改为左右撑满 + align-items:center，位移动画即可自由使用 transform。 */
+  left: 0;
+  right: 0;
   bottom: 36px;
-  transform: translateX(-50%);
   z-index: 2;
   display: flex;
   flex-direction: column;

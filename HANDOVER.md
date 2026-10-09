@@ -60,3 +60,49 @@
 - **部署前必须替换 `index.html` 占位**：`canonical` 与 `og:url` 仍是 `https://lizongheng.example.com/`；自建分享封面已放在 `public/assets/og-cover.jpg`（1200×630），但分享标签需要绝对 URL，待正式域名确定后把 `og:image` / `twitter:image` 一并替换。
 - 若继续改视觉，先读 `src/styles/global.css` 的 Design Token，避免散落硬编码颜色。
 - 资源清理：2026-09-28 删除未引用的 `public/assets/hero/earth-texture.png` 与 8 个 `public/assets/pptx-media/` 遗留文件，合计约 3.1MB；不要再把这张地球纹理当作首屏优化对象。清理后 `pptx-media/` 剩 15 个文件，与 15 处引用一一对应。
+
+## 动效层排查与修复（2026-10-09）
+
+对全站动效做了一次排查（读码 + dev server 实测），修掉 4 个真实缺陷 + 3 处性能/手感问题。`npx eslint src/` 0 error，`npm run build` 通过。
+
+**已修的缺陷**
+
+1. **SCROLL 提示失去居中**（`Hero.css` `.hero-scroll-cue`）：居中靠 `left:50% + translateX(-50%)`，但 `heroFadeUp` 的结束关键帧是 `transform: none`，带 `forwards` 的动画会覆盖基础 transform，把这半格自身宽度的位移抹掉。已改为 `left:0; right:0` + flex 居中，位移动画即可自由用 transform。**教训：任何用 `translateX(-50%)` 居中的元素，若自身动画的结束态是 `transform: none`，居中就会在动画结束后失效。**
+2. **VideoRail 入场交错从未被看见**（`VideoRail.jsx` / `.css`）：22 张卡的 `rail-card-in` + `--rail-delay` 交错是纯 CSS，挂载即播，而轨道在文档 Y≈7026（首屏之下 6000px+），用户滚到时动画早已 `finished`。已改为首次进入视口才给 `.video-rail` 加 `.is-in` 统一触发；同时保留 `--rail-delay` 交错。触发用 IntersectionObserver **加 scroll/resize 兜底**——IO 在标签页不可见时不触发，只靠它会让用户切回来时卡片停在 `opacity:0`。
+3. **10 个滚动揭示选择器里 9 个是死 CSS**（`global.css`）：`@supports (animation-timeline: view())` 块里的 `.about-grid` / `.campus-block` / `.strength-grid` / `.project-list` / `.project-stories` / `.media-grid` / `.resource-bar` 在当前组件结构中都不存在了（各板块改用 `Reveal` 后未同步清理）；仅 `.metrics` 与 `.experience-list` 命中，而这两个恰好与 `Reveal` 的过渡作用在同一元素上，两套机制互相覆盖。已整块移除，揭示统一由 `Reveal` 负责。**原选择器清单保留在 `global.css` 的注释里，别再照着它加规则。**
+4. **`--text-main` 残留 4 处**（`VideoRail.css` ×3、`WorkModal.css` ×1）：该 token 在 08-03 重设计时已改名为 `--text-bright` / `--text-base`，这 4 处没跟上。`var(--text-main)` 无定义无 fallback，会让声明在计算值阶段失效并回退继承。已全部改为 `--text-base`。`.workbuddy/memory/2026-07-30.md` 早就记过同一问题，说明它跨轮次没被清掉——**改配色 token 时要全局搜一遍旧名。**
+
+**性能 / 手感**
+
+5. **常驻 `will-change` 41 → 6**：`Reveal` 的 `.reveal` 与 `.reveal-stagger > *` 都设了 `will-change`，而元素揭示后就停在终态，图层白占合成器内存。已移除（`translate3d` 本身已能触发提升）。
+6. **Hero 灯泡 rAF 越界空转**：`globeLoop` 从挂载跑到卸载，hero 滚出视口后仍逐帧写 transform（上方视差循环本就随滚动停了，两者原本不一致）。已用 IntersectionObserver 启停。
+7. **Magnetic 被双重平滑**：`Magnetic.jsx` 每帧写 transform，`Nav.css` 又对 transform 加 0.5s 过渡，两套时钟互相拉扯、元素明显滞后于光标。已改为跟手期间加 `.is-tracking`（`transition: none`），离开时移除、交还过渡做回弹。
+
+**reduced-motion 统一**
+
+全局块原先只压 `animation-duration` / `transition-duration`，**没压 delay**，导致 `hero-scroll-cue`（1.2s）、`hero-foot`（0.85s）等带延迟入场的元素在 reduce 下仍等满延迟才跳到终态，造成一帧闪烁。已补上 `animation-delay` 与 `transition-delay: 0s !important`。另：`Hero.jsx` 的 reduce 判断改为每次读 `reduceMotionRef.current` 并监听 `matchMedia` 的 `change`，用户在系统设置里切换该偏好无需刷新即可生效（原先挂载时取一次，ref 更新但已注册的循环仍用旧值，ref 等于白加）。
+
+**已知限制 / 待人工确认**
+
+- **本项目的 Browser 预览面板会强制 `prefers-reduced-motion: reduce`，且标签页不可见时 rAF 与 IntersectionObserver 都被节流**（固定定位的屏上元素 IO 也不触发）。因此：① 在该面板里看到的 `animation-delay` 一律是 `0s`，属预期而非 bug，验证交错要靠读 `--rail-delay` 变量本身；② **Hero 灯泡的 rAF 启停（修复 6）无法在面板里用「动画是否推进」验证，需要在可见的真实浏览器里人工确认一次**。历史上踩过同一个坑，见 `docs/claude-memory/hero-cursor-effects-coexist.md` 第 1 条。
+- 该面板的 `preview_console_logs` 会**重放缓存的旧错误**（时间戳 `?t=...` 冻结不变），改完代码 reload 后仍显示上一次的报错。**判断是否有错要看 DOM 实际状态（如 `document.body.innerText` 是否含「页面渲染出错」），不要只看 console。**
+- 面板里 `React` 的合成事件无法用 `dispatchEvent(new MouseEvent('mouseenter'))` 触发（由 mouseout/mouseover 合成）。验证 hover 类交互要 dispatch `mouseover` + `relatedTarget`，否则会误判为「hover 暂停失效」。
+- `CursorGlow.jsx` 仍在 reduce 下整体 `return` 不渲染（`App.jsx` 里始终挂着该组件），与「用户主动触发的效果不受 reduce 限制」的既定策略不一致，但这是**有意为之且已与用户确认**，本次未动。
+- `TiltCard.jsx` / `useParallax` 全项目无引用，属死代码，未删（删除需用户确认）。
+
+## VideoRail 自动滚动与本机 reduce-motion（2026-10-09 追加）
+
+**本机 Windows 动画效果是关闭的**：`HKCU\Control Panel\Desktop\WindowMetrics\MinAnimate = 0`（`VisualFXSetting = 0`，`HKCU\Control Panel\Accessibility\Animation` 键不存在）。Chrome/Edge 会把这个状态传导为网页的 `prefers-reduced-motion: reduce`。**所以在这台机器上调试本站，任何被 reduce 门控的动效都不会动，这是环境不是 bug** —— 2026-10-09 用户报「视频轨道不会自动滚动」即由此而来。
+
+VideoRail 原实现是 `if (!reduceMotion) 启动 tick`，即 reduce 下**静默不启动且无任何提示**，看起来就像功能坏了。已改为：
+
+- 自动滚动属 WCAG 2.2.2「会动的内容」，**必须可暂停**，因此轨道右侧新增常驻的 `.video-rail-play-toggle` 播放/暂停按钮（`aria-pressed` / `aria-label` 同步）；reduce-motion 下默认暂停但不隐藏，用户可自行开启。
+- `hoveredRef` / `userPausedRef` 两个 ref 供 tick 每帧读取（悬停不触发 22 张卡重渲染），`userPaused` state 只驱动图标与 aria，并用 effect 同步回 ref —— **切勿在 render 期读 ref，eslint `react-hooks/refs` 会报错**（本次踩过）。
+- tick 改为**始终运行、内部判停**，用户点播放可立即恢复，不必重挂 effect。
+- 回环宽度 `measure()` 在恢复播放时重测一次，防窗口缩放后 `loopWidth` 失真导致回环跳变。
+
+实测（1440×900，reduce-motion 开启）：点播放后 800ms 内 `scrollLeft` 0 → 78；悬停暂停 / 移出恢复 / 再点暂停均正确；把 `scrollLeft` 推到 `loopWidth-30` 越过后回落到 88（无缝回环成立）。
+
+## 本轮修复清单（2026-10-09，动效排查）
+
+对全站动效做了一次排查（读码 + dev server 实测），修掉 4 个真实缺陷 + 3 处性能/手感问题。`npx eslint src/` 0 error，`npm run build` 通过。
