@@ -103,6 +103,39 @@ VideoRail 原实现是 `if (!reduceMotion) 启动 tick`，即 reduce 下**静默
 
 实测（1440×900，reduce-motion 开启）：点播放后 800ms 内 `scrollLeft` 0 → 78；悬停暂停 / 移出恢复 / 再点暂停均正确；把 `scrollLeft` 推到 `loopWidth-30` 越过后回落到 88（无缝回环成立）。
 
+## 全站视觉语言迁移：羊皮纸亮调 → 暗场发光 + 点阵数据感（2026-10-10）
+
+按用户提供的参考图与《视觉设计规范-深色AI视觉语言-20261009.md》执行整站换肤，提交 `9998fb9`（20 文件，+898/−720）。**这不是调色，是设计语言替换**；功能、交互、动画全部保留。
+
+**四个已确认的翻译决策**（改视觉前先看这里，别走回头路）：
+
+1. **全站纯暗场**，单一主题（`--bg-base #0d0a0c` 近黑微暖红棕），无亮色模式回退。
+2. **衬线全站退役**——`--font-serif` token 已删除。中文标题用 **Noto Sans SC 900** 极重字重对位参考图像素标题的"情绪权重"；拉丁标签/序号用 **Silkscreen** 像素字（`--font-pixel`，OFL 免费商用，走 fonts.googleapis.cn；缺 em-dash 等字形，写 kicker 文案时只用拉丁/数字/斜杠）。词重音从"衬线斜体"改为 900→300 字重对比 + 浅蜜桃 `--accent-warm #f3c6a6`。
+3. **UI 层几乎无彩色**：层级靠明度差。唯一强调色为**蜜桃 `--accent #e9a57f`**（取自光域中段），仅用于 hover/焦点/kicker 编号微点缀。数据数字一律纯白 `#fff` 无衬线 700。
+4. **Hero 是唯一彩色光源**（A1）：4 个强 blur 的 blob（洋红 `#c2265a` / 蜜桃 / 淡紫 `#cfc9ec` / 暖白核心）组成光雾，色值收在 `--glow-*` token；全页其余部分不铺光。
+
+**构图与组件**：
+
+- Hero 从"左文右球"改为**居中单轴**：灯泡吊在中轴上部（`left:50%` + 负 margin 居中，注意它不用 translateX 居中——wrap 上有 JS 视差 transform），往下依次徽章药丸 → 三行大标题 → 副文案（max-width 560）→ 白药丸主 CTA + 深色药丸次 CTA。新增 `HeroDigits.jsx`（数字点阵 canvas，mount/resize 绘一次，密度波带调制，无动画）。
+- Nav 从全宽贴边改为**悬浮白药丸**（`translateX(-50%)` 居中——`.nav-hidden` 隐藏态必须带着这个 translate 一起写，踩过一次差点丢掉）。active 项用 3px 小圆点（`::after`），旧 `.nav-indicator` 滑动胶囊已删（JSX 本就无引用，是死 CSS）。**进度条移出了 `.nav` 元素**：nav 自带 transform 会让 `position:fixed` 子元素相对它定位，全宽进度线必须渲染在 nav 外。1180px 断收状态文案、800px 转全宽条+暗玻璃抽屉。
+- Footer 居中化，白药丸 CTA「发邮件聊聊」，底光晕改光域同族色。
+- SpiralGallery：几何零改动；**`.spiral-edge-mask` 里的 `#fff` 改成了容器底色 `#070508`**——mask 渐变必须与底色一致，否则亮调白雾在暗底上会渲染成四条白框（本次最隐蔽的一处）。冷蓝系（`#5b8fc4`/`rgba(15,30,60,…)`) 全部换暖暗系。
+- 聚光灯 `mix-blend-mode` **difference → screen**（暗场上白斑 difference 会翻成互补色刺眼补丁；screen = "手电提亮"）。`isolation: isolate` 层叠结构保留。
+- 颗粒层 `body::after` **multiply → soft-light**（multiply 在近黑底上不可感知）。
+- 图片类：卡片封面默认 `brightness(0.82) saturate(0.88)` 压亮融入暗场，hover 恢复。
+- `index.html` theme-color 已换 `#0d0a0c`。
+
+**验证记录（dev server 实测，1440×900 + 375×812）**：暗底/白药丸/900 标题/Silkscreen 徽章/screen 聚光灯/4 blob/点阵 canvas/数据栏纯白/软光颗粒 全部实测命中；桌面居中单轴（nav/h1/灯泡中轴偏差 -7px = 滚动条宽度）；灯泡 hover `is-lit` 开合、VideoRail `is-in` + scrollLeft 推进、11/11 Reveal、螺旋 10 卡 Y 全相异（阶梯几何完好）、WorkModal 开/Esc 关、移动端抽屉开/Esc 关。`npx eslint src/` 0 error，`npm run build` 通过。
+
+**残留审计已清零**：`#faf9f5 / #cc785c / #d97757 / #1f1915 / #e8e6dc / rgba(204,120,92 / rgba(217,119,87 / Fraunces / Noto Serif / --font-serif / --text-main` 全局 grep 仅剩注释文字，代码零命中。**下次改配色 token 时照这个清单再搜一遍。**
+
+**未解决 / 待人工**：
+
+- **动画推进本机不可验**：Windows 动画效果关闭 → 浏览器恒 reduce-motion，光雾缓漂（42s blobDrift）、灯泡 idle 自转、入场 stagger 在本机全停在终态。需在开着动画效果的真实浏览器人工过一遍手感（同 2026-10-09 修复 6 的验收要求）。
+- VideoRail 播放钮/详情图等真实视频海报的暗场观感（本机 reduce 下 tick 不推进）需人工确认。
+- Silkscreen 像素字若后续要用于更多文案，注意缺字形（em-dash、中文全角符号）会回退 DM Mono，混排时字重观感略跳。
+- `dist/` 是旧产物，部署时需重新 build。
+
 ## 本轮修复清单（2026-10-09，动效排查）
 
 对全站动效做了一次排查（读码 + dev server 实测），修掉 4 个真实缺陷 + 3 处性能/手感问题。`npx eslint src/` 0 error，`npm run build` 通过。
