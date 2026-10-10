@@ -103,6 +103,23 @@ VideoRail 原实现是 `if (!reduceMotion) 启动 tick`，即 reduce 下**静默
 
 实测（1440×900，reduce-motion 开启）：点播放后 800ms 内 `scrollLeft` 0 → 78；悬停暂停 / 移出恢复 / 再点暂停均正确；把 `scrollLeft` 推到 `loopWidth-30` 越过后回落到 88（无缝回环成立）。
 
+## 第二轮视觉改造：亮彩光效 + 中文像素标题 + 全站光晕体系（2026-10-10）
+
+提交 `b7683be`（17 文件，+931/−104）。用户反馈第一轮"整体仍偏暗、后续板块与首页脱节、标题要真像素风"，本轮按 6 条文字要求执行。
+
+**核心改动**：
+
+1. **中文像素字自托管**：`@fontsource/fusion-pixel-12px-proportional-sc`（缝合像素 Fusion Pixel 12px，TakWolf 出品，SIL OFL 免费商用）。npm 安装后把 woff2（592KB，31345 字形，**含全部所需汉字**——fontsource 的 "latin" 子集实际是全字库）拷入 `public/fonts/`，许可证随附。`@font-face` 写在 global.css，`--font-pixel-zh` token。**改标题文案后若出现缺字，先查这个字库**（脚本：fontTools 读 cmap）。字号必须 12 的整倍数（当前 72/96/120px 断点式，不用连续 vw——80.9px 这种非整倍数会破坏点阵对齐），并 `-webkit-font-smoothing: none` 保硬边。
+2. **光效提亮**：blob 透明度 0.5→0.42~0.75 档、色值提饱和（玫红 `#ff2d6f`、亮紫 `#b39dff`、新增粉 `--glow-pink #ff5e9e`）、5 个 blob、尺寸/位置上调。实测（1440×900 像素采样）：光域中心亮度 115→193，四色像素计数全部在场，底部仍深（lum 9）保留明暗对比。
+3. **全站光晕**：`.section-glow--{about,strengths,experience,media,account}` + `.work-glow` + Footer 三色，每个板块色相/定位/形态各异（About 左上玫红 / Strengths 右亮紫 / Experience 左下粉 / Projects 居中蜜桃 / Media 右上双色 / Account 底部粉），blur(90px) + pointer-events:none，内容层 `~ *` 兜底 z-index:1。**板块 JSX 各插一行 `<div className="section-glow ..." aria-hidden />`，新增板块记得跟进**。
+4. 数字点阵亮度 0.15→0.34（亮彩背景下保持可辨）；灯泡缩至 210px 上移避让 120px 标题；Hero padding 96/84。
+
+**验收记录（dev server 实测）**：像素字 `document.fonts.check` 加载+应用双确认、标题三行文案零改动；1440×900 布局灯泡 32-242/徽章 118-149/标题 185-627/CTA 767-820/SCROLL 803-866 全在视口零遮挡；375×812 标题 72px 宽 235px 不溢出、CTA 纵排；WorkModal 开/Esc 关、螺旋 10 卡 Y 全相异、rail `is-in` 触发（**面板 instant 滚动不派发 scroll 事件，需手动 `window.dispatchEvent(new Event('scroll'))` 验证；真实浏览器无此问题**——第一轮记录的"smooth 滚动能触发"经验仍对）。lint 0 error，build 通过。
+
+**面板工具新坑（本次发现）**：
+- 截图管线会返回**滞后帧**（滚动后截图全黑/无红色标记，但 DOM rect 正确）——验证视觉要"像素采样首屏（不滚动）"或纯 DOM 几何，滚动后的截图不可信。
+- `scrollTo({behavior:'instant'})` 在面板里**不派发 scroll 事件**，依赖 scroll 监听的逻辑（如 rail is-in）必须手动 dispatchEvent 验证。
+
 ## 全站视觉语言迁移：羊皮纸亮调 → 暗场发光 + 点阵数据感（2026-10-10）
 
 按用户提供的参考图与《视觉设计规范-深色AI视觉语言-20261009.md》执行整站换肤，提交 `9998fb9`（20 文件，+898/−720）。**这不是调色，是设计语言替换**；功能、交互、动画全部保留。
