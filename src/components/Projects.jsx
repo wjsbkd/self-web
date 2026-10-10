@@ -24,6 +24,7 @@ export default function Projects() {
 
   return (
     <section className="work section" id="work">
+      <div className="work-glow" aria-hidden="true" />
       <div className="wrap">
         <SectionHeading num="04" kicker="SELECTED WORK">
           <h2>

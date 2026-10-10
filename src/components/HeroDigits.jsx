@@ -48,8 +48,9 @@ export default function HeroDigits() {
             0.5 *
               Math.sin(x * 0.0035 + y * 0.016) *
               Math.cos(y * 0.011 - 1.1)
-          const alpha = Math.max(0, Math.pow(vy, 1.6) * 0.15 * band)
-          if (alpha < 0.012) continue
+          // 第二轮提亮：0.15 → 0.34 基准，在亮彩光雾上仍清晰可辨
+          const alpha = Math.max(0, Math.pow(vy, 1.5) * 0.34 * band)
+          if (alpha < 0.02) continue
           ctx.fillStyle = `rgba(247, 242, 239, ${alpha.toFixed(3)})`
           ctx.fillText(glyphs[(Math.random() * glyphs.length) | 0], x, y)
         }

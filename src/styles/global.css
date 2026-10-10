@@ -1,69 +1,78 @@
 /* 全局样式：字体导入、reset、跨组件共享类 */
 /* 使用国内镜像 fonts.googleapis.cn，避免 Google Fonts 在天朝网络下超时导致首屏白屏 */
-/* 字体策略（2026-10 暗场视觉语言迁移）：
-   像素显示字 Silkscreen 承担拉丁标签 / 序号 / 编号（dot-matrix 数据感，仅拉丁与数字，
-   缺失字形由 DM Mono 回退）；Noto Sans SC（300–900）承担全部中文标题与正文
-   （grotesque 类信息字，900 极重字重对位参考图的像素标题"情绪权重"）；
-   DM Mono 保留等宽元数据。衬线体系（Fraunces / Noto Serif SC）全站退役，
-   全屏无衬线、无斜体。 */
+/* 字体策略（2026-10-10 第二轮：亮彩光效 + 中文像素标题）：
+   中文像素字「缝合像素 Fusion Pixel 12px」自托管于 public/fonts/（OFL 免费商用，
+   592KB woff2 / 31345 字形，含全部所需汉字），承担首页超大标题的 8-bit 方块感；
+   Silkscreen 承担拉丁小标签；Noto Sans SC（300–900）承担正文与板块标题；
+   DM Mono 保留等宽元数据。 */
 @import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Silkscreen:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
 
+/* 中文像素显示字：自托管（fontsource 打包，12px 点阵基准，放大取整倍数才锐利） */
+@font-face {
+  font-family: 'Fusion Pixel 12px Proportional SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/fusion-pixel-12px-proportional-sc-latin-400-normal.woff2') format('woff2'),
+       url('/fonts/fusion-pixel-12px-proportional-sc-latin-400-normal.woff') format('woff');
+}
+
 /* ── Design Tokens ── */
-/* 色系定位（2026-10）：暗场单光源 × 点阵数据感。
-   底色近黑微暖红棕（非中性黑），高光带粉紫倾向，整屏色温统一——"暗而不廉价"。
-   UI 层几乎无彩色：色彩只存在于背景光域，层级靠明度差而非色相。
-   唯一的蜜桃强调色取自光域中段，仅用于 hover / 焦点 / kicker 编号等微点缀。 */
+/* 色系定位（第二轮）：明亮丰富的粉/玫红/蜜桃/紫光效。
+   底色仍是暗场（近黑暖红棕）作为光效的画布，但光效亮度、饱和度、
+   覆盖范围全面上调——整站读起来是"亮彩光在深空上燃烧"而非"深灰页面"。
+   UI 层继续无彩色，层级靠明度差。 */
 :root {
-  /* 主强调 —— 蜜桃（光域中段色；D4 决策保留的微强调） */
+  /* 主强调 —— 蜜桃（光域中段色） */
   --accent: #e9a57f;
-  /* 强调激活态 —— 深蜜桃（按压 / hover 加深方向，亮背景上也可作文字） */
+  /* 强调激活态 —— 深蜜桃 */
   --accent-active: #c77e5a;
   /* 暖强调 —— 浅蜜桃（词重音、关键数字的高光端） */
   --accent-warm: #f3c6a6;
-  /* 亮强调 —— 极浅蜜桃（hover 文字提亮端） */
+  /* 亮强调 —— 极浅蜜桃 */
   --accent-bright: #f7d9c2;
-  /* 柔强调 —— 暖银灰（弱化装饰、hover 边框） */
+  /* 柔强调 —— 暖银灰 */
   --accent-soft: #8e8884;
   /* 中性暖灰 */
   --accent-deep: #85807c;
 
-  /* 文字色阶（暖白系；层级只靠明度差，标题比正文亮一个档） */
-  --text-bright: #f3efec; /* 主标题（暖白，非纯白，与光晕同色温） */
-  --text-base: #c7c2be; /* 默认正文（暖灰白） */
-  --text-dim: #9a948f; /* 次级说明 */
-  --text-muted: #85807c; /* 辅助说明 */
+  /* 文字色阶（暖白系） */
+  --text-bright: #f3efec;
+  --text-base: #c7c2be;
+  --text-dim: #9a948f;
+  --text-muted: #85807c;
 
-  /* 分割线（暗场上退役为隐约发丝线；层次靠明暗与表面色阶，不靠线） */
+  /* 分割线（隐约发丝线） */
   --line: rgba(247, 242, 239, 0.1);
   --line-soft: rgba(247, 242, 239, 0.06);
   --line-tag: rgba(247, 242, 239, 0.16);
 
-  /* 背景层级（暗场四层：近黑底 → 章节深底 → 浮层 → 最深暗角） */
-  --bg-base: #0d0a0c; /* 页面底色（近黑，微暖红棕倾向） */
-  --bg-elev-1: #17141b; /* 浮层卡片（微带紫倾向，呼应光域淡紫端） */
-  --bg-elev-2: #110e14; /* 章节深底（板块区隔） */
-  --bg-deep: #070508; /* 最深层 / 暗角 */
+  /* 背景层级（暗场四层） */
+  --bg-base: #0d0a0c;
+  --bg-elev-1: #17141b;
+  --bg-elev-2: #110e14;
+  --bg-deep: #070508;
 
-  /* 光域色（Hero 光雾 + 全站氛围呼应；色相集中在洋红→蜜桃 + 低饱和紫） */
-  --glow-magenta: #c2265a;
-  --glow-peach: #efaf87;
-  --glow-lavender: #cfc9ec;
+  /* 光域色（第二轮全面提亮：饱和度 100%、透明度上调、色相扩为四段） */
+  --glow-magenta: #ff2d6f; /* 玫红（更亮更饱和） */
+  --glow-peach: #ff9d6b; /* 蜜桃橙 */
+  --glow-lavender: #b39dff; /* 亮紫 */
+  --glow-pink: #ff5e9e; /* 粉（新增色段） */
   --glow-highlight: #f7f2ef;
 
-  /* 明暗反转容器（A2：白色药丸 × 深色药丸的对置制造层级） */
+  /* 明暗反转容器 */
   --surface-light: #ffffff;
   --surface-dark: #14121a;
   --on-light: #141414;
 
   /* ── 字体栈 ── */
-  /* 无衬线：Noto Sans SC（中文 grotesque），300–900 全字重承担双字号极端对比 */
   --font-sans: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Segoe UI', Arial, sans-serif;
-  /* 等宽：DM Mono，编辑式元数据（像素字缺字形时的回退） */
   --font-mono: 'DM Mono', 'JetBrains Mono', ui-monospace, monospace;
-  /* 像素显示字：仅拉丁与数字（Silkscreen 缺 em-dash 等标点，文案避免使用） */
   --font-pixel: 'Silkscreen', 'DM Mono', ui-monospace, monospace;
+  /* 中文像素标题字（8-bit 方块感，12px 基准放大用） */
+  --font-pixel-zh: 'Fusion Pixel 12px Proportional SC', 'Noto Sans SC', sans-serif;
 
-  /* ── 阴影系统（暗场：阴影变"深度"，环变微光） ── */
+  /* ── 阴影系统 ── */
   --ring-soft: 0 0 0 1px rgba(247, 242, 239, 0.08);
   --ring-warm: 0 0 0 1px rgba(233, 165, 127, 0.28);
   --ring-card: 0 0 0 1px rgba(247, 242, 239, 0.06);
@@ -71,7 +80,7 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.36);
   --shadow-warm-glow: 0 0 60px rgba(233, 165, 127, 0.08);
 
-  /* ── 缓动曲线（与色彩无关，原样保留） ── */
+  /* ── 缓动曲线 ── */
   --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
@@ -165,8 +174,92 @@ footer[id] {
   margin: 11px 4px;
 }
 .section {
-  /* 大间距块节奏（A3）：用间距切分区块，不靠卡片与分割线 */
+  /* 大间距块节奏：用间距切分区块，不靠卡片与分割线 */
   padding: 170px 0;
+}
+
+/* ── 全站彩色光晕系统（第二轮：整站延续光效，不机械重复）──
+   每个主要 section 一块定位/色相/形态各异的柔光，挂在板块自身上、
+   不重复 Hero 的云雾（那是页面唯一的"光源叙事"），这里是"余晖洒进各层楼"。
+   统一用 fixed-attachment 视差 + pointer-events:none，成本一次栅格化。 */
+.section-glow,
+.work-glow,
+.footer-glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+/* About：左上玫红余晖（Hero 光雾的正下方延续） */
+.section-glow--about {
+  width: 44vw;
+  height: 34vw;
+  left: -10vw;
+  top: -6vw;
+  background: radial-gradient(circle, rgba(255, 45, 111, 0.14), transparent 65%);
+}
+/* Strengths：右侧亮紫侧光 */
+.section-glow--strengths {
+  width: 40vw;
+  height: 30vw;
+  right: -12vw;
+  top: 10%;
+  background: radial-gradient(circle, rgba(179, 157, 255, 0.12), transparent 65%);
+}
+/* Experience：左下粉光 */
+.section-glow--experience {
+  width: 42vw;
+  height: 30vw;
+  left: -14vw;
+  bottom: 4%;
+  background: radial-gradient(circle, rgba(255, 94, 158, 0.11), transparent 65%);
+}
+/* Projects：居中蜜桃底光（压在卡片群之下） */
+.work-glow {
+  width: 60vw;
+  height: 36vw;
+  left: 20vw;
+  top: 8%;
+  background: radial-gradient(ellipse, rgba(255, 157, 107, 0.1), transparent 62%);
+}
+/* Account（螺旋照片墙板）：底部暖粉光，托住照片墙 */
+.section-glow--account {
+  width: 50vw;
+  height: 28vw;
+  left: 25vw;
+  bottom: 0;
+  background: radial-gradient(ellipse, rgba(255, 94, 158, 0.1), transparent 60%);
+}
+/* Media：右上玫红→紫双色 */
+.section-glow--media {
+  width: 44vw;
+  height: 32vw;
+  right: -10vw;
+  top: -4vw;
+  background:
+    radial-gradient(circle at 30% 50%, rgba(255, 45, 111, 0.12), transparent 60%),
+    radial-gradient(circle at 75% 40%, rgba(179, 157, 255, 0.1), transparent 60%);
+}
+
+/* 板块根需要成为光晕的定位基准 */
+.about,
+.strength,
+.experience,
+.work,
+.media,
+.account-ops {
+  position: relative;
+}
+/* 光晕不得拦截交互；内容层保持在其上 */
+.section-glow,
+.work-glow {
+  z-index: 0;
+}
+.section-glow ~ *,
+.work-glow ~ * {
+  position: relative;
+  z-index: 1;
 }
 .section-kicker {
   color: var(--text-dim);
@@ -186,7 +279,7 @@ footer[id] {
 }
 .heading-row h2 {
   font-size: clamp(42px, 4.1vw, 76px);
-  /* 暗场语言：极重无衬线 + 微松字距，对位参考图像素标题的"情绪权重"（中文对位方案） */
+  /* 板块标题：900 极重无衬线，微松字距 */
   font-family: var(--font-sans);
   font-weight: 900;
   letter-spacing: 0.01em;

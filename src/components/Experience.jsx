@@ -8,6 +8,7 @@ import Reveal from '@/components/Reveal.jsx'
 export default function Experience() {
   return (
     <section className="experience section wrap" id="experience">
+      <div className="section-glow section-glow--experience" aria-hidden="true" />
       <SectionHeading num="03" kicker="EXPERIENCE">
         <h2>
           在真实的现场，

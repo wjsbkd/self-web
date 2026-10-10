@@ -30,6 +30,7 @@ export default function AccountOperations() {
 
   return (
     <section className="account-ops section wrap" id="account">
+      <div className="section-glow section-glow--account" aria-hidden="true" />
       <SectionHeading num="06" kicker="DOUYIN / ACCOUNT">
         <h2>
           账号运营，

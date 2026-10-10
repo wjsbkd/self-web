@@ -203,6 +203,7 @@ export default function Hero() {
       <div className="hero-canvas" aria-hidden="true">
         <div className="hero-glow" ref={glowRef}>
           <div className="hero-glow-blob hero-glow-blob--magenta" />
+          <div className="hero-glow-blob hero-glow-blob--pink" />
           <div className="hero-glow-blob hero-glow-blob--peach" />
           <div className="hero-glow-blob hero-glow-blob--lavender" />
           <div className="hero-glow-blob hero-glow-blob--core" />

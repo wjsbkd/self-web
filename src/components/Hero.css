@@ -12,7 +12,8 @@
   align-items: center;
   justify-content: center;
   color: var(--text-bright);
-  padding: 140px 0 100px;
+  /* 120px 像素标题较高：上下 padding 收窄，给标题让出最大空间 */
+  padding: 96px 0 84px;
   /* 近黑底 + 上下暗角：中心提亮、四周压暗（暗场 vignette），
      并隔离层叠上下文，使聚光灯（screen）能与"背景 + 文字"在同一上下文内正确混合 */
   background:
@@ -31,10 +32,10 @@
   opacity: calc(1 - var(--hero-exit, 0) * 0.5);
 }
 
-/* === 彩色光雾（A1：全屏唯一彩色光源）===
+/* === 彩色光雾（第二轮：明亮丰富，粉/玫红/蜜桃/紫四段色相）===
    结构：.hero-glow 负责视差/绽放的合成层包装（JS 写 transform）；
-   内部 4 个强 blur 色块（洋红/蜜桃/淡紫/暖白核心）组成有机云雾——
-   blur 只加在色块上（一次性栅格化），漂移动画只走色块 transform（不重栅格化）。 */
+   内部色块强 blur 组成有机云雾。透明度与尺寸全面上调——光效要"读得出彩色"，
+   不是暗场里的微弱点缀。blur 只加在色块上（一次性栅格化），漂移动画只走 transform。 */
 .hero-glow {
   position: absolute;
   inset: -12%;
@@ -43,50 +44,61 @@
 .hero-glow-blob {
   position: absolute;
   border-radius: 50%;
-  /* 每个色块独立缓漂（30–45s 大尺度往复，B10：只做缓慢大尺度运动） */
+  /* 每个色块独立缓漂（30–45s 大尺度往复） */
   animation: blobDrift 42s ease-in-out infinite alternate;
   will-change: transform;
 }
 .hero-glow-blob--magenta {
-  width: 46vw;
-  height: 40vw;
-  left: 4%;
-  top: 12%;
+  width: 52vw;
+  height: 44vw;
+  left: 2%;
+  top: 8%;
   background: var(--glow-magenta);
+  opacity: 0.75;
+  filter: blur(80px);
+}
+.hero-glow-blob--pink {
+  width: 34vw;
+  height: 30vw;
+  left: 24%;
+  top: 22%;
+  background: var(--glow-pink);
   opacity: 0.5;
-  filter: blur(90px);
+  filter: blur(70px);
+  animation-duration: 38s;
+  animation-delay: -18s;
 }
 .hero-glow-blob--peach {
-  width: 40vw;
-  height: 34vw;
-  left: 33%;
-  top: 6%;
+  width: 44vw;
+  height: 36vw;
+  left: 32%;
+  top: 2%;
   background: var(--glow-peach);
-  opacity: 0.42;
-  filter: blur(80px);
+  opacity: 0.62;
+  filter: blur(75px);
   animation-duration: 36s;
   animation-delay: -12s;
 }
 .hero-glow-blob--lavender {
-  width: 38vw;
-  height: 32vw;
-  right: 2%;
-  top: 16%;
+  width: 42vw;
+  height: 34vw;
+  right: 0%;
+  top: 12%;
   background: var(--glow-lavender);
-  opacity: 0.3;
-  filter: blur(85px);
+  opacity: 0.55;
+  filter: blur(80px);
   animation-duration: 48s;
   animation-delay: -24s;
 }
 .hero-glow-blob--core {
-  /* 暖白最亮处：正落在标题区上方，形成天然 spotlight 打光（A1）*/
-  width: 26vw;
-  height: 20vw;
-  left: 40%;
-  top: 20%;
+  /* 暖白最亮处：正落在标题区上方，天然 spotlight 打光 */
+  width: 30vw;
+  height: 22vw;
+  left: 38%;
+  top: 22%;
   background: var(--glow-highlight);
-  opacity: 0.3;
-  filter: blur(70px);
+  opacity: 0.42;
+  filter: blur(65px);
   animation-duration: 40s;
   animation-delay: -6s;
 }
@@ -106,14 +118,14 @@
   z-index: 1;
 }
 
-/* === 中轴灯泡（光域核心，D1）=== */
+/* === 中轴灯泡（光域核心；120px 像素标题下让出中轴空间）=== */
 .hero-globe-wrap {
   position: absolute;
-  width: min(300px, 34vh);
-  height: min(300px, 34vh);
+  width: min(210px, 26vh);
+  height: min(210px, 26vh);
   left: 50%;
-  top: 7%;
-  margin-left: calc(min(300px, 34vh) / -2);
+  top: 3.5%;
+  margin-left: calc(min(210px, 26vh) / -2);
   z-index: 1;
   display: flex;
   align-items: center;
@@ -208,14 +220,14 @@
 }
 
 .bulb-glass {
-  fill: rgba(247, 242, 239, 0.04);
-  stroke: rgba(233, 224, 214, 0.42);
+  fill: rgba(247, 242, 239, 0.06);
+  stroke: rgba(247, 242, 239, 0.6);
   stroke-width: 2;
   transition: fill 0.5s var(--ease-claude), stroke 0.4s var(--ease-claude);
 }
 .bulb-filament {
   fill: none;
-  stroke: rgba(201, 196, 236, 0.6);
+  stroke: rgba(220, 213, 255, 0.75);
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -285,12 +297,12 @@
   will-change: transform, opacity, filter;
 }
 
-/* 徽章药丸：深色半透明浮层（明暗反转的小过渡带，参考图 2.4 对位） */
+/* 徽章药丸：深色半透明浮层 */
 .hero .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  margin: 0 0 44px;
+  margin: 0 0 56px;
   padding: 9px 18px;
   border-radius: 999px;
   background: var(--surface-dark);
@@ -310,16 +322,31 @@
   color: var(--accent-warm);
 }
 
-/* 极重无衬线大标题（中文对位像素标题）：900 字重 + 微松字距 + 行距紧凑
-   Apple 招牌：三行 stagger 逐行揭示（位移 + 淡入） */
+/* 中文像素大标题（缝合像素 Fusion Pixel 12px 放大）：
+   真点阵字形——方块感与阶梯轮廓来自字形本身，非 CSS 模拟。
+   字号取 12px 基准的整倍数（84/132/156），保证点阵像素对齐、锐利不糊。
+   极大字号 + 多行排版 + 充足留白，标题即首页视觉焦点。
+   -webkit-font-smoothing 必须关掉：像素字要的就是硬边，抗锯齿会糊掉方块感。 */
 .hero .hero-headline {
-  font-family: var(--font-sans);
-  font-weight: 900;
-  font-size: clamp(48px, 7.6vw, 136px);
-  line-height: 1.08;
-  letter-spacing: 0.01em;
+  font-family: var(--font-pixel-zh);
+  font-weight: 400;
+  /* 字号严格取 12px 基准的整倍数（断点切换而非连续 vw），保证点阵像素对齐锐利。
+     ≤800px: 72px / ≤1200px: 96px / ≤1600px: 120px / >1600px: 156px */
+  font-size: 120px;
+  line-height: 1.22;
+  letter-spacing: 0.02em;
   color: var(--text-bright);
   margin: 0 0 40px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  /* 极淡暖色投影：让暖白字在亮光域上也保持边缘可辨（不发光、不做像素模拟） */
+  text-shadow: 0 2px 0 rgba(13, 10, 12, 0.55);
+}
+@media (max-width: 1600px) {
+  .hero .hero-headline { font-size: 120px; }
+}
+@media (max-width: 1200px) {
+  .hero .hero-headline { font-size: 96px; }
 }
 .hero .hero-headline .line {
   display: block;
@@ -336,9 +363,9 @@
 .hero .hero-headline .line:nth-child(3) {
   animation-delay: 0.59s;
 }
-/* 词重音 —— "被看见，"用 300 轻字重 + 浅蜜桃做低语式强调（斜体全站退役） */
+/* 词重音 —— "被看见，"用浅蜜桃做低语式强调（像素字同字体，色相重音） */
 .hero .hero-headline .line i {
-  font-weight: 300;
+  font-weight: 400;
   color: var(--accent-warm);
 }
 
@@ -359,10 +386,10 @@
   }
 }
 
-/* 副文案：居中限宽，暖灰（层级低于标题一档，靠明度差区分） */
+/* 副文案：居中限宽，暖灰 */
 .hero .hero-sub {
   max-width: 560px;
-  margin: 0 0 52px;
+  margin: 0 0 44px;
   font-size: 16px;
   line-height: 1.75;
   color: var(--text-dim);
@@ -520,7 +547,7 @@
     align-items: flex-start;
   }
   .hero .hero-badge {
-    margin-bottom: 28px;
+    margin-bottom: 40px;
     gap: 10px;
     padding: 8px 14px;
     font-size: 8px;
@@ -529,19 +556,21 @@
     margin-right: 10px;
   }
   .hero .hero-headline {
-    font-size: clamp(40px, 12vw, 76px);
-    margin-bottom: 28px;
+    /* 12px 基准整倍数（72px），保持点阵对齐 */
+    font-size: 72px;
+    margin-bottom: 32px;
+    line-height: 1.22;
   }
   .hero .hero-sub {
     font-size: 14px;
     margin-bottom: 36px;
   }
   .hero-globe-wrap {
-    width: min(220px, 30vh);
-    height: min(220px, 30vh);
-    margin-left: calc(min(220px, 30vh) / -2);
-    top: 3%;
-    opacity: 0.75;
+    width: min(160px, 22vh);
+    height: min(160px, 22vh);
+    margin-left: calc(min(160px, 22vh) / -2);
+    top: 2%;
+    opacity: 0.8;
   }
   .hero-glow-blob--magenta {
     filter: blur(60px);
