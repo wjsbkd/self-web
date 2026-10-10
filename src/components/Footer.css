@@ -14,11 +14,13 @@
   left: 50%;
   bottom: -34vw;
   margin-left: -39vw;
-  /* 光域同族色：洋红→蜜桃的低透明光晕，从页面尽头向上"泛起" */
+  /* 光域同族色提亮版：玫红→亮紫双光从页面尽头向上泛起 */
   background:
-    radial-gradient(ellipse 55% 42% at 42% 60%, rgba(194, 38, 90, 0.14), transparent 62%),
-    radial-gradient(ellipse 48% 36% at 60% 52%, rgba(233, 165, 127, 0.08), transparent 60%);
+    radial-gradient(ellipse 55% 42% at 38% 58%, rgba(255, 45, 111, 0.2), transparent 62%),
+    radial-gradient(ellipse 48% 36% at 64% 50%, rgba(179, 157, 255, 0.14), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 52% 44%, rgba(255, 157, 107, 0.1), transparent 60%);
   pointer-events: none;
+  filter: blur(60px);
 }
 .footer-inner {
   position: relative;

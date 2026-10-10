@@ -33,6 +33,7 @@ export default function Strengths() {
 
   return (
     <section className="strength section wrap" id="strengths">
+      <div className="section-glow section-glow--strengths" aria-hidden="true" />
       <SectionHeading num="02" kicker="WHAT I BRING">
         <h2>
           不止完成，

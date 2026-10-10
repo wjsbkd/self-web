@@ -18,6 +18,7 @@ export default function Media() {
 
   return (
     <section className="media section wrap" id="media">
+      <div className="section-glow section-glow--media" aria-hidden="true" />
       <SectionHeading num="05" kicker="MEDIA ARCHIVE">
         <h2>
           留给作品，
