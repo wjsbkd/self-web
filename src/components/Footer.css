@@ -1,73 +1,105 @@
-/* Footer 组件样式 —— Claude 羊皮纸亮调 + Apple 极简联系区 */
+/* Footer 组件样式 —— 暗场收尾（居中单轴，与 Hero 首尾呼应）
+   底部光晕用光域同族色收束整站；CTA 为白色药丸（命令级）。 */
 .footer {
   min-height: 100vh;
   display: flex;
   position: relative;
   overflow: hidden;
-  /* Claude 风格：footer 用暖奶油底，柔和收束，替代原暗底 */
-  background: var(--bg-elev-2);
+  background: var(--bg-deep);
 }
 .footer-glow {
   width: 78vw;
   height: 78vw;
   position: absolute;
-  right: -20vw;
-  top: -15vw;
-  /* Claude 风格：陶土橙辉光，更暖更"沉思" */
-  background: radial-gradient(circle, rgba(217, 119, 87, 0.16), transparent 60%);
+  left: 50%;
+  bottom: -34vw;
+  margin-left: -39vw;
+  /* 光域同族色：洋红→蜜桃的低透明光晕，从页面尽头向上"泛起" */
+  background:
+    radial-gradient(ellipse 55% 42% at 42% 60%, rgba(194, 38, 90, 0.14), transparent 62%),
+    radial-gradient(ellipse 48% 36% at 60% 52%, rgba(233, 165, 127, 0.08), transparent 60%);
+  pointer-events: none;
 }
 .footer-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  text-align: center;
   padding: 100px 0;
 }
 .footer h2 {
-  /* Claude 风格：footer 大标题用衬线 Display 字体 */
-  font-family: var(--font-serif);
-  font-size: clamp(55px, 6.5vw, 118px);
-  font-weight: 500;
-  letter-spacing: -0.02em; /* 中文不宜过紧，与 hero/section 标题统一 */
-  line-height: 1.05;
-  font-optical-sizing: auto;
+  /* 极重无衬线（与 hero 标题同族），暗场上的"落幕标题" */
+  font-family: var(--font-sans);
+  font-size: clamp(48px, 6vw, 104px);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 1.12;
   color: var(--text-bright);
+  margin: 0;
 }
-.email {
-  font-size: clamp(17px, 2vw, 32px);
-  font-family: var(--font-mono);
-  border-bottom: 1px solid var(--accent-warm);
-  padding-bottom: 14px;
-  width: max-content;
+.footer h2 i {
+  font-weight: 300;
   color: var(--accent-warm);
-  transition:
-    color 0.3s var(--ease-claude),
-    border-color 0.3s var(--ease-claude);
 }
-.footer-email-wrap {
-  margin-top: 75px;
+/* 邮箱大字（保留原有 mailto 直达能力，改成轻字重数据感排版） */
+.email {
+  display: block;
+  margin-top: 40px;
+  font: clamp(15px, 1.8vw, 26px) var(--font-mono);
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  transition: color 0.3s var(--ease-claude);
 }
 .email:hover {
-  color: var(--accent-active);
-  border-bottom-color: var(--accent-active);
+  color: var(--accent-warm);
+}
+.footer-email-wrap {
+  margin-top: 60px;
+}
+/* 白药丸 CTA（命令级，与 Hero 主 CTA 同族） */
+.footer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 34px;
+  border-radius: 999px;
+  background: var(--surface-light);
+  color: var(--on-light);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(247, 242, 239, 0.06);
+  transition:
+    background 0.3s var(--ease-claude),
+    transform 0.3s var(--ease-claude);
+}
+.footer-cta .arrow {
+  font-size: 16px;
+  color: var(--on-light);
+}
+.footer-cta:hover {
+  background: var(--glow-highlight);
+  transform: translateY(-2px);
 }
 .footer-social {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   margin-top: 36px;
 }
 .social-btn {
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(31, 25, 21, 0.18);
+  border: 1px solid rgba(247, 242, 239, 0.14);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  color: var(--text-base);
-  background: var(--bg-elev-1);
+  color: var(--text-dim);
+  background: transparent;
   transition:
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
@@ -79,9 +111,9 @@
   height: 20px;
 }
 .social-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(204, 120, 92, 0.08);
+  border-color: rgba(233, 165, 127, 0.55);
+  color: var(--accent-warm);
+  background: rgba(233, 165, 127, 0.08);
   transform: translateY(-3px);
 }
 .social-wechat {
@@ -90,11 +122,11 @@
   gap: 9px;
   margin-left: 6px;
   padding: 11px 16px;
-  border: 1px solid rgba(31, 25, 21, 0.18);
+  border: 1px solid rgba(247, 242, 239, 0.14);
   border-radius: 30px;
   font: 12px var(--font-mono);
-  color: var(--text-base);
-  background: var(--bg-elev-1);
+  color: var(--text-dim);
+  background: transparent;
 }
 .social-wechat svg {
   width: 18px;
@@ -104,14 +136,19 @@
   margin-top: auto;
   padding-top: 150px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 30px;
   font: 10px var(--font-mono);
   color: var(--text-muted);
 }
 .footer-bottom a {
-  margin-left: auto;
   color: var(--accent);
+  transition: color 0.3s var(--ease-claude);
+}
+.footer-bottom a:hover {
+  color: var(--accent-warm);
 }
 .footer-brand {
   display: flex;
@@ -128,10 +165,10 @@
 @media (max-width: 800px) {
   .footer-bottom {
     padding-top: 100px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 12px;
   }
-  .footer-bottom a {
-    margin-left: 0;
-    width: 100%;
+  .footer-email-wrap {
+    margin-top: 40px;
   }
 }

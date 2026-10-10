@@ -1,7 +1,8 @@
-/* Hero 组件样式 —— Claude 编辑式封面 × Apple 滚动编排（亮调版）
-   背景由原视频+冷靛蓝遮罩 → Claude 羊皮纸 + 暖色光晕 + 装饰环
-   结构由原"LI/ZONG/HENG 三行巨字 + 信息卡" → 衬线大标题（斜体重音）+ 编辑式元数据 + 磁性 CTA
-   动效：入场逐行揭示（Apple）+ 多层视差（Apple）+ 鼠标跟随装饰环 + 磁性按钮 */
+/* Hero 组件样式 —— 暗场单光源 × 居中单轴构图（2026-10 视觉语言迁移）
+   背景由"羊皮纸 + 暖色光晕 + 工程网格" → 近黑暗场 + 彩色光雾（强 blur，颗粒溶解）+ 数字点阵
+   构图由"左文右球" → 全部元素共用一条垂直中轴（导航/徽章/标题/副文案/CTA）
+   灯泡移到中轴上部成为光域的物理光源；hover 点亮 / rAF 自转 / 轨道环全部保留
+   动效：三行 stagger 入场 + 多层视差 + 滚动退出 + 光标提亮聚光灯（screen）+ 磁性按钮 */
 .hero {
   --hero-exit: 0;
   min-height: 100vh;
@@ -9,13 +10,13 @@
   overflow: hidden;
   display: flex;
   align-items: center;
+  justify-content: center;
   color: var(--text-bright);
   padding: 140px 0 100px;
-  /* 给 hero 一层实色羊皮纸底 + 暖色光晕，并隔离层叠上下文，
-     使反色聚光灯（difference）能与"背景 + 文字"在同一上下文内正确反色 */
+  /* 近黑底 + 上下暗角：中心提亮、四周压暗（暗场 vignette），
+     并隔离层叠上下文，使聚光灯（screen）能与"背景 + 文字"在同一上下文内正确混合 */
   background:
-    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(204, 120, 92, 0.06), transparent 65%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(217, 119, 87, 0.04), transparent 70%),
+    radial-gradient(ellipse 120% 80% at 50% 38%, transparent 40%, rgba(7, 5, 8, 0.5) 100%),
     var(--bg-base);
   isolation: isolate;
 }
@@ -26,25 +27,93 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* 随滚动退出逐渐隐去背景，强化首屏"被推走"的纵深感（Apple 编排） */
+  /* 随滚动退出逐渐隐去背景，强化首屏"被推走"的纵深感 */
   opacity: calc(1 - var(--hero-exit, 0) * 0.5);
 }
+
+/* === 彩色光雾（A1：全屏唯一彩色光源）===
+   结构：.hero-glow 负责视差/绽放的合成层包装（JS 写 transform）；
+   内部 4 个强 blur 色块（洋红/蜜桃/淡紫/暖白核心）组成有机云雾——
+   blur 只加在色块上（一次性栅格化），漂移动画只走色块 transform（不重栅格化）。 */
 .hero-glow {
   position: absolute;
-  inset: -10%;
-  /* Claude 风格：暖色径向光晕，营造"羊皮纸被烛光照亮"的氛围 */
-  background:
-    radial-gradient(ellipse 50% 40% at 82% 18%, rgba(204, 120, 92, 0.14), transparent 60%),
-    radial-gradient(ellipse 40% 32% at 8% 82%, rgba(217, 119, 87, 0.09), transparent 65%);
+  inset: -12%;
   will-change: transform;
 }
-/* === 右侧创意网络地球仪 === */
+.hero-glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  /* 每个色块独立缓漂（30–45s 大尺度往复，B10：只做缓慢大尺度运动） */
+  animation: blobDrift 42s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.hero-glow-blob--magenta {
+  width: 46vw;
+  height: 40vw;
+  left: 4%;
+  top: 12%;
+  background: var(--glow-magenta);
+  opacity: 0.5;
+  filter: blur(90px);
+}
+.hero-glow-blob--peach {
+  width: 40vw;
+  height: 34vw;
+  left: 33%;
+  top: 6%;
+  background: var(--glow-peach);
+  opacity: 0.42;
+  filter: blur(80px);
+  animation-duration: 36s;
+  animation-delay: -12s;
+}
+.hero-glow-blob--lavender {
+  width: 38vw;
+  height: 32vw;
+  right: 2%;
+  top: 16%;
+  background: var(--glow-lavender);
+  opacity: 0.3;
+  filter: blur(85px);
+  animation-duration: 48s;
+  animation-delay: -24s;
+}
+.hero-glow-blob--core {
+  /* 暖白最亮处：正落在标题区上方，形成天然 spotlight 打光（A1）*/
+  width: 26vw;
+  height: 20vw;
+  left: 40%;
+  top: 20%;
+  background: var(--glow-highlight);
+  opacity: 0.3;
+  filter: blur(70px);
+  animation-duration: 40s;
+  animation-delay: -6s;
+}
+@keyframes blobDrift {
+  from {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2.5%, -2%, 0) scale(1.08);
+  }
+}
+
+/* === 数字点阵纹理（A5）=== */
+.hero-digits {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* === 中轴灯泡（光域核心，D1）=== */
 .hero-globe-wrap {
   position: absolute;
-  width: 46vw;
-  height: 46vw;
-  right: 5%;
-  top: 10%;
+  width: min(300px, 34vh);
+  height: min(300px, 34vh);
+  left: 50%;
+  top: 7%;
+  margin-left: calc(min(300px, 34vh) / -2);
   z-index: 1;
   display: flex;
   align-items: center;
@@ -60,7 +129,7 @@
   content: '';
   position: absolute;
   inset: -8%;
-  border: 1px solid rgba(204, 120, 92, 0.12);
+  border: 1px solid rgba(233, 165, 127, 0.14);
   border-radius: 50%;
   transform: rotateX(72deg);
   transform-style: preserve-3d;
@@ -74,7 +143,7 @@
 }
 .hero-globe-wrap:hover::before,
 .hero-globe-wrap:hover::after {
-  border-color: rgba(204, 120, 92, 0.32);
+  border-color: rgba(233, 165, 127, 0.36);
 }
 .hero-globe-wrap:hover::before {
   animation-duration: 9s;
@@ -113,7 +182,8 @@
   will-change: transform;
 }
 
-/* === 灯泡：未点亮 = 温润玻璃；hover 落于本体 = 点亮并向四周散发亮光 === */
+/* === 灯泡：未点亮 = 暗场里的"暗玻璃"轮廓（描边整体提亮，否则暗底上隐身）；
+   hover 落于本体 = 点亮并向四周散发暖光 === */
 .hero-bulb-shape {
   transform-origin: 210px 185px;
 }
@@ -138,31 +208,31 @@
 }
 
 .bulb-glass {
-  fill: rgba(255, 255, 255, 0.05);
-  stroke: rgba(204, 120, 92, 0.35);
+  fill: rgba(247, 242, 239, 0.04);
+  stroke: rgba(233, 224, 214, 0.42);
   stroke-width: 2;
   transition: fill 0.5s var(--ease-claude), stroke 0.4s var(--ease-claude);
 }
 .bulb-filament {
   fill: none;
-  stroke: rgba(150, 130, 115, 0.55);
+  stroke: rgba(201, 196, 236, 0.6);
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: stroke 0.4s var(--ease-claude), filter 0.4s var(--ease-claude);
 }
 .bulb-base {
-  fill: rgba(150, 140, 128, 0.45);
-  stroke: rgba(120, 110, 100, 0.4);
+  fill: rgba(133, 128, 124, 0.55);
+  stroke: rgba(176, 170, 164, 0.45);
   stroke-width: 1;
   transition: fill 0.4s var(--ease-claude);
 }
 .bulb-thread {
-  stroke: rgba(110, 100, 92, 0.5);
+  stroke: rgba(176, 170, 164, 0.5);
   stroke-width: 1.5;
 }
 .bulb-tip {
-  fill: rgba(130, 120, 110, 0.5);
+  fill: rgba(158, 152, 143, 0.6);
 }
 
 /* hover 落于灯泡本体：点亮，向四周散发暖光 */
@@ -193,82 +263,63 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-globe-wrap::before,
-  .hero-globe-wrap::after {
+  .hero-globe-wrap::after,
+  .hero-glow-blob {
     animation: none;
   }
   .hero-globe-wrap.is-lit .bulb-ambient {
     animation: none;
   }
 }
-.hero-grid {
-  /* Apple 风格：极淡网格 + 径向遮罩，营造"工程图纸"的精密感 */
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(31, 25, 21, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 25, 21, 0.025) 1px, transparent 1px);
-  background-size: 80px 80px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 30%, transparent 75%);
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 30%, transparent 75%);
-}
 
-/* === 内容层 === */
+/* === 内容层：居中单轴 === */
 .hero .hero-content {
   position: relative;
   z-index: 2;
   width: min(1700px, calc(100% - 120px));
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   will-change: transform, opacity, filter;
 }
 
-/* === 左侧反色光标聚光灯（MiMo 式）=== */
-/* 置于 hero 顶层、与背景同层，白色圆斑用 difference 混合 → 走到哪反到哪 */
-/* === 左侧反色光标聚光灯（MiMo 式）===
-   关键：mix-blend-mode 必须直接施加在「独立层叠上下文的根元素」上，
-   才能与下方 hero 的背景/文字混合；若放在 ::before 上，父容器已成独立
-   上下文会隔断混合（只和白底混合，不反色）。opacity 在本元素上不影响混合。 */
-.hero-invert-spotlight {
-  position: absolute;
-  left: var(--ix, 50%);
-  top: var(--iy, 50%);
-  width: 200px;
-  height: 200px;
-  margin: -100px 0 0 -100px;
-  border-radius: 50%;
-  background: #fff;
-  mix-blend-mode: difference;
-  filter: blur(2px);
-  pointer-events: none;
+/* 徽章药丸：深色半透明浮层（明暗反转的小过渡带，参考图 2.4 对位） */
+.hero .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 44px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--surface-dark);
+  border: 1px solid rgba(247, 242, 239, 0.08);
+  font: 10px var(--font-pixel);
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
   opacity: 0;
-  z-index: 3;
-  transition: opacity 0.22s ease, left 0.08s ease-out, top 0.08s ease-out;
-}
-.hero-invert-spotlight.is-active {
-  opacity: 1;
-}
-
-.hero .hero-eyebrow {
-  font: 11px var(--font-mono);
-  letter-spacing: 1.7px;
-  color: var(--accent);
-  margin: 0 0 60px;
   animation: heroFadeUp 0.8s var(--ease-claude) 0.1s both;
 }
-.hero .hero-eyebrow span {
-  color: var(--text-bright);
+.hero .hero-badge span + span::before {
+  content: '·';
+  margin-right: 14px;
+  color: var(--accent);
+}
+.hero .hero-badge span:first-child {
+  color: var(--accent-warm);
 }
 
-/* Claude 招牌：衬线 Display 大标题，字重 500（非 Bold），"书名般分量感"
+/* 极重无衬线大标题（中文对位像素标题）：900 字重 + 微松字距 + 行距紧凑
    Apple 招牌：三行 stagger 逐行揭示（位移 + 淡入） */
 .hero .hero-headline {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: clamp(56px, 9vw, 168px);
-  line-height: 1.02;
-  letter-spacing: -0.02em; /* 中文不宜过紧，-0.02em 收敛字距但不挤压 */
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: clamp(48px, 7.6vw, 136px);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
   color: var(--text-bright);
-  margin: 0 0 80px;
-  font-optical-sizing: auto;
+  margin: 0 0 40px;
 }
 .hero .hero-headline .line {
   display: block;
@@ -285,12 +336,10 @@
 .hero .hero-headline .line:nth-child(3) {
   animation-delay: 0.59s;
 }
-/* 词重音 —— "被看见，"用更轻字重 + 陶土橙做编辑式强调
-   中文不用 font-style: italic（避免合成假斜体），改用字重对比 + 色彩重音 */
+/* 词重音 —— "被看见，"用 300 轻字重 + 浅蜜桃做低语式强调（斜体全站退役） */
 .hero .hero-headline .line i {
-  font-weight: 400; /* 比标题 500 更轻，"低语"般的词重音 */
+  font-weight: 300;
   color: var(--accent-warm);
-  letter-spacing: -0.005em;
 }
 
 @keyframes heroLineReveal {
@@ -310,105 +359,103 @@
   }
 }
 
-/* === 底部信息 + CTA === */
-.hero .hero-foot {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 60px;
-  opacity: 0;
-  animation: heroFadeUp 1s var(--ease-claude) 0.85s forwards;
-}
-.hero .hero-intro {
-  max-width: 460px;
-}
-.hero .hero-name {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--text-bright);
-  margin: 0 0 4px;
-  letter-spacing: -0.01em;
-}
-.hero .hero-name span {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-}
-.hero .hero-role {
-  font-size: 13px;
-  color: var(--accent);
-  margin: 0 0 14px;
-  font-family: var(--font-mono);
-  letter-spacing: 0.3px;
-}
-.hero .hero-desc {
-  font-size: 15px;
-  line-height: 1.8;
+/* 副文案：居中限宽，暖灰（层级低于标题一档，靠明度差区分） */
+.hero .hero-sub {
+  max-width: 560px;
+  margin: 0 0 52px;
+  font-size: 16px;
+  line-height: 1.75;
   color: var(--text-dim);
-  margin: 0;
+  opacity: 0;
+  animation: heroFadeUp 1s var(--ease-claude) 0.72s forwards;
 }
 
+/* CTA：白药丸（命令级，全屏对比最强处）+ 深色药丸（明暗对置） */
 .hero .hero-cta-group {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  opacity: 0;
+  animation: heroFadeUp 1s var(--ease-claude) 0.9s forwards;
 }
-/* 主 CTA：陶土橙实心胶囊 + 暖色辉光投影（Apple 风格按钮） */
 .hero .hero-cta-primary {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 26px;
-  background: var(--accent);
-  color: #fff;
+  padding: 16px 32px;
+  background: var(--surface-light);
+  color: var(--on-light);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   border-radius: 999px;
   transition:
     background 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude),
     box-shadow 0.3s var(--ease-claude);
-  box-shadow: 0 8px 24px rgba(204, 120, 92, 0.25);
+  /* 极轻光晕分离背景（悬浮，非硬阴影） */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(247, 242, 239, 0.07);
 }
 .hero .hero-cta-primary:hover {
-  background: var(--accent-active);
+  background: var(--glow-highlight);
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(204, 120, 92, 0.32);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 80px rgba(247, 242, 239, 0.12);
 }
 .hero .hero-cta-primary .arrow {
   font-size: 16px;
-  color: #fff;
+  color: var(--on-light);
 }
-/* 次 CTA：环形边框胶囊（Claude 风格克制按钮） */
+/* 次 CTA：深色药丸（与白 CTA 明暗对置） */
 .hero .hero-cta-secondary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  border: 1px solid var(--line-tag);
-  color: var(--text-base);
+  padding: 16px 28px;
+  border: 1px solid rgba(247, 242, 239, 0.16);
+  color: var(--text-bright);
   font-size: 13px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--surface-dark);
   transition:
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
     background 0.3s var(--ease-claude);
 }
 .hero .hero-cta-secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(204, 120, 92, 0.06);
+  border-color: rgba(233, 165, 127, 0.5);
+  color: var(--accent-warm);
+  background: rgba(233, 165, 127, 0.06);
 }
 .hero .hero-cta-secondary .arrow {
   font-size: 14px;
 }
 
-/* === 滚动提示（Apple 风格极简指示器 + 流动光点） === */
+/* === 光标提亮聚光灯（D2：difference → screen）===
+   关键：mix-blend-mode 必须直接施加在「独立层叠上下文的根元素」上，
+   才能与下方 hero 的背景/文字混合；若放在 ::before 上，父容器已成独立
+   上下文会隔断混合。opacity 在本元素上不影响混合。
+   暗场上白色圆斑经 screen 混合 = "手电提亮"，与主题自洽。 */
+.hero-invert-spotlight {
+  position: absolute;
+  left: var(--ix, 50%);
+  top: var(--iy, 50%);
+  width: 200px;
+  height: 200px;
+  margin: -100px 0 0 -100px;
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+  transition: opacity 0.22s ease, left 0.08s ease-out, top 0.08s ease-out;
+}
+.hero-invert-spotlight.is-active {
+  opacity: 1;
+}
+
+/* === 滚动提示（极简指示器 + 流动光点） === */
 .hero .hero-scroll-cue {
   position: absolute;
   /* 居中刻意不用 translateX(-50%)：heroFadeUp 的结束态是 transform:none，
@@ -422,7 +469,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  font: 10px var(--font-mono);
+  font: 10px var(--font-pixel);
   letter-spacing: 1.2px;
   color: var(--text-muted);
   opacity: 0;
@@ -454,7 +501,7 @@
   }
 }
 
-/* === 侧边竖排元数据（保留原签名元素，适配亮调） === */
+/* === 侧边竖排元数据 === */
 .hero .side-note {
   bottom: 36px;
   right: 22px;
@@ -472,37 +519,51 @@
     padding: 110px 0 70px;
     align-items: flex-start;
   }
-  .hero .hero-eyebrow {
-    margin-bottom: 40px;
+  .hero .hero-badge {
+    margin-bottom: 28px;
+    gap: 10px;
+    padding: 8px 14px;
+    font-size: 8px;
+  }
+  .hero .hero-badge span + span::before {
+    margin-right: 10px;
   }
   .hero .hero-headline {
-    font-size: clamp(44px, 13vw, 88px);
-    margin-bottom: 50px;
+    font-size: clamp(40px, 12vw, 76px);
+    margin-bottom: 28px;
+  }
+  .hero .hero-sub {
+    font-size: 14px;
+    margin-bottom: 36px;
   }
   .hero-globe-wrap {
-    width: 70vw;
-    height: 70vw;
-    right: -22%;
-    top: 2%;
-    opacity: 0.55;
+    width: min(220px, 30vh);
+    height: min(220px, 30vh);
+    margin-left: calc(min(220px, 30vh) / -2);
+    top: 3%;
+    opacity: 0.75;
+  }
+  .hero-glow-blob--magenta {
+    filter: blur(60px);
+  }
+  .hero-glow-blob--peach,
+  .hero-glow-blob--lavender,
+  .hero-glow-blob--core {
+    filter: blur(55px);
   }
   .hero-invert-spotlight {
     width: 130px;
     height: 130px;
     margin: -65px 0 0 -65px;
   }
-  .hero .hero-foot {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
   .hero .hero-cta-group {
-    flex-direction: row;
+    flex-direction: column;
     align-items: stretch;
-    flex-wrap: wrap;
+    width: 100%;
+    max-width: 360px;
   }
   .hero .hero-cta-primary,
   .hero .hero-cta-secondary {
-    flex: 1;
     justify-content: center;
   }
   .hero .side-note,

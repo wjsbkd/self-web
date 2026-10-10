@@ -7,10 +7,10 @@
 }
 .tool-list span {
   font: 11px/1.5 var(--font-mono);
-  color: var(--accent-bright);
-  border: 1px solid var(--accent-deep);
+  color: var(--accent-warm);
+  border: 1px solid var(--line-tag);
   padding: 7px 10px;
-  background: rgba(108, 106, 100, 0.22);
+  background: rgba(233, 165, 127, 0.06);
 }
 
 .about-links {
@@ -44,13 +44,12 @@
   max-width: 750px;
 }
 .lead {
-  /* Claude 风格：lead 段落用衬线字体，赋予"论文摘要"般的编辑式分量 */
-  font-family: var(--font-serif);
+  /* 数据感大字：极重无衬线暖白（衬线退役，承担编辑式分量的新载体） */
+  font-family: var(--font-sans);
   font-size: clamp(26px, 2.2vw, 43px) !important;
   line-height: 1.4 !important;
-  letter-spacing: -0.02em;
-  font-weight: 400;
-  font-optical-sizing: auto;
+  letter-spacing: 0.01em;
+  font-weight: 700;
   color: var(--text-bright);
 }
 .about-copy p {
@@ -61,10 +60,9 @@
   margin-top: 20px;
 }
 .about-copy p span {
-  /* 词重音：关键词用衬线 + 更重字重 + 陶土橙，作为正文中的编辑式重音
-     中文不用 italic（避免假斜体），改用字重 500 + 色彩强调 */
-  font-family: var(--font-serif);
-  font-weight: 500;
+  /* 词重音：衬线斜体退役 → 字重对比 + 浅蜜桃 */
+  font-family: var(--font-sans);
+  font-weight: 700;
   color: var(--accent-warm);
 }
 
@@ -86,16 +84,15 @@
   padding-left: 0;
 }
 .metrics b {
-  /* Claude 风格：关键数字用衬线字体 + 陶土橙，"书籍页码"般的分量感 */
-  font-family: var(--font-serif);
-  font-size: 42px;
-  letter-spacing: -0.03em;
-  font-weight: 500;
-  color: var(--accent-warm);
+  /* 数据栏（参考图 2.5 对位）：大号无衬线偏粗、纯白数字 */
+  font-family: var(--font-sans);
+  font-size: 40px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  color: #ffffff;
   display: flex;
   align-items: baseline;
   gap: 3px;
-  font-optical-sizing: auto;
 }
 .metrics b:after {
   content: '';

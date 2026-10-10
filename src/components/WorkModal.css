@@ -11,7 +11,7 @@
 .work-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(46, 41, 37, 0.55);
+  background: rgba(7, 5, 8, 0.72);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: modal-fade-in 0.35s var(--ease-claude);
@@ -27,7 +27,7 @@
   max-height: 85vh;
   background: var(--bg-elev-1);
   border-radius: 8px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   animation: modal-scale-in 0.45s var(--ease-claude);
   transform-origin: center;
@@ -203,17 +203,17 @@
   margin-top: auto;
   padding: 12px 22px;
   border-radius: 99px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--surface-light);
+  color: var(--on-light);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   text-decoration: none;
   transition:
     background 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude);
 }
 .work-modal-link:hover {
-  background: var(--accent-deep);
+  background: var(--glow-highlight);
   transform: translateY(-2px);
 }
 .work-modal-pwd {

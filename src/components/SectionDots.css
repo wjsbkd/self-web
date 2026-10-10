@@ -33,13 +33,13 @@
     background 0.4s var(--ease-claude),
     border-color 0.4s var(--ease-claude);
 }
-/* 活动章节：圆点放大并填充陶土橙 */
+/* 活动章节：圆点放大为暖白胶囊 */
 .section-dot.active .section-dot-mark {
   width: 22px;
   height: 8px;
   border-radius: 4px;
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--glow-highlight);
+  border-color: var(--glow-highlight);
 }
 /* 标签：默认隐藏，hover 或 active 时展开 */
 .section-dot-label {
@@ -59,7 +59,7 @@
   transform: translateX(0);
 }
 .section-dot.active .section-dot-label {
-  color: var(--accent);
+  color: var(--accent-warm);
 }
 
 /* 响应式：窄屏隐藏标签，仅保留圆点 */

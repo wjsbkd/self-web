@@ -3,17 +3,20 @@ import { useRef, useEffect } from 'react'
 import Arrow from '@/components/Arrow.jsx'
 import Magnetic from '@/components/Magnetic.jsx'
 import HeroGlobe from '@/components/HeroGlobe.jsx'
+import HeroDigits from '@/components/HeroDigits.jsx'
 import { resumePdf } from '@/data/nav.js'
 
-// Hero 首页 —— Claude 编辑式封面 × Apple 滚动编排（亮调版）
-// 结构：暖色光晕背景 + 衬线大标题（斜体重音）+ 编辑式元数据 + 磁性 CTA + 滚动提示
-// 动效：入场逐行揭示（Apple）+ 多层视差（Apple）+ 左侧反色光标聚光灯（MiMo 式）+ 右侧灯泡（hover 点亮四散发光，光晕随鼠标速度/方向自转）
+// Hero 首页 —— 暗场单光源 × 居中单轴构图（2026-10 视觉语言迁移）
+// 结构：彩色光雾（强 blur，洋红→蜜桃→淡紫）+ 数字点阵 + 中轴灯泡（光域核心）
+//   + 徽章药丸 + 极重无衬线大标题 + 居中副文案 + 双药丸 CTA + 滚动提示
+// 动效：三行 stagger 入场 + 多层视差与滚动退出 + 反色聚光灯（screen 提亮版）
+//   + 灯泡 hover 点亮 / rAF 自转 / 轨道环 —— 全部沿用原实现，仅重排 DOM
 export default function Hero() {
   const heroRef = useRef(null) // 区块根：驱动 --hero-exit 滚动进度
-  const glowRef = useRef(null) // 背景光晕：远景慢视差
+  const glowRef = useRef(null) // 背景光雾：远景慢视差
   const contentRef = useRef(null) // 内容层：近景视差 + 滚动退出
-  const invertRef = useRef(null) // 左侧反色聚光灯（hero 顶层，与背景同层混合）
-  const globeWrapRef = useRef(null) // 右侧灯泡包裹：鼠标交互区
+  const invertRef = useRef(null) // 光标提亮聚光灯（hero 顶层，与背景同层混合）
+  const globeWrapRef = useRef(null) // 中轴灯泡包裹：鼠标交互区
   const globeBodyRef = useRef(null) // 灯泡光晕 SVG 主体：JS 驱动自转（旋转辐射光）
   const bulbRef = useRef(null) // 灯泡本体：hover 命中区
 
@@ -32,7 +35,7 @@ export default function Hero() {
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  // Hero 运动 loop：光晕视差 + 内容视差/退出 + 反色光标 + 地球仪速度自转
+  // Hero 运动 loop：光雾视差 + 内容视差/退出 + 光标提亮 + 灯泡速度自转
   useEffect(() => {
     const hero = heroRef.current
     const glow = glowRef.current
@@ -42,7 +45,7 @@ export default function Hero() {
     const globeBody = globeBodyRef.current
     if (!hero || !glow || !content || !invert || !globeWrap || !globeBody) return
 
-    // 仅自动视差/滚动退出尊重「减少动效」；光标反色与地球仪交互是用户主动触发，
+    // 仅自动视差/滚动退出尊重「减少动效」；光标提亮与灯泡交互是用户主动触发，
     // 不受此限制（否则开了减少动效的用户会完全看不到效果）。
     // 注意：下面各分支直接读 reduceMotionRef.current（而非挂载时取一次），
     // 这样用户在系统设置里切换该偏好后，无需刷新即可生效。
@@ -58,7 +61,7 @@ export default function Hero() {
       hero.style.setProperty('--hero-exit', exit.toFixed(3))
       const V = window.innerHeight
 
-      // 光晕：远景慢视差（反方向）+ 离场微微绽放
+      // 光雾：远景慢视差（反方向）+ 离场微微绽放
       const gRect = glow.getBoundingClientRect()
       const gOff = (gRect.top + gRect.height / 2 - V / 2) / V
       const gPar = gOff * -8
@@ -78,8 +81,8 @@ export default function Hero() {
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply) }
 
     // 整屏（hero）鼠标移动：同一处理函数同时驱动
-    //  ① 左侧反色光标聚光灯（仅左侧文字区生效，进入右侧地球仪区时隐藏）
-    //  ② 右侧灯泡：鼠标在画面内任意位置移动，光晕按方向/速度跟随自转
+    //  ① 光标提亮聚光灯（hero 全区生效，进入灯泡区时隐藏，避免双光叠加刺眼）
+    //  ② 灯泡：鼠标在画面内任意位置移动，光晕按方向/速度跟随自转
     //     —— 不再要求鼠标压在球上；垂直移动额外带动一点立体倾斜。
     let lastX = null
     let lastY = null
@@ -91,7 +94,7 @@ export default function Hero() {
 
     const onHeroMove = (e) => {
       const rect = hero.getBoundingClientRect()
-      // ① 反色聚光灯跟随光标（hero 坐标）
+      // ① 提亮聚光灯跟随光标（hero 坐标）
       invert.style.setProperty('--ix', `${e.clientX - rect.left}px`)
       invert.style.setProperty('--iy', `${e.clientY - rect.top}px`)
       const gRect = globeWrap.getBoundingClientRect()
@@ -113,7 +116,7 @@ export default function Hero() {
       }
       globeWrap.classList.toggle('is-lit', onBulb)
 
-      // ② 右侧灯泡：鼠标在画面内任意位置移动，光晕按方向/速度跟随自转
+      // ② 灯泡：鼠标在画面内任意位置移动，光晕按方向/速度跟随自转
       const now = performance.now()
       if (lastX !== null && lastT !== null) {
         const dt = now - lastT
@@ -146,8 +149,8 @@ export default function Hero() {
     hero.addEventListener('mousemove', onHeroMove)
     hero.addEventListener('mouseleave', onHeroLeave)
 
-    // === 右侧灯泡：命令式 rAF 自转（绕 Z 轴，驱动光晕/放射线）+ 倾斜回正 ===
-    // 监听已移至整屏 hero，故这里只负责惯性/阻尼推进与空闲慢转。
+    // === 中轴灯泡：命令式 rAF 自转（绕 Z 轴，驱动光晕/放射线）+ 倾斜回正 ===
+    // 监听在整屏 hero 上，这里只负责惯性/阻尼推进与空闲慢转。
     // 用 IntersectionObserver 启停：hero 滚出视口后逐帧写 transform 纯属空耗，
     // 而上方视差循环本就随滚动停止，两者原本不一致。
     let rafGlobe = 0
@@ -196,22 +199,29 @@ export default function Hero() {
 
   return (
     <section className="hero" id="top" ref={heroRef}>
-      {/* 背景画布：暖色光晕 + 极淡网格 + 右侧灯泡 */}
+      {/* 背景画布：彩色光雾 + 数字点阵 + 中轴灯泡 */}
       <div className="hero-canvas" aria-hidden="true">
-        <div className="hero-glow" ref={glowRef} />
+        <div className="hero-glow" ref={glowRef}>
+          <div className="hero-glow-blob hero-glow-blob--magenta" />
+          <div className="hero-glow-blob hero-glow-blob--peach" />
+          <div className="hero-glow-blob hero-glow-blob--lavender" />
+          <div className="hero-glow-blob hero-glow-blob--core" />
+        </div>
+        <HeroDigits />
         <div className="hero-globe-wrap" ref={globeWrapRef}>
           <HeroGlobe bodyRef={globeBodyRef} bulbRef={bulbRef} />
         </div>
-        <div className="hero-grid" />
       </div>
 
       <div className="hero-content wrap" ref={contentRef}>
-        <p className="hero-eyebrow">
-          <span>01</span> — PORTFOLIO / 2026
+        {/* 徽章药丸：深色半透明，明暗反转的小过渡带 */}
+        <p className="hero-badge">
+          <span>PORTFOLIO</span>
+          <span>2026</span>
+          <span>LI ZONGHENG</span>
         </p>
 
-        {/* Claude 招牌：衬线大标题 + 斜体词重音（"被看见，"）
-            Apple 招牌：三行 stagger 逐行揭示入场 */}
+        {/* 极重无衬线大标题（对位参考图像素标题）+ 三行 stagger 逐行揭示 */}
         <h1 className="hero-headline">
           <span className="line">让想法</span>
           <span className="line">
@@ -220,42 +230,38 @@ export default function Hero() {
           <span className="line">让体验被记住。</span>
         </h1>
 
-        <div className="hero-foot">
-          <div className="hero-intro">
-            <p className="hero-name">
-              李纵横 <span>/ LI ZONGHENG</span>
-            </p>
-            <p className="hero-role">AI 内容运营与视觉创作者</p>
-            <p className="hero-desc">
-              在内容、运营与现场执行的交界处，将创意转化为可见的影响力。
-            </p>
-          </div>
+        {/* 副文案：居中限宽，明显降饱和的暖灰 */}
+        <p className="hero-sub">
+          在内容、运营与现场执行的交界处，
+          <br />
+          将创意转化为可见的影响力。
+        </p>
 
-          <div className="hero-cta-group">
-            <Magnetic strength={0.4} radius={120}>
-              <a className="hero-cta-primary" href="#work">
-                探索精选项目 <Arrow />
-              </a>
-            </Magnetic>
-            <Magnetic strength={0.3} radius={100}>
-              <a
-                className="hero-cta-secondary"
-                href={resumePdf}
-                target="_blank"
-                rel="noreferrer"
-                download
-              >
-                下载简历 <Arrow />
-              </a>
-            </Magnetic>
-          </div>
+        {/* CTA：白药丸（命令级）+ 深色药丸（明暗对置） */}
+        <div className="hero-cta-group">
+          <Magnetic strength={0.4} radius={120}>
+            <a className="hero-cta-primary" href="#work">
+              探索精选项目 <Arrow />
+            </a>
+          </Magnetic>
+          <Magnetic strength={0.3} radius={100}>
+            <a
+              className="hero-cta-secondary"
+              href={resumePdf}
+              target="_blank"
+              rel="noreferrer"
+              download
+            >
+              下载简历 <Arrow />
+            </a>
+          </Magnetic>
         </div>
       </div>
 
-      {/* 左侧反色光标聚光灯：hero 顶层、与背景同层，mix-blend-mode 局部反色 */}
+      {/* 光标提亮聚光灯：hero 顶层、与背景同层，screen 混合在暗场上"提灯" */}
       <div className="hero-invert-spotlight" ref={invertRef} aria-hidden="true" />
 
-      {/* 滚动提示（Apple 风格极简指示器 + 流动光点） */}
+      {/* 滚动提示（极简指示器 + 流动光点） */}
       <div className="hero-scroll-cue" aria-hidden="true">
         <span>SCROLL</span>
         <div className="scroll-line" />
