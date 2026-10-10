@@ -1,54 +1,96 @@
-/* Nav 组件样式 —— 全局固定导航（Claude 羊皮纸亮调 + Apple 玻璃） */
+/* Nav 组件样式 —— 悬浮白药丸导航（暗场语言，参考图 2.3 对位）
+   白药丸水平居中、不贴边（A6 元素浮于背景之上）；active 项用 3px 小圆点（A9）；
+   「联系我」为右端独立深色药丸，与白药丸形成明暗对置（A2）。
+   滚动隐藏 / Magnetic 联系按钮 / 移动端抽屉全部保留。 */
+
+/* 药丸容器：视口水平居中悬浮 */
 .nav {
   position: fixed;
   z-index: 50;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 88px;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid transparent;
+  gap: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--surface-light);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
   transition:
-    background 0.45s var(--ease-claude),
-    border-color 0.45s var(--ease-claude),
-    backdrop-filter 0.45s var(--ease-claude),
-    transform 0.55s var(--ease-claude);
+    transform 0.55s var(--ease-claude),
+    opacity 0.45s var(--ease-claude),
+    box-shadow 0.45s var(--ease-claude);
 }
+/* 滚动后加深悬浮投影，强化"浮"感 */
 .nav.scrolled {
-  /* Claude 风格：羊皮纸半透明玻璃底，替代原冷靛蓝暗底 */
-  background: rgba(250, 249, 245, 0.82);
-  backdrop-filter: blur(16px) saturate(1.1);
-  border-bottom-color: rgba(31, 25, 21, 0.08);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 /* 向下滚动隐藏、向上滚动显现（iOS 26 标签栏行为） */
 .nav.nav-hidden {
-  transform: translateY(-100%);
+  transform: translateX(-50%) translateY(-140%);
 }
 
-/* 顶部滚动进度条（Claude 风格：陶土橙暖色渐变） */
-.nav-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  overflow: hidden;
-  pointer-events: none;
+.brand {
+  display: flex;
+  align-items: center;
+  /* 字标微微溢出药丸左边界（呼应参考图 logo 破格，但用的是我们自己的字标） */
+  margin-left: -4px;
 }
-.nav-progress-bar {
-  height: 100%;
-  width: 100%;
-  transform-origin: left center;
-  transform: scaleX(0);
-  background: linear-gradient(
-    90deg,
-    var(--accent),
-    var(--accent-bright),
-    var(--accent-warm)
-  );
-  transition: transform 0.1s linear;
+.brand .brand-mark {
+  height: 26px;
+  width: auto;
+  display: block;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 13px;
+  position: relative;
+}
+/* 竖向分隔：状态文案与导航项之间（发丝线，A9 状态指示的分组） */
+.nav-status {
+  font: 9px var(--font-pixel);
+  letter-spacing: 0.8px;
+  color: var(--accent-active);
+  padding-left: 22px;
+  border-left: 1px solid rgba(20, 20, 20, 0.12);
+}
+.nav-links a {
+  position: relative;
+  z-index: 1;
+  color: var(--on-light);
+  opacity: 0.62;
+  transition:
+    opacity 0.25s var(--ease-claude),
+    color 0.25s var(--ease-claude);
+}
+.nav-links a:hover,
+.nav-links a.active {
+  opacity: 1;
+  color: var(--on-light);
+}
+/* A9 微小状态指示：active 项下方 3px 小圆点（常驻极淡，hover/active 加深） */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 50%;
+  background: var(--accent-active);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-claude);
+}
+.nav-links a:hover::after {
+  opacity: 0.4;
+}
+.nav-links a.active::after {
+  opacity: 1;
 }
 
 /* 磁性包裹元素：JS 逐帧写入位移，CSS 过渡负责离开后的平滑回弹 */
@@ -64,64 +106,26 @@
 .magnetic > * {
   transition: transform 0.5s var(--ease-claude);
 }
-.brand {
-  display: flex;
-  align-items: center;
-}
-.brand .brand-mark {
-  height: 32px;
-  width: auto;
-  display: block;
-}
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  font-size: 14px;
-}
-.nav-links a {
-  opacity: 0.7;
-  transition:
-    opacity 0.25s var(--ease-claude),
-    color 0.25s var(--ease-claude);
-}
-.nav-links a:hover,
-.nav-links a.active {
-  opacity: 1;
-  color: var(--accent);
-}
-.nav-links a:before {
-  content: '•';
-  color: rgba(31, 25, 21, 0.3);
-  margin-right: 8px;
-  transition: color 0.3s var(--ease-claude);
-}
-.nav-links a:hover:before,
-.nav-links a.active:before {
-  color: var(--accent);
-}
-.nav-status {
-  margin-left: 4px;
-  font: 9px var(--font-mono);
-  letter-spacing: 0.8px;
-  color: var(--accent);
-}
+
+/* 联系按钮：独立深色药丸（明暗对置，A2） */
 .nav-contact {
-  /* Claude 风格：胶囊按钮用环形暖边框 */
-  border: 1px solid rgba(31, 25, 21, 0.28);
-  border-radius: 30px;
-  padding: 12px 18px;
-  font-size: 13px;
-  color: var(--text-base);
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 12px;
+  color: var(--text-bright);
+  background: var(--surface-dark);
+  border: 1px solid rgba(247, 242, 239, 0.14);
   transition:
     border-color 0.3s var(--ease-claude),
     background 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude);
 }
 .nav-contact:hover {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border-color: rgba(233, 165, 127, 0.55);
+  background: rgba(233, 165, 127, 0.12);
+  color: var(--accent-warm);
 }
 
 /* 移动端汉堡按钮（默认隐藏） */
@@ -136,12 +140,13 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  margin-right: 2px;
 }
 .nav-toggle span {
   display: block;
   width: 22px;
-  height: 1.5px;
-  background: var(--text-bright);
+  height: 2px;
+  background: var(--on-light);
   transition: transform 0.35s var(--ease-claude), opacity 0.35s var(--ease-claude);
 }
 .nav.open .nav-toggle span:nth-child(1) {
@@ -154,10 +159,60 @@
   transform: translateY(-6.5px) rotate(-45deg);
 }
 
-/* 响应式 —— 800px 断点 */
+/* 顶部滚动进度条（全宽细线；渲染在 nav 元素之外，不受其 transform 影响） */
+.nav-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nav-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  /* 暖白进度线（暗场上的一线光） */
+  background: linear-gradient(
+    90deg,
+    var(--glow-magenta),
+    var(--accent),
+    var(--glow-lavender)
+  );
+  transition: transform 0.1s linear;
+}
+
+/* ── 响应式 ── */
+
+/* 中屏：收状态文案、缩间距（7 项导航在 1024px 附近挤不进单颗药丸） */
+@media (max-width: 1180px) {
+  .nav-status {
+    display: none;
+  }
+  .nav-links {
+    gap: 18px;
+    font-size: 12px;
+  }
+  .nav {
+    gap: 14px;
+    padding: 9px 12px;
+  }
+}
+
 @media (max-width: 800px) {
   .nav {
-    height: 72px;
+    /* 移动端改为左右撑满的药丸（贴近边缘的全宽条，仍是悬浮容器） */
+    top: 16px;
+    left: 20px;
+    right: 20px;
+    transform: none;
+    justify-content: space-between;
+  }
+  .nav.nav-hidden {
+    transform: translateY(-140%);
   }
   .nav-toggle {
     display: flex;
@@ -165,16 +220,20 @@
   }
   .nav-links {
     position: fixed;
-    inset: 72px 0 auto 0;
+    left: 20px;
+    right: 20px;
+    top: 68px;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
     padding: 18px 24px 26px;
-    /* Claude 风格：羊皮纸玻璃下拉，替代原暗底 */
-    background: rgba(250, 249, 245, 0.97);
+    border-radius: 20px;
+    /* 暗场玻璃下拉 */
+    background: rgba(20, 18, 26, 0.97);
     backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(31, 25, 21, 0.08);
-    box-shadow: 0 16px 40px rgba(31, 25, 21, 0.08);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(247, 242, 239, 0.08);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     transform: translateY(-12px);
     opacity: 0;
     pointer-events: none;
@@ -188,52 +247,48 @@
     pointer-events: auto;
   }
   .nav-links a {
-    font-size: 16px;
+    font-size: 15px;
     padding: 10px 0;
+    color: var(--text-bright);
+    opacity: 0.8;
   }
-  .nav-links a:before {
-    margin-right: 10px;
+  .nav-links a.active {
+    opacity: 1;
+  }
+  .nav-links a::after {
+    left: 0;
+    bottom: 4px;
   }
   .nav-status {
+    display: block;
+    border-left: none;
+    padding-left: 0;
     margin: 10px 0 4px;
+    color: var(--accent);
   }
   .nav-contact {
     margin-top: 12px;
     font-size: 13px;
-    padding: 12px 18px;
+    padding: 11px 18px;
+    background: transparent;
   }
 }
 
-/* 滑动指示条（Apple 风格）：在 active 导航项下方平滑滑动的暖色胶囊 */
-.nav-links {
-  position: relative;
-}
-.nav-links a {
-  position: relative;
-  z-index: 1;
-}
-.nav-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 999px;
-  background: rgba(204, 120, 92, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(204, 120, 92, 0.26);
-  transition:
-    transform 0.55s var(--ease-apple),
-    width 0.55s var(--ease-apple),
-    height 0.55s var(--ease-apple),
-    opacity 0.3s var(--ease-claude);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  will-change: transform, width, height;
-}
-.nav-indicator--show {
-  opacity: 1;
-}
-@media (max-width: 800px) {
-  .nav-indicator {
-    display: none;
+/* 尊重减少动态效果 */
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  .nav-links,
+  .magnetic,
+  .magnetic > *,
+  .nav-toggle span {
+    transition: none;
+  }
+  .nav.nav-hidden {
+    transform: translateX(-50%) translateY(-140%);
+  }
+  @media (max-width: 800px) {
+    .nav.nav-hidden {
+      transform: translateY(-140%);
+    }
   }
 }

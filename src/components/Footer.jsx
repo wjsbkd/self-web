@@ -4,7 +4,7 @@ import Magnetic from '@/components/Magnetic.jsx'
 import Reveal from '@/components/Reveal.jsx'
 import { contactEmail, contactWechat, resumePdf } from '@/data/nav.js'
 
-// 页脚 / 联系方式
+// 页脚 / 联系方式 —— 暗场收尾（居中单轴，与 Hero 首尾呼应）
 export default function Footer() {
   return (
     <footer className="footer" id="contact">
@@ -20,13 +20,13 @@ export default function Footer() {
         </Reveal>
         <Reveal delay={0.15} className="footer-email-wrap">
           <Magnetic strength={0.3} radius={140}>
-            <a className="email" href={`mailto:${contactEmail}`}>
-              {contactEmail} <Arrow />
+            <a className="footer-cta" href={`mailto:${contactEmail}`}>
+              发邮件聊聊 <Arrow />
             </a>
           </Magnetic>
         </Reveal>
 
-        <div className="footer-social">
+        <Reveal delay={0.25} className="footer-social">
           <Magnetic strength={0.5} radius={60}>
             <a
               className="social-btn"
@@ -78,14 +78,14 @@ export default function Footer() {
             </svg>
             <span>微信 {contactWechat}</span>
           </span>
-        </div>
+        </Reveal>
 
         <div className="footer-bottom">
           <span className="footer-brand">
             <svg className="footer-mark" viewBox="0 0 120 48" aria-label="LZH">
-              <text x="0" y="38" fill="#1f1915" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">L</text>
-              <text x="40" y="38" fill="#cc785c" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">Z</text>
-              <text x="78" y="38" fill="#cc785c" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">H</text>
+              <text x="0" y="38" fill="#f3efec" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">L</text>
+              <text x="40" y="38" fill="#f3efec" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">Z</text>
+              <text x="78" y="38" fill="#85807c" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">H</text>
             </svg>
             <span>© 2026 LIZONGHENG</span>
           </span>
