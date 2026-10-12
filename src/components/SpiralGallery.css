@@ -1,13 +1,14 @@
-/* SpiralGallery v3 —— 朦胧水波螺旋照片墙
+/* SpiralGallery v3 —— 暗场水波螺旋照片墙
  *
- * 视觉变化（相对 v2）：
- * - 纯白底 + 中心极淡蓝白光晕，大留白
- * - 去掉手机框硬边，改为"飘浮卡"柔阴影
+ * 视觉构成：
+ * - 容器是最深档的一口"井"，上缘吃一线缘光（--ring-card）
+ * - 中心光晕走缘光族（rim-brick），不再用站外色
  * - 卡片边缘自然羽化（图片本身无硬切割）
- * - 远景卡片：blur + 半透明 + 降饱和 → "水波散开"感
- * - 前景卡片：锐利 + 大尺寸 + 浅色高光
+ * - 远景卡片：半透明 + 降饱和 → "水波散开"感（由 JS 逐帧写 inline opacity/filter）
+ * - 前景卡片：锐利 + 大尺寸
  *
- * 参考：dreamcore 风格 / 朦胧照片墙
+ * ⚠️ JS 会在 .spiral-card 上写 inline opacity 与 filter（saturate），
+ *   这两项不要在这里用 CSS 覆写；动画层里也别用 transform —— 会被逐帧覆盖。
  */
 
 /* ── 外层容器：暗场深底大留白 ── */
@@ -18,7 +19,9 @@
   min-height: 620px;
   max-height: 880px;
   margin-top: 48px;
-  background: var(--bg-deep);
+  /* 比所在板块（--void-6）再沉一档，读作凹进去的井 */
+  background: var(--void-7);
+  box-shadow: var(--shadow-soft), var(--ring-card);
   border-radius: 16px;
   overflow: hidden;             /* 深底容器需要硬切割以保持干净边缘 */
   cursor: grab;
@@ -32,7 +35,7 @@
   cursor: grabbing;
 }
 
-/* ── 中心光晕（玫红→蜜桃→紫三段，呼应 Hero 光雾的同族提亮版）── */
+/* ── 中心光晕：缘光族，只留砖红一档的暖 ── */
 .spiral-glow {
   position: absolute;
   inset: 0;
@@ -40,16 +43,15 @@
   pointer-events: none;
   background:
     radial-gradient(ellipse 55% 45% at 50% 50%,
-      rgba(255, 45, 111, 0.16) 0%,
-      rgba(255, 157, 107, 0.07) 32%,
-      rgba(179, 157, 255, 0.05) 55%,
+      var(--rim-brick-a28) 0%,
+      var(--rim-brick-a18) 32%,
       transparent 68%
     );
 }
 
 /* ── 四边柔化遮罩：图片滑到边缘自然淡入 ──
-   暗场修正：mask 里的 #fff 必须与容器底色一致（bg-deep），
-   否则亮调白雾在暗底上会渲染成四条白框。 */
+   mask 默认按 alpha 取用，所以两端的实色写什么都一样（alpha 1 = 保留），
+   这里的 var(--void-7) 只是与容器底色同值、读代码时不骗人。 */
 .spiral-edge-mask {
   position: absolute;
   inset: 0;
@@ -57,17 +59,17 @@
   pointer-events: none;
   -webkit-mask-image:
     linear-gradient(to right,
-      #070508 0%, transparent 6%, transparent 94%, #070508 100%
+      var(--void-7) 0%, transparent 6%, transparent 94%, var(--void-7) 100%
     ),
     linear-gradient(to bottom,
-      #070508 0%, transparent 8%, transparent 92%, #070508 100%
+      var(--void-7) 0%, transparent 8%, transparent 92%, var(--void-7) 100%
     );
   mask-image:
     linear-gradient(to right,
-      #070508 0%, transparent 6%, transparent 94%, #070508 100%
+      var(--void-7) 0%, transparent 6%, transparent 94%, var(--void-7) 100%
     ),
     linear-gradient(to bottom,
-      #070508 0%, transparent 8%, transparent 92%, #070508 100%
+      var(--void-7) 0%, transparent 8%, transparent 92%, var(--void-7) 100%
     );
   mask-composite: intersect;
   -webkit-mask-composite: source-in;
@@ -94,7 +96,7 @@
   height: 380px;
   margin-left: -89px;
   margin-top: -190px;
-  background: var(--bg-elev-1);
+  background: var(--card-void);
   border: none;
   border-radius: 14px;        /* 软圆角，无硬切割 */
   overflow: hidden;
@@ -102,7 +104,7 @@
   box-shadow:
     0 22px 50px -18px rgba(0, 0, 0, 0.55),
     0 6px 18px -6px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(247, 242, 239, 0.07);
+    0 0 0 1px var(--text-bright-a06);
   will-change: transform, opacity, filter;
   backface-visibility: hidden;
   pointer-events: auto;
@@ -126,7 +128,7 @@
   box-shadow:
     0 32px 70px -18px rgba(0, 0, 0, 0.65),
     0 10px 24px -6px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(233, 165, 127, 0.22);
+    0 0 0 1px var(--rim-ember-a22);
 }
 .spiral-card:focus-visible {
   outline: 2px solid var(--accent);
@@ -147,10 +149,11 @@
   letter-spacing: 1px;
   padding: 9px 20px;
   border-radius: 100px;
-  background: rgba(23, 20, 27, 0.85);
+  /* 提示条浮在滚动的卡片流之上，必须留半透：卡片经过时能透出来一点 */
+  background: var(--glass-void);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(247, 242, 239, 0.1);
+  border: 1px solid var(--line);
   opacity: 0.85;
   animation: hintPulse 3s ease-in-out infinite;
   z-index: 20;

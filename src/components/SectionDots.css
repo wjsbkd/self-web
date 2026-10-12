@@ -20,12 +20,12 @@
   cursor: pointer;
   padding: 4px 0;
 }
-/* 圆点 */
+/* 圆点：未激活只留一枚缘光描边的空环（暗场与亮天下都靠这条环呼吸，不铺底色） */
 .section-dot-mark {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid var(--accent-deep);
+  border: 1px solid var(--rim-brick-a40);
   background: transparent;
   transition:
     width 0.4s var(--ease-claude),
@@ -33,13 +33,13 @@
     background 0.4s var(--ease-claude),
     border-color 0.4s var(--ease-claude);
 }
-/* 活动章节：圆点放大为暖白胶囊 */
+/* 活动章节：圆点拉长为暖色胶囊（与导航 active 的 4 点下划线同族，取 ember 端） */
 .section-dot.active .section-dot-mark {
   width: 22px;
   height: 8px;
   border-radius: 4px;
-  background: var(--glow-highlight);
-  border-color: var(--glow-highlight);
+  background: var(--rim-ember);
+  border-color: var(--rim-ember);
 }
 /* 标签：默认隐藏，hover 或 active 时展开 */
 .section-dot-label {

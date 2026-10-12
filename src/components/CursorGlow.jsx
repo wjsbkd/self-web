@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * CursorGlow —— 光标氛围光晕（Claude 氛围感）
- * 一个跟随光标的暖色径向光晕，增强而非替换原生光标。
+ * CursorGlow —— 光标氛围光晕（暗场"提灯"）
+ * 一抹砖红族柔光跟随光标，环体缓动追赶营造拖尾。
  * 触屏设备自动禁用；尊重 prefers-reduced-motion。
  *
- * 效果：光标移动时，一抹陶土橙柔光如"提灯"般跟随，
- * 在亮调羊皮纸背景上营造 Claude 式的温润氛围。
+ * 只在暗场出手：指针进入 Hero 天光带（实测 lum 155-231）时收灯 ——
+ * 暖白径向光压在天光上不可读，只会把干净的天空糊出一团跟手的脏斑，
+ * 而暗体本身已有灯泡这个固定光源，不该再有一个跟着跑的第二个光源。
  */
 export default function CursorGlow() {
   const dotRef = useRef(null) // 内层小点（瞬时跟随）
@@ -26,47 +27,67 @@ export default function CursorGlow() {
     let rx = mx
     let ry = my
     let raf = 0
-    let visible = false
+    let inside = false
+    let shown = false
+    let litBottom = 0
+
+    // 手灯点亮的分界线。原先是 .hero-sky 天光带的下沿（亮部实测到板块高的 66%）；
+    // 天光层随首屏重构删掉后，0.66 这个数正好落在首影片那一镜的人头下沿
+    // （face.js 实测头占 y 0–607 / 900 = 0.67），语义没变：光标离开亮部、
+    // 进入下方暗区才亮。所以只改注释，不动常数。
+    const measure = () => {
+      const hero = document.querySelector('.hero')
+      if (!hero) return
+      litBottom = hero.getBoundingClientRect().top + hero.offsetHeight * 0.66
+    }
+    measure()
+
+    // 透明度只在状态翻转时写，避免每帧重复触发样式计算
+    const show = (v) => {
+      if (v === shown) return
+      shown = v
+      const o = v ? '1' : '0'
+      dot.style.opacity = o
+      ring.style.opacity = o
+    }
 
     const onMove = (e) => {
       mx = e.clientX
       my = e.clientY
+      inside = true
       // 内层点瞬时贴合
       dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`
-      if (!visible) {
-        visible = true
-        dot.style.opacity = '1'
-        ring.style.opacity = '1'
-      }
     }
 
-    // 外层环缓动追赶（Claude 式"沉思"拖尾）
+    // 外层环缓动追赶（"沉思"拖尾）。天光判定也放在这一帧里：
+    // 只挪滚轮不挪鼠标时，灯同样要能亮起来或收掉。
     const loop = () => {
       raf = requestAnimationFrame(loop)
       rx += (mx - rx) * 0.12
       ry += (my - ry) * 0.12
       ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`
+      show(inside && my >= litBottom)
     }
     loop()
 
     // 进入/离开窗口时淡入淡出
     const onEnter = () => {
-      visible = true
-      dot.style.opacity = '1'
-      ring.style.opacity = '1'
+      inside = true
     }
     const onLeave = () => {
-      visible = false
-      dot.style.opacity = '0'
-      ring.style.opacity = '0'
+      inside = false
     }
 
     window.addEventListener('mousemove', onMove, { passive: true })
+    window.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure)
     document.addEventListener('mouseenter', onEnter)
     document.addEventListener('mouseleave', onLeave)
 
     return () => {
       window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
       document.removeEventListener('mouseenter', onEnter)
       document.removeEventListener('mouseleave', onLeave)
       cancelAnimationFrame(raf)

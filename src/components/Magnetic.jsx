@@ -32,7 +32,7 @@ export default function Magnetic({ children, strength = 0.3, radius = 120, class
       }
       const moveX = dx * strength
       const moveY = dy * strength
-      // 跟手期间关掉 CSS 过渡（见 Nav.css .magnetic.is-tracking）：
+      // 跟手期间关掉 CSS 过渡（见 global.css .magnetic.is-tracking）：
       // 否则每帧写入的位移与 0.5s 过渡是两套时钟，元素明显滞后于光标。
       el.classList.add('is-tracking')
       el.style.transform = `translate3d(${moveX.toFixed(2)}px, ${moveY.toFixed(2)}px, 0)`

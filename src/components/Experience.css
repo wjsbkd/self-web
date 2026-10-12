@@ -3,8 +3,11 @@
 .experience {
   padding-bottom: 120px;
 }
+/* 分隔线也要收进信息道：整幅 1px 亮线横穿画面时正好刮在头发边缘上，
+   比正文更容易被眼睛抓到。收到阅读块右缘（正文 46% + 日期列）为止。 */
 .experience-list {
   border-top: 1px solid var(--line);
+  max-width: calc(var(--lane-w, 100%) - 120px);
 }
 .experience-item {
   display: grid;
@@ -19,7 +22,7 @@
 }
 .experience-item:hover {
   padding-left: 24px;
-  background: var(--bg-elev-1);
+  background: var(--card-void);
 }
 
 /* 左侧：时期（mono 小字 + 陶土橙） */
@@ -30,9 +33,10 @@
   letter-spacing: 0.02em;
 }
 
-/* 右侧：内容主体（限宽 760px，不再无限扩展） */
+/* 右侧：内容主体不再单独限宽 —— .experience-list 已经收到信息道，
+   grid 的 1fr 列就是剩下的全部宽度。这里再写一次 calc(百分比 - 200px) 会
+   以 1fr 列宽为基准，减出负数 → 宽度归零、正文一字一行（实测整节 12600px 高）。 */
 .experience-body {
-  max-width: 760px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -81,7 +85,7 @@
     color 0.3s var(--ease-claude);
 }
 .experience-item:hover .tag-list span {
-  border-color: rgba(233, 165, 127, 0.55);
+  border-color: var(--rim-ember-a40);
   color: var(--accent-warm);
 }
 
@@ -97,7 +101,7 @@
   font-size: 34px;
   letter-spacing: -0.01em;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-bright);
   line-height: 1;
 }
 .campus-highlight b span {
@@ -106,8 +110,24 @@
 }
 .campus-highlight > span {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   letter-spacing: 0.02em;
+}
+
+/* 信息道是 48% 再减 120px，两列（160px 固定 + 40px gap）在窄一点的视口上会把正文挤没。
+   正文列实测：1440→306px、1280→230px、1180→182px、1151→168px（一行十一个字，读不成），
+   改前 1024→68px（一行五个字，整节散架）。列宽随视口约 0.48px/px 变化，
+   210px 是「两列还读得下去」的位置，反推视口 ≈1238 → 断点定 1240。
+   1240 以下改成日期在上、正文独占整条道。缩的是内部列，不是让位——主体在画面右侧
+   这件事跟视口宽度无关，信息道保持不动。 */
+@media (max-width: 1240px) {
+  .experience-item {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+  .experience-period {
+    padding-top: 0;
+  }
 }
 
 /* 响应式 —— 800px 断点 */

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>滚动看一条片子 · 作品集</title>
+<meta name="description" content="一条 15 秒的短片，从发呆到收工。向下滚动，你就是这条片子的进度条。">
+<meta name="theme-color" content="#020202">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="/assets/scrolly/outro-poster.jpg">
+<link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>
+<style>
+@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Silkscreen:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+</style>
+<link rel="stylesheet" href="scrolly.css">
+</head>
+<body>
+
+<!-- 背景舞台：三层同时渲染，只靠 opacity 切换 -->
+<div class="stage" aria-hidden="true">
+  <div class="layer is-on" id="layer-intro">
+    <video id="v-intro" class="film film--parallax" muted loop autoplay playsinline preload="auto"
+           src="/assets/scrolly/intro.mp4"></video>
+  </div>
+  <div class="layer" id="layer-main">
+    <video id="v-main" class="film" muted playsinline preload="auto"
+           src="/assets/scrolly/main.mp4"></video>
+  </div>
+  <div class="layer" id="layer-outro">
+    <img id="poster-outro" class="film" alt="" src="/assets/scrolly/outro-poster.jpg">
+  </div>
+  <div class="scrim scrim--sky"></div>
+  <div class="scrim scrim--floor"></div>
+  <canvas class="rain" id="rain"></canvas>
+</div>
+
+<!-- 顶栏：悬浮药丸，与主站同一套语言 -->
+<header class="hud-top">
+  <a class="pill pill--mark" href="/" aria-label="返回作品集首页"><span class="mark-dot"></span></a>
+  <nav class="pill pill--nav" aria-label="章节">
+    <span class="nav-item is-on" data-jump="0">首屏</span>
+    <span class="nav-item" data-jump="0.16">乱想</span>
+    <span class="nav-item" data-jump="0.58">过载</span>
+    <span class="nav-item" data-jump="0.84">落地</span>
+    <span class="nav-item" data-jump="1">尾声</span>
+  </nav>
+  <a class="pill pill--cta" href="/">进入作品集</a>
+</header>
+
+<main>
+  <!-- 文案层：固定居中，靠 fade 交接 -->
+  <div class="captions">
+
+    <section class="caption is-on" id="cap-intro" data-stage="intro">
+      <p class="badge"><span class="badge-avatars" aria-hidden="true"><i></i><i></i><i></i></span>李纵横 · 内容 / 运营 · 作品集</p>
+      <h1 class="headline">
+        <span class="line dot-matrix">把脑子里的热闹</span>
+        <span class="line dot-matrix">做成看得见的东西</span>
+      </h1>
+      <p class="sub">一条 15 秒的短片，从发呆到收工。<br>向下滚动，你就是这条片子的进度条。</p>
+      <p class="btn-row"><a class="btn" href="#" data-jump="0.06">开始滚动</a></p>
+      <dl class="metrics">
+        <div><dt class="m-icon" aria-hidden="true">&#9001;</dt><dd class="m-val">15s</dd><dd class="m-key">主视频时长</dd></div>
+        <div><dt class="m-icon" aria-hidden="true">&#8258;</dt><dd class="m-val">03</dd><dd class="m-key">叙事节拍</dd></div>
+        <div><dt class="m-icon" aria-hidden="true">&#42;</dt><dd class="m-val">24</dd><dd class="m-key">帧每秒</dd></div>
+        <div><dt class="m-icon" aria-hidden="true">&#8862;</dt><dd class="m-val">100%</dd><dd class="m-key">滚动驱动</dd></div>
+      </dl>
+    </section>
+
+    <section class="caption" id="cap-1" data-stage="1">
+      <p class="kicker">01 / STATIC NOISE</p>
+      <h2 class="headline headline--act">
+        <span class="line dot-matrix">灵感先在脸上</span>
+        <span class="line dot-matrix">乱涂一遍</span>
+      </h2>
+      <p class="sub">脸上贴满草稿的那几分钟，是所有作品的起点。<br>没有一张图是干净的，就像没有念头是安静的。</p>
+      <p class="meta">00:00.0 &mdash; 00:06.8 &nbsp;/&nbsp; 特写 &nbsp;/&nbsp; 发呆 &rarr; 托腮 &rarr; 瞪眼</p>
+    </section>
+
+    <section class="caption" id="cap-2" data-stage="2">
+      <p class="kicker">02 / OVERWHELM</p>
+      <h2 class="headline headline--act">
+        <span class="line dot-matrix">坐下来认真做</span>
+        <span class="line dot-matrix">却被念头抛上半空</span>
+      </h2>
+      <p class="sub">工具、需求、参考图同时起飞，咖啡泼了一脸。<br>这一段我最想留给你看：失控也是过程的一部分。</p>
+      <p class="meta">00:06.8 &mdash; 00:11.6 &nbsp;/&nbsp; 中景 &rarr; 全景 &nbsp;/&nbsp; 开工 &rarr; 腾空</p>
+    </section>
+
+    <section class="caption" id="cap-3" data-stage="3">
+      <p class="kicker">03 / LANDED</p>
+      <h2 class="headline headline--act">
+        <span class="line dot-matrix">摔在地上也</span>
+        <span class="line dot-matrix">先把咖啡端稳</span>
+      </h2>
+      <p class="sub">把失控收回来，交付一个能用的东西——<br>这就是我做设计的全部，也是我想跟你继续聊的。</p>
+      <p class="meta">00:11.6 &mdash; 00:15.1 &nbsp;/&nbsp; 落地 &rarr; 起身 &rarr; 走向镜头</p>
+    </section>
+
+    <section class="caption" id="cap-outro" data-stage="outro">
+      <p class="kicker">04 / NEXT</p>
+      <h2 class="headline headline--act">
+        <span class="line dot-matrix">人看完了</span>
+        <span class="line dot-matrix">接下来看作品</span>
+      </h2>
+      <p class="sub">项目、经历、账号运营都在主站里。<br>这条片子往回滚，可以倒着放完。</p>
+      <p class="btn-row">
+        <a class="btn" href="/">进入作品集</a>
+        <a class="btn btn--ghost" href="#" data-jump="0">回看一遍</a>
+      </p>
+    </section>
+
+  </div>
+
+  <!-- 滚动轨道：只负责撑高度，不承载内容 -->
+  <div id="track" class="track"></div>
+</main>
+
+<footer class="hud-bottom" aria-hidden="true">
+  <span class="cue" id="cue">SCROLL</span>
+  <span class="bar"><span class="bar-fill" id="bar-fill"></span></span>
+  <span class="readout" id="readout">00:00.0 / 00:15.1</span>
+</footer>
+
+<noscript><p class="noscript">这条页面需要 JavaScript 才能用滚动驱动视频。</p></noscript>
+<script src="scrolly.js"></script>
+</body>
+</html>

@@ -4,9 +4,12 @@
 }
 
 /* 能力与优势：合并为同一板块的统一网格（原“核心能力”+“个人优势”合一） */
+/* 三列改两列并收进信息道：第三列原本正好落在主视频那孩子的脸上（实测中段
+   x 30%–70% 是主体区），道宽见 global.css 的 .strength --lane-w。 */
 .capability-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  width: var(--lane-w, 100%);
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
 }
@@ -19,7 +22,7 @@
   transition: background 0.4s var(--ease-claude);
 }
 .capability-item:hover {
-  background: var(--bg-elev-1);
+  background: var(--card-void);
 }
 .capability-index {
   font: 10px var(--font-mono);
@@ -60,16 +63,17 @@
 }
 .tool-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  width: var(--lane-w, 100%);
 }
 .tool-gallery-grid figure,
 .tool-gallery-item {
   margin: 0;
   overflow: hidden;
   border-radius: 4px;
-  background: var(--bg-elev-1);
-  box-shadow: var(--shadow-card);
+  background: var(--card-void);
+  box-shadow: var(--shadow-card), var(--ring-card);
   cursor: pointer;
   transition:
     transform 0.5s var(--ease-claude),
@@ -78,7 +82,7 @@
 .tool-gallery-grid figure:hover,
 .tool-gallery-item:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-warm-glow);
+  box-shadow: var(--shadow-warm-glow), var(--ring-card);
 }
 .tool-gallery-item:focus-visible {
   outline: 2px solid var(--accent);
@@ -89,12 +93,13 @@
   aspect-ratio: 16/10;
   object-fit: cover;
   display: block;
-  /* 暗场：图片降亮压饱和融入背景，hover 恢复（参考图 6.6 图片不跳出氛围层） */
-  filter: brightness(0.82) saturate(0.85);
+  /* 暗场压图统一档（全站三处配图同值）：降亮 + 抽饱和 + 补一点对比，
+     让图片留在氛围层里而不跳出背景；hover 用 filter:none 回到原图。 */
+  filter: brightness(0.9) saturate(0.72) contrast(1.06);
   transition: filter 0.5s var(--ease-claude);
 }
 .tool-gallery-grid figure:hover img {
-  filter: brightness(1) saturate(1);
+  filter: none;
 }
 .tool-gallery-grid figcaption {
   font: 11px var(--font-mono);
