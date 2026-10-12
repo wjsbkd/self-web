@@ -1,16 +1,9 @@
-/* About 组件样式 —— Claude 暖调融入 */
-.tool-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 30px;
-}
-.tool-list span {
-  font: 11px/1.5 var(--font-mono);
-  color: var(--accent-warm);
-  border: 1px solid var(--line-tag);
-  padding: 7px 10px;
-}
+/* About 组件样式 —— 2026-10-11 第四轮：迁移到参考图的「黑场 + 火光 + 白墨」海报排版
+   （token 见 global.css）。要点：
+   · 一种墨 —— 正文/标题全部白墨，强调改用字重对比而不是浅蜜桃色；
+   · 层级靠字号 —— 导语 = display 阶，正文 = --fs-body，元数据 = --fs-label；
+   · 等宽只留给纯拉丁/数字的读数（邮箱、电话、日期），中文一律 display 族。
+   已删：.tool-list（About.jsx 里没有对应节点，第三轮就悬空的死规则）。 */
 
 /* 联系条 / 自述 / 教育经历统一收进信息道（宽度见 global.css 的 .about --lane-w）：
    主视频这两秒人头就在画面正中，铺满内容列等于把字压在脸上。 */
@@ -45,27 +38,29 @@
   margin-top: 50px;
   max-width: var(--lane-w, 750px);
 }
-.lead {
-  /* 数据感大字：极重无衬线暖白（衬线退役，承担编辑式分量的新载体） */
-  font-family: var(--font-sans);
-  font-size: clamp(26px, 2.2vw, 43px) !important;
-  line-height: 1.4 !important;
-  letter-spacing: 0.01em;
-  font-weight: 700;
+.about-copy .lead {
+  /* 导语 = 海报上的第二档大字。参考图的大字是「实心 + 细体」两档对撞，
+     这里同一行里 300/800 对撞（见下面的 span），不再用颜色做重音。
+     行高比 --lh-display(0.92) 松：全角字没有拉丁的升降部空隙，0.92 会贴笔。 */
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.05vw, 40px);
+  line-height: 1.28;
+  letter-spacing: var(--track-display);
+  font-weight: 300;
   color: var(--text-bright);
 }
 .about-copy p {
-  font-size: 16px;
-  line-height: 2;
-  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-base);
   max-width: 630px;
-  margin-top: 20px;
+  margin-top: 26px;
 }
 .about-copy p span {
-  /* 词重音：衬线斜体退役 → 字重对比 + 浅蜜桃 */
-  font-family: var(--font-sans);
-  font-weight: 700;
-  color: var(--accent-warm);
+  /* 词重音：靠字重，不靠彩色 —— 与参考图「文字只有一种墨」一致 */
+  font-weight: 800;
+  color: var(--text-bright);
 }
 
 .metrics {
@@ -81,22 +76,16 @@
      收窄后密度回到"一屏读数"的量级（1700 时约 1120px）。 */
   max-width: 66%;
 }
-/* 点阵刻度线：与导航下划线同一套 pitch（--dot-pitch），给数据栏一个仪器读数的底。
-   用缘光族的砖红而不是站外色。 */
+/* 数据栏的收束：参考图的装饰只有 pill、标签、分割线三样，没有点阵刻度，
+   所以本轮把原来的点阵底纹（--dot-pitch 刻度线）换成一条与顶部同款的分隔线，
+   数据栏就变成「上下两道细线夹一组读数」的版式。 */
 .metrics::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: var(--dot-pitch);
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    var(--rim-brick-a40) 1.5px,
-    transparent 1.9px
-  );
-  background-size: var(--dot-pitch) var(--dot-pitch);
-  background-repeat: repeat-x;
+  border-bottom: 1px solid var(--line-soft);
 }
 .metrics div {
   border-left: 1px solid var(--line-soft);
@@ -108,22 +97,25 @@
   padding-left: 0;
 }
 .metrics b {
-  /* 数据栏（参考图 2.5 对位）：大号无衬线偏粗、近白读数 */
-  font-family: var(--font-sans);
-  font-size: 40px;
-  letter-spacing: -0.01em;
-  font-weight: 700;
+  /* 读数：白墨实心大字，与导语同一族；小数用 800 压住，靠 -0.02em 收紧 */
+  font-family: var(--font-display);
+  font-size: 44px;
+  letter-spacing: -0.02em;
+  font-weight: 800;
   color: var(--text-bright);
   display: flex;
   align-items: baseline;
   gap: 3px;
 }
 .metrics span {
+  /* 中文标签不能走参考图的「全大写 + 宽字距」，字距收到 0.04em 才不会把词拆散 */
+  font-family: var(--font-display);
   font-size: 11px;
+  font-weight: 500;
   color: var(--text-dim);
   margin-top: 10px;
   display: block;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
 }
 
 .about {
@@ -151,28 +143,34 @@
      总有某个宽度（实测 1352–1440 这一段，1366 最典型）刚好容得下一整行，字尾离分隔线只剩 2px。
      所以留 24px：让日期在任何宽度下都稳定断成「2022.09 —」/「2026.06」两行
      （前半实测 70px，最窄的两列档 1151 处内容盒 83px，仍留 13px 气口），
-     既不孤立破折号，也不贴线。分隔线画在列边框上，不受这个 padding 影响。 */
+     既不孤立破折号，也不贴线。分隔线画在列边框上，不受这个 padding 影响。
+     ⚠️ 这一档保持 13px 等宽（本轮唯一没换成 display 族的元数据）：上面那串宽度全部是在
+     13px DM Mono 下实测的，改成 12px Archivo 会让整行缩短到 120px 上下，1366 那一档就重新贴线了。 */
   padding-right: 24px;
   border-right: 1px solid var(--line);
   font: 13px var(--font-mono);
   color: var(--text-dim);
 }
 .education-detail h3 {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+  color: var(--text-bright);
   margin: 0;
 }
 .education-sub {
-  font-size: 14px;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
   color: var(--text-dim);
   margin-top: 8px;
 }
 .education-skills {
-  font-size: 14px;
-  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  color: var(--text-base);
   margin-top: 12px;
-  line-height: 1.7;
+  line-height: var(--lh-body);
 }
 
 /* 跟 Experience 同一类挤压：教育块 1fr:2fr + 60px gap，右列实测

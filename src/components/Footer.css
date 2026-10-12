@@ -1,15 +1,22 @@
-/* Footer 组件样式 —— 暗场收尾（居中单轴，与 Hero 首尾呼应）
-   底部光晕用光域同族色收束整站；CTA 为白色药丸（命令级）。 */
+/* Footer 组件样式 —— 2026-10-11 第四轮：参考图海报排版语言（token 见 global.css）
+   收尾屏 = 满幅巨型标题出血压画面 + 信息道里的白药丸 CTA + 一排方括号/微标签。
+   已删：.email 那一档（Footer.jsx 里早没有 email 大字行了，规则是旧的）。
+   ⚠️ 暗场里的浅色件（药丸、社交圆钮）压在影片上仍需一点投影，这是参考图
+   （纯黑底海报）不需要、我们必须补的一条。 */
 .footer {
   min-height: 100vh;
   display: flex;
   position: relative;
   overflow: hidden;
 }
-/* 收尾一镜（t≈15s）孩子端着咖啡站在画面中段偏右，所以这一屏不再居中。
+/* 收尾一镜（t≈15s）孩子端着咖啡站在画面中段偏右。
+   本轮把这条约束改成参考图的分工：巨型标题出车道、横压整幅内容列（可读性由
+   global.css 给 .footer 加的 --title-band-h 顶部暗板承担），正文/按钮/底栏仍留在道内。
+   ⚠️ 暗板与 .footer-rim 都是 .footer 的伪元素/绝对定位件，不要在这个 flex 容器上
+   给它们加 justify/align，会打散 flex 轴。
    ⚠️ 限宽不能写在 .footer-inner 上：它带 .wrap 的 margin:auto，
    一被压到 52% 就重新居中，整块 CTA 反而挪到了人身上（实测标题右缘 x 980，
-   正好盖住脸）。所以内层保持整幅内容列，限宽交给下面的直接子元素。 */
+   正好盖住脸）。所以内层保持整幅内容列，限宽逐个挂在下面的子块上。 */
 .footer-inner {
   position: relative;
   z-index: 1;
@@ -20,60 +27,58 @@
   text-align: left;
   padding: 100px 0;
 }
-.footer-inner > * {
+/* 出车道的只有 h2（见下），其余子块一律收进 --lane-w */
+.footer-inner > *:not(:first-child),
+.footer-inner .eyebrow {
   max-width: var(--lane-w, 100%);
 }
 .footer h2 {
-  /* 极重无衬线（与 hero 标题同族），暗场上的"落幕标题"。
-     上限 72px 是被道宽卡住的：「从一次对话开始。」8 个字要在 47% 道（1440 下 620px）
-     里排成一行，字号过 77 就折行 —— 折行会把第二行推到角色身上。 */
-  font-family: var(--font-sans);
-  font-size: clamp(40px, 5vw, 72px);
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  line-height: 1.12;
+  /* 与 .heading-row h2 同一档：满幅内容列，字号由 --fs-h2 的 clamp 按 10 个全角字反推。
+     「下一个故事，」「从一次对话开始。」两行各自成行（<br/> 是写死的），
+     1440 下 132px × 8 字 = 1056px < 内容列 1320px，实测不折行。 */
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
   color: var(--text-bright);
   margin: 0;
-}
-/* 邮箱大字（保留原有 mailto 直达能力，改成轻字重数据感排版） */
-.email {
-  display: block;
-  margin-top: 40px;
-  font: clamp(15px, 1.8vw, 26px) var(--font-mono);
-  color: var(--text-dim);
-  letter-spacing: 0.02em;
-  transition: color 0.3s var(--ease-claude);
-}
-.email:hover {
-  color: var(--accent-warm);
 }
 .footer-email-wrap {
   margin-top: 60px;
 }
-/* 白药丸 CTA（命令级，与 Hero 主 CTA 同族） */
+/* 白药丸 CTA：与 global.css 的 .pill 同档（em 驱动的 padding、600 字重），
+   只多一条投影 —— 理由见文件头。 */
 .footer-cta {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 34px;
+  gap: 0.7em;
+  padding: 1em 1.75em;
   border-radius: 999px;
-  background: var(--paper);
+  background: var(--paper-hi);
   color: var(--ink);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
   box-shadow: var(--shadow-paper);
   transition:
     background 0.3s var(--ease-claude),
-    transform 0.3s var(--ease-claude);
+    color 0.3s var(--ease-claude),
+    translate 0.3s var(--ease-claude);
 }
 .footer-cta .arrow {
-  font-size: 16px;
+  font-size: 1.1em;
   color: var(--ink);
 }
 .footer-cta:hover {
-  background: var(--paper-hi);
+  background: var(--paper);
   color: var(--rim-brick);
-  transform: translateY(-2px);
+  translate: 0 -2px;
+}
+.footer-cta:hover .arrow {
+  color: var(--rim-brick);
 }
 .footer-social {
   display: flex;
@@ -104,7 +109,7 @@
 }
 .social-btn:hover {
   border-color: var(--rim-ember-a40);
-  color: var(--accent-warm);
+  color: var(--accent);
   background: var(--accent-a08);
   transform: translateY(-3px);
 }
@@ -115,8 +120,9 @@
   margin-left: 6px;
   padding: 11px 16px;
   border: 1px solid var(--line-tag);
-  border-radius: 30px;
-  font: 12px var(--font-mono);
+  border-radius: 999px;
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.04em;
   color: var(--text-dim);
   background: transparent;
 }
@@ -132,7 +138,11 @@
   align-items: center;
   justify-content: flex-start;
   gap: 30px;
-  font: 10px var(--font-mono);
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-dim);
 }
 .footer-bottom a {
@@ -140,7 +150,7 @@
   transition: color 0.3s var(--ease-claude);
 }
 .footer-bottom a:hover {
-  color: var(--accent-warm);
+  color: var(--accent-active);
 }
 .footer-brand {
   display: flex;

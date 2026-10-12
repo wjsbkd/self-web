@@ -1,19 +1,24 @@
-/* Media 组件样式 —— Claude 羊皮纸亮调 + Apple 横向滚动视频轨道 */
+/* Media 组件样式 —— 2026-10-11 第四轮：参考图海报排版语言（token 见 global.css）
+   已删：.account-section 到 .stat-item 的整段（Media.jsx 只渲染 .portfolio-bar，
+   那 81 行是从旧版「运营账号区块」留下的死规则；现行账号区块在 AccountOperations.css）。 */
 .media {
   padding-bottom: 170px;
 }
 
-/* 完整作品集 PDF 入口条 */
+/* 完整作品集 PDF 入口条：按参考图的「一行微标签 + 一行实心大字 + 一枚白药丸」重排。
+   入口条原来是 1px 砖红描边框 + 渐变底 + 暖光阴影，那是第三轮的仪器感；
+   参考图里唯一的框状控件就是那枚白药丸，所以右侧收成药丸，条本身只留一条顶线。 */
 .portfolio-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   margin-top: 18px;
-  padding: 20px 23px;
-  border: 1px solid var(--rim-brick-a40);
-  background: linear-gradient(135deg, var(--card-void), var(--card-void-hi));
-  box-shadow: var(--shadow-warm-glow), var(--ring-card);
-  border-radius: 4px;
+  padding: 26px 0 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 .portfolio-bar div {
   display: flex;
@@ -21,116 +26,44 @@
   gap: 18px;
 }
 .portfolio-bar span {
-  font: 10px var(--font-mono);
-  color: var(--accent);
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 .portfolio-bar b {
-  font-size: 15px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
   color: var(--text-bright);
 }
 .portfolio-bar > a {
-  font: 12px var(--font-mono);
-  color: var(--accent-warm);
+  /* 白药丸：参考图里唯一的 UI 控件，见 global.css 的 .pill */
+  font: 600 var(--fs-label)/1 var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border-radius: 999px;
+  padding: 0.95em 1.7em;
+  transition:
+    translate 0.3s var(--ease-claude),
+    background 0.3s var(--ease-claude);
+}
+.portfolio-bar > a:hover {
+  translate: 0 -2px;
+  background: var(--paper);
 }
 
-/* 运营账号区块 */
-.account-section {
-  margin-top: 70px;
-  padding: 36px 28px;
-  /* 暗面卡 + 上缘一线光 */
-  border: 1px solid var(--line);
-  background: var(--card-void);
-  box-shadow: var(--shadow-soft), var(--ring-card);
-  border-radius: 4px;
-}
-.account-title {
-  font-family: var(--font-sans);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  margin-bottom: 22px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-bright);
-}
-.account-icon {
-  font-size: 20px;
-}
-.account-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: start;
-}
-.account-info {
-  font: 13px var(--font-mono);
-  color: var(--text-dim);
-}
-.account-name {
-  font-size: 15px;
-  color: var(--text-bright);
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-.account-link {
-  margin-top: 10px;
-  font-size: 12px;
-}
-.account-url {
-  color: var(--accent);
-  word-break: break-all;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.3s var(--ease-claude);
-}
-.account-url:hover {
-  border-bottom-color: var(--accent);
-}
-.account-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-.stat-item {
-  text-align: center;
-  padding: 16px 10px;
-  border: 1px solid var(--line);
-  /* 嵌在 .account-section 里，比所在卡再抬一档 */
-  background: var(--card-void-hi);
-  border-radius: 4px;
-}
-.stat-item b {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text-bright);
-  letter-spacing: -0.01em;
-}
-.stat-item span {
-  display: block;
-  font: 10px var(--font-mono);
-  color: var(--text-dim);
-  margin-top: 6px;
-}
-
-/* 响应式 —— 800px 断点 */
+/* 响应式 —— 800px 断点（原来同档还有 .account-content / .account-stats 两条，
+   随上面的死规则一起删了） */
 @media (max-width: 800px) {
   .media {
     padding-bottom: 90px;
   }
-  .account-content {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .account-stats {
-    grid-template-columns: repeat(3, 1fr);
-  }
   .portfolio-bar {
     align-items: flex-start;
-    gap: 18px;
+    gap: 16px;
     flex-direction: column;
   }
   .portfolio-bar div {

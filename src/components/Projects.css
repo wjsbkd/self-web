@@ -1,7 +1,12 @@
 /* Projects —— Master-Detail 悬停展示
  *
- * 布���：上方三张概览卡 + 下方详情面板
+ * 布局：上方三张概览卡 + 下方详情面板
  * hover 概览卡 → 下方切换为该卡的完整图文
+ *
+ * 2026-10-11 第四轮：迁移到参考图的海报排版（token 见 global.css）。这一节只有四档字：
+ * 编号（--fs-label，站内少数保留火光色的拉丁读数）、标签与说明（--fs-label / --fs-body 白墨）、
+ * 条目名与数字（--fs-h3 与 clamp 大字，800 实心）。中文标签不吃 0.16em 的拉丁字距，统一 0.04em；
+ * text-transform 在这里没有意义。顺带修掉本文件第 3 行历史遗留的 3 个 U+FFFD（"布???：" → "布局："）。
  */
 
 /* 板块底色与 padding 都在 global.css（.work 挂在下潜梯度上 + .section）。
@@ -50,23 +55,21 @@
   margin-bottom: 18px;
 }
 .project-index-num {
-  font: 11px var(--font-mono);
+  font: 500 var(--fs-label)/1 var(--font-display);
   color: var(--accent);
-  letter-spacing: 1px;
+  letter-spacing: var(--track-label);
 }
 .project-index-tag {
-  font: 10px var(--font-mono);
-  letter-spacing: 0.8px;
+  /* 原来是一枚描边小胶囊；参考图的标签是「裸的」微标签，装饰只有方括号和细线 */
+  font: 500 11px/1.4 var(--font-display);
+  letter-spacing: 0.04em;
   color: var(--text-dim);
-  padding: 4px 10px;
-  border-radius: 99px;
-  border: 1px solid var(--line-soft);
 }
 .project-index-title {
-  font-family: var(--font-sans);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
   line-height: 1.2;
   color: var(--text-bright);
   margin: 0;
@@ -79,16 +82,17 @@
   padding-top: 14px;
 }
 .project-index-value {
-  font-family: var(--font-sans);
-  font-size: 30px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 2.1vw, 38px);
+  font-weight: 800;
   color: var(--text-bright);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 .project-index-label {
-  font: 11px var(--font-mono);
+  font: 500 var(--fs-label)/1.4 var(--font-display);
   color: var(--text-dim);
-  letter-spacing: 0.6px;
+  letter-spacing: 0.04em;
 }
 
 /* ═══════════════ 下方：详情面板 ═══════════════ */
@@ -148,19 +152,18 @@
 }
 
 .feature-kicker {
-  font: 10px var(--font-mono);
-  letter-spacing: 1.3px;
-  color: var(--accent);
-  text-transform: uppercase;
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: var(--track-label);
+  color: var(--text-dim);
   display: inline-block;
   margin-bottom: 6px;
 }
 .feature-title {
-  font-family: var(--font-sans);
-  font-size: clamp(20px, 1.8vw, 26px);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  line-height: 1.18;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 1.9vw, 30px);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
+  line-height: 1.16;
   color: var(--text-bright);
   margin: 0 0 16px;
 }
@@ -174,14 +177,15 @@
 }
 .detail-block b {
   display: block;
-  font: 11px var(--font-mono);
-  letter-spacing: 0.7px;
-  color: var(--accent-warm);
+  font: 700 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.04em;
+  color: var(--text-bright);
   margin-bottom: 3px;
 }
 .detail-block p {
-  font-size: 13.5px;
-  line-height: 1.72;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--text-dim);
   margin: 0;
 }
@@ -198,15 +202,16 @@
   width: fit-content;
 }
 .feature-stat b {
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
   color: var(--text-bright);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .feature-stat span {
-  font: 10px var(--font-mono);
+  font: 500 var(--fs-label)/1.4 var(--font-display);
   color: var(--text-dim);
+  letter-spacing: 0.04em;
 }
 
 /* ═══════════════ 响应式 ═══════════════ */
@@ -226,9 +231,6 @@
     width: 100%;
     height: 300px;
   }
-  .feature-title {
-    font-size: 20px;
-  }
 }
 
 @media (max-width: 700px) {
@@ -240,24 +242,11 @@
     min-height: 160px;
     padding: 20px;
   }
-  .project-index-title {
-    font-size: 19px;
-  }
-  .project-index-value {
-    font-size: 26px;
-  }
   .detail-showcase {
     padding: 20px;
   }
   .detail-visual {
     height: 240px;
-  }
-  .feature-title {
-    font-size: 18px;
-  }
-  .detail-block p {
-    font-size: 12.5px;
-    line-height: 1.65;
   }
   .expand-details {
     gap: 10px;

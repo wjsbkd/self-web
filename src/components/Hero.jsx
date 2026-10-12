@@ -85,45 +85,44 @@ export default function Hero() {
   return (
     <section className="hero" id="top" ref={heroRef}>
       <div className="hero-content wrap" ref={contentRef}>
-        {/* 点阵大标题：实心像素字 + 圆点遮罩；遮罩挂在每行上，容器居中也不会打散相位。
-            四行短列而不是两行长句：实测首屏 t=0 那一镜人头占 x 480–960、y 90–660，
-            两行 120px 的横排怎么挪都要刮到下巴，竖成一列才把整块脸让出来。 */}
+        {/* 参考图的海报分工：满幅巨型标题压过主体，微标签缩在标题下方的左右两角，
+            正文与 CTA 沉到画面底部两端。原先那四行点阵短列是为让开人头设计的，
+            本轮不再让 —— 大字出血本身就是这套语言的主体，可读性由顶部压暗带兜住。
+            两半字重对撞（800 / 300）对应参考图的「DJ Zak」重、「Derdan」轻。 */}
         <h1 className="hero-headline">
-          <span className="line dot-matrix">让想法</span>
-          <span className="line dot-matrix">被看见，</span>
-          <span className="line dot-matrix">让体验</span>
-          <span className="line dot-matrix">被记住。</span>
+          <span className="line">让想法被看见，</span>
+          <span className="line line--whisper">让体验被记住。</span>
         </h1>
 
-        <p className="hero-badge">
-          <span>PORTFOLIO</span>
-          <span>2026</span>
-          <span>LI ZONGHENG</span>
-        </p>
+        <div className="spec hero-spec">
+          <span>Portfolio // 2026</span>
+          <span className="spec--bracket">Li Zongheng // Creative Operator</span>
+        </div>
 
-        <p className="hero-sub">
-          在内容、运营与现场执行的交界处，
-          <br />
-          将创意转化为可见的影响力。
-        </p>
+        <div className="hero-foot">
+          <p className="hero-sub">
+            <span className="bullet">在内容、运营与现场执行的交界处，</span>
+            <span className="bullet">将创意转化为可见的影响力。</span>
+          </p>
 
-        <div className="hero-cta-group">
-          <Magnetic strength={0.4} radius={120}>
-            <a className="hero-cta-primary" href="#work">
-              探索精选项目 <Arrow />
-            </a>
-          </Magnetic>
-          <Magnetic strength={0.3} radius={100}>
-            <a
-              className="hero-cta-secondary"
-              href={resumePdf}
-              target="_blank"
-              rel="noreferrer"
-              download
-            >
-              下载简历 <Arrow />
-            </a>
-          </Magnetic>
+          <div className="hero-cta-group">
+            <Magnetic strength={0.4} radius={120}>
+              <a className="pill" href="#work">
+                探索精选项目 <Arrow />
+              </a>
+            </Magnetic>
+            <Magnetic strength={0.3} radius={100}>
+              <a
+                className="pill pill--ghost"
+                href={resumePdf}
+                target="_blank"
+                rel="noreferrer"
+                download
+              >
+                下载简历 <Arrow />
+              </a>
+            </Magnetic>
+          </div>
         </div>
       </div>
 
@@ -132,10 +131,6 @@ export default function Hero() {
         <span>SCROLL</span>
         <div className="scroll-line" />
       </div>
-
-      <p className="side-note">
-        LIZONGHENG / CREATIVE OPERATOR <span /> 2026
-      </p>
     </section>
   )
 }

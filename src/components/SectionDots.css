@@ -43,8 +43,9 @@
 }
 /* 标签：默认隐藏，hover 或 active 时展开 */
 .section-dot-label {
-  font: 10px var(--font-mono);
-  letter-spacing: 0.8px;
+  /* 标签是中文（关于 / 经历 / 项目…）→ display 族 + 0.04em，不吃拉丁字距 */
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.04em;
   color: var(--text-dim);
   white-space: nowrap;
   opacity: 0;
@@ -59,7 +60,8 @@
   transform: translateX(0);
 }
 .section-dot.active .section-dot-label {
-  color: var(--accent-warm);
+  /* 活动态由那枚 ember 胶囊负责，文字回到白墨，只是抬一档亮度 */
+  color: var(--text-bright);
 }
 
 /* 响应式：窄屏隐藏标签，仅保留圆点 */
