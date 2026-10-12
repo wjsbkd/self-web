@@ -561,7 +561,10 @@ footer[id] {
   font-weight: 500;
   letter-spacing: var(--track-label);
   text-transform: uppercase;
-  color: var(--text-dim);
+  /* 参考图里所有字都是纯白 #FFFFFF，层级只靠字号与字距。
+     原先跟正文取了 --text-dim：390 上右侧那条压到头发时只有 4.25:1（眼神六帧实测），
+     回到纯白后同一帧 8:1 以上，六个锚点帧全过。暗影描边试过，只抬 0.1，不划算。 */
+  color: var(--text-bright);
 }
 .spec--bracket::before {
   content: '[';

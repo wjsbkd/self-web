@@ -1,7 +1,7 @@
 import './FilmStage.css'
 import { useEffect, useRef } from 'react'
 
-/* 全站影片层：首屏 = 首屏视频（循环 + 跟随鼠标），滚过交接点后 = 主视频（滚动驱动进度）。
+/* 全站影片层：首屏 = 首屏视频（眼神跟随鼠标，不滚动时画面不动），滚过交接点后 = 主视频（滚动驱动进度）。
    素材沿用 public/assets/scrolly/ 那两份，不复制第二份字节。
    数值依据（实测，见 HANDOVER「Scrollytelling」节）：
    - 主视频 24fps、重编码成 GOP6 后单次 seek p50 5.6–23ms（随解码路径浮动），
@@ -14,6 +14,30 @@ const HANDOFF = 0.35 // 滚过首屏高度的 35% 就交棒给主视频；未滚
    纵向 ±6%（前提是 FilmStage.css 把盒子做到 112% 宽，见那里的 ⚠️ 说明）。
    代价是上下各裁掉 6% 画面 —— 站立那一镜的鞋尖靠 DODGE 的负向 y 偏移补回来。 */
 const FILM_K = 1.12
+
+/* ── 首屏眼神跟随 ──
+   intro.mp4 是一条 10s 的「表情 + 视线」素材：正面 → 右上 → 大笑 → 左 → 下 → 正面。
+   下面这张锚点表是逐张看过抽帧后定的（x 正=看向画面右、y 正=看向画面上，视线单位向量）：
+   0.15 正面平视 / 1.30 水平看向画面右 / 2.85 右上 / 5.40 看向画面左 / 5.75 左下 / 6.80 正下。
+   素材里没有「纯上」和「纯右下」的镜头，那两个方向由最接近的锚点代打。
+   指针方向取点积最大的锚点，再把 currentTime 平滑推过去 —— 中间走的是素材自己的帧，
+   所以看起来是"眼睛转过去"而不是"跳切"。
+   ⚠️ 时间不能按方向加权平均：这条视线轨迹在时间轴上不是单调的（2.85s 的右上和 5.40s 的左
+   之间隔着整段朝右的大笑），平均出来的时刻对应的还是朝右。只能选一个锚点再平滑。 */
+const GAZE = [
+  { t: 0.15, x: 0, y: 0 },
+  { t: 1.3, x: 1, y: 0.05 },
+  { t: 2.85, x: 0.55, y: 0.85 },
+  { t: 5.4, x: -1, y: 0 },
+  { t: 5.75, x: -0.6, y: -0.8 },
+  { t: 6.8, x: 0, y: -1 },
+]
+const GAZE_DEAD = 0.1 // 指针落在这个半径内（以短边一半为单位）视为"贴在脸上"→ 正面
+/* 双眼中点在源片里的位置，实测自 t=0.15 那帧的 128px/90px 网格叠图：
+   左眼 (575,295) / 右眼 (700,295) → 中点 (638,295) ÷ 1280×720。 */
+const FACE = { x: 0.498, y: 0.41 }
+const SRC_W = 1280
+const SRC_H = 720
 
 /* 主体避让表：板块滚到视口中央时，影片该往哪边让开多少（视口宽/高比例，x 正=主体右移）。
    数字口径：lanes.js 对每个板块居中的那一帧做背景减除，逐行量出「主体最靠左在哪」，
@@ -57,8 +81,13 @@ export default function FilmStage() {
     let seekAt = 0
     let mx = 0
     let my = 0
-    let pmx = 0
-    let pmy = 0
+    let moved = false // 鼠标还没动过 → 停在正面那一帧，别把 (0,0) 当成"左上角"
+    let gazeT = GAZE[0].t
+    let introSeeking = false
+    let issuedIntroFrame = -1
+    let introSeekAt = 0
+    let faceX = 0
+    let faceY = 0
     let raf = 0
     let dodge = [] // measure() 生成：[{y 生效 scrollY, x, yOff}]
     let dx = 0 // 当前已应用的避让位移（视口比例）
@@ -66,18 +95,50 @@ export default function FilmStage() {
     let lastTx = -1
     let lastTy = -1
 
+    /* 触屏（没有可跟随的指针）才让首屏循环播；有指针或开了减少动效就钉在某一帧上。 */
+    const looping = () => !fine && !reduce.matches
+
     function measure() {
       const hero = document.querySelector('.hero')
       const heroH = hero ? hero.offsetHeight : window.innerHeight
       anchor = heroH * HANDOFF
       docMax = document.documentElement.scrollHeight - window.innerHeight
       duration = main.duration > 0 && isFinite(main.duration) ? main.duration : duration
+      // 脸在屏幕上的位置：getBoundingClientRect 已经带上了 CSS 的 scale，
+      // 再按 object-fit:cover 的实际缩放把源片坐标映射过来。
+      const r = intro.getBoundingClientRect()
+      const s = Math.max(r.width / SRC_W, r.height / SRC_H)
+      faceX = r.left + r.width / 2 + (FACE.x - 0.5) * SRC_W * s
+      faceY = r.top + r.height / 2 + (FACE.y - 0.5) * SRC_H * s
       // 各板块「居中于视口」时的 scrollY，就是该板块避让档的生效点；档间线性插值
       dodge = DODGE.map(([sel, x, y]) => {
         const el = document.querySelector(sel)
         const mid = el ? el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2 : 0
         return { y: Math.min(docMax, Math.max(0, mid)), x, yOff: y }
       }).sort((a, b) => a.y - b.y)
+    }
+
+    /* 指针方向 → 锚点时刻 */
+    function gazeTargetT() {
+      if (!moved) return GAZE[0].t
+      const vx = mx - faceX
+      const vy = faceY - my // 屏幕 y 向下，取反成"向上为正"
+      const len = Math.hypot(vx, vy)
+      if (len < Math.min(window.innerWidth, window.innerHeight) * 0.5 * GAZE_DEAD) return GAZE[0].t
+      const ux = vx / len
+      const uy = vy / len
+      let best = GAZE[0]
+      let bs = -2
+      for (const a of GAZE) {
+        const n = Math.hypot(a.x, a.y)
+        if (!n) continue
+        const sc = (a.x * ux + a.y * uy) / n
+        if (sc > bs) {
+          bs = sc
+          best = a
+        }
+      }
+      return best.t
     }
 
     function dodgeAt(y) {
@@ -102,8 +163,9 @@ export default function FilmStage() {
     }
 
     function onMainMove(e) {
-      mx = (e.clientX / window.innerWidth) * 2 - 1
-      my = (e.clientY / window.innerHeight) * 2 - 1
+      mx = e.clientX
+      my = e.clientY
+      moved = true
     }
 
     function tick(now) {
@@ -119,7 +181,7 @@ export default function FilmStage() {
         root.classList.toggle('is-intro', stage === 'intro')
         // 隐藏的循环层停掉解码，否则一份 1280×720 常驻；显示时再续上
         if (stage === 'intro') {
-          if (!reduce.matches && intro.paused) intro.play().catch(() => {})
+          if (looping() && intro.paused) intro.play().catch(() => {})
         } else if (!intro.paused) {
           intro.pause()
         }
@@ -154,12 +216,22 @@ export default function FilmStage() {
         }
       }
 
-      // 首屏跟随鼠标：位移由这里每帧写，CSS 侧不能再挂 transition（两套时钟会互相拉扯）
-      if (fine && !reduce.matches && stage === 'intro') {
-        pmx += (mx - pmx) * 0.08
-        pmy += (my - pmy) * 0.08
-        intro.style.transform =
-          'translate3d(' + (-pmx * 26).toFixed(2) + 'px,' + (-pmy * 16).toFixed(2) + 'px,0) scale(1.08)'
+      // 首屏眼神：这一层不做位移、不自动播，只把 currentTime 推到指针方向对应的锚点帧
+      if (stage === 'intro' && fine && !reduce.matches) {
+        const gt = gazeTargetT()
+        gazeT += (gt - gazeT) * 0.18
+        if (Math.abs(gt - gazeT) < 0.004) gazeT = gt
+        const f = Math.round(gazeT * FPS)
+        if (f !== issuedIntroFrame && (!introSeeking || now - introSeekAt > SEEK_STALL)) {
+          issuedIntroFrame = f
+          introSeeking = true
+          introSeekAt = now
+          try {
+            intro.currentTime = f / FPS
+          } catch {
+            introSeeking = false
+          }
+        }
       }
     }
 
@@ -167,19 +239,35 @@ export default function FilmStage() {
       seeking = false
     }
 
+    const onIntroSeeked = () => {
+      introSeeking = false
+    }
+
     const onVisibility = () => {
       if (document.hidden) return
       // 后台标签页里 seek 会被挂起，回到前台后必须允许重新发一次
       issuedFrame = -1
       seeking = false
+      issuedIntroFrame = -1
+      introSeeking = false
+    }
+
+    /* 把首屏钉在当前注视帧上：有指针可跟、或开了「减少动效」时用。 */
+    function holdIntro() {
+      if (!intro.paused) intro.pause()
+      issuedIntroFrame = Math.round(gazeT * FPS)
+      try {
+        intro.currentTime = gazeT
+      } catch {
+        // metadata 还没到时浏览器会拒，tick 里下一帧会补上
+      }
     }
 
     function onPrefChange() {
-      if (reduce.matches && !intro.paused) {
-        intro.pause()
-        intro.currentTime = 0
-      } else if (!reduce.matches && stage === 'intro' && intro.paused) {
-        intro.play().catch(() => {})
+      if (looping()) {
+        if (stage === 'intro') intro.play().catch(() => {})
+      } else {
+        holdIntro()
       }
     }
 
@@ -194,9 +282,11 @@ export default function FilmStage() {
       duration = main.duration
       main.pause()
     }
-    if (reduce.matches) {
-      intro.removeAttribute('autoplay')
-      intro.pause()
+    if (looping()) {
+      // 触屏没有指针可跟，退回原来的循环播放
+      intro.play().catch(() => {})
+    } else {
+      holdIntro()
     }
 
     main.addEventListener('loadedmetadata', () => {
@@ -206,12 +296,11 @@ export default function FilmStage() {
       onScroll()
     })
     main.addEventListener('seeked', onSeeked)
+    intro.addEventListener('seeked', onIntroSeeked)
+    intro.addEventListener('loadedmetadata', measure)
     intro.addEventListener('play', () => {
       // autoplay 的启动是排队任务，会跑在脚本 pause() 之后，只能在事件上钉回
-      if (reduce.matches) {
-        intro.pause()
-        intro.currentTime = 0
-      }
+      if (!looping()) holdIntro()
     })
     document.addEventListener('visibilitychange', onVisibility)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -226,6 +315,8 @@ export default function FilmStage() {
     return () => {
       cancelAnimationFrame(raf)
       main.removeEventListener('seeked', onSeeked)
+      intro.removeEventListener('seeked', onIntroSeeked)
+      intro.removeEventListener('loadedmetadata', measure)
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
@@ -241,7 +332,6 @@ export default function FilmStage() {
         ref={introRef}
         muted
         loop
-        autoPlay
         playsInline
         preload="auto"
         src="/assets/scrolly/intro.mp4"
