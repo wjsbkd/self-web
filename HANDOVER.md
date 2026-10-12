@@ -6,10 +6,10 @@
 
 ## 项目是什么
 
-个人作品集网站（求职用），React 19 + Vite 8。2026-10-10 起为**暗场发光 + 点阵数据感**视觉（下潜梯度 `--void-1…7`、缘光 `--rim-*`、像素点阵标题），面向内容 / 运营岗求职（详见 AI工作文件夹 HANDOVER 中的求职诊断结论）。**"羊皮纸亮调"那一版已退役**，读到旧描述以 `global.css` 的 Design Token 为准。
+个人作品集网站（求职用），React 19 + Vite 8。当前视觉（2026-10-12）是**参考图「黑场 + 火光 + 白墨」海报排版**：整页铺在滚动影片上，无衬线实心大字、文字只用一种白墨、层级靠字号不靠灰度。面向内容 / 运营岗求职（详见 AI工作文件夹 HANDOVER 中的求职诊断结论）。**"羊皮纸亮调"（08-03）与"暗场发光 + 点阵数据感"（10-10）两版都已退役**，读到旧描述一律以 `global.css` 的 Design Token 与文件头注释为准。
 
 - 项目路径：`D:\AI工作文件夹\self web`
-- 站点结构（`src/App.jsx` 实际滚动顺序）：Hero（首屏，含自转地球）→ About（关于）→ Strengths（能力与优势）→ Experience（经历）→ Projects（精选项目）→ Media（作品 / 视频轨道）→ AccountOperations（账号运营，螺旋照片墙）→ Footer
+- 站点结构（`src/App.jsx` 实际滚动顺序）：Hero（首屏）→ About（关于）→ Strengths（能力与优势）→ Experience（经历）→ Projects（精选项目）→ Media（作品 / 视频轨道）→ AccountOperations（账号运营，螺旋照片墙）→ Footer。首屏起各区块背景透明，共用 `FilmStage` 那一层滚动驱动影片（`HeroGlobe` / `HeroDigits` 已删除）。
 - 版心约 1700px，PC 优先展示；移动端有抽屉导航与响应式降级。
 
 ## 技术栈与结构
@@ -18,7 +18,7 @@
 |---|---|
 | 框架 | React 19 + Vite 8 |
 | 规范 | ESLint 9 + Prettier（`npm run lint` / `npm run format`），当前 0 error |
-| 组件 | `src/components/`：Nav、Hero、About、Experience、Projects、Strengths、Media、VideoRail、AccountOperations、SpiralGallery、WorkModal、Footer、SectionHeading、SectionDots、CountUp、CursorGlow、Magnetic、Reveal、TiltCard、Arrow、ErrorBoundary（`HeroGlobe` / `HeroDigits` 已于 10-11 删除）|
+| 组件 | `src/components/`：Nav、Hero、FilmStage（滚动驱动影片层）、About、Experience、Projects、Strengths、Media、VideoRail、AccountOperations、SpiralGallery、WorkModal、Footer、SectionHeading、SectionDots、CountUp、CursorGlow、Magnetic、Reveal、TiltCard、Arrow、ErrorBoundary（`HeroGlobe` / `HeroDigits` 已于 10-11 删除）|
 | Hooks | `src/hooks/`：useScroll、useScrollSpy、useKeyboardNav（方向键跳章节） |
 | 数据 | `src/data/`：全部文案与链接单源化（experiences / projects / strengths / nav / mediaLinks / videos / tools / douyinWorks / abilityMaterials），`index.js` 统一出口 |
 | 样式 | 组件级 CSS + `src/styles/global.css`（Design Token）+ `src/styles/responsive.css` |
@@ -583,6 +583,12 @@ experience/work/account-ops/footer 与 390 的对应六格，漂移 0.00；1440 
   `geom.js`（容器链 + 计算后的 `grid-template-columns`，`node geom.js W H .selector`，
   就是它量出 68px 正文列）、`paintcheck.js`（`elementFromPoint` 判画没画）、
   `functional.js`（滚动→seek／交递／视差，自带有效性闸门）。
+  **第七轮（10-12）新增 3 个**：`shotpage.js`（`node shotpage.js <url> <W> <H> <frac> <out.jpg>`，
+  顺带打印 `fonts` / 当前亮起的 caption id / `rain` 是否存在，用来证明独立页真的加载了）、
+  `railprobe.js`（轨道 frame/poster/caption/scrim 几何 + 卡片 opacity + 计算后的 `p` 颜色）、
+  `raillist.js`（把每张轨道卡的 `VIDEO / nn` 与标题按 DOM 打出来 —— 小字别从缩略截图里认）。
+  `contrast.js` 本轮两处变更：支持 `MODE=caption PAGE=… FRACS=…` 量多页，以及**沿祖先链求 `overflow` 裁切交集**
+  （见下文 ⚠️ 假阳性），改完它 `paintcheck.js` 基本就是冗余件了。
 - 日志 8 个：`after-1440/1280/1241/1024/390.log`（修完之后的 AA 表）、`final-1440/390.log`（修之前，
   上面对比表的对照组）、`lanes2.log`（留白分区原始输出）。
 - 证据截图 5 个：`lane-before-1024-experience.jpg`（68px 正文列散架现场）、
@@ -818,5 +824,90 @@ CDP 坑复记：`proc.kill()` 只杀父进程，headless Edge 子进程会留着
 引用自查脚本从 34 个 `/assets/文件` 引用降到 33 个，**仍然 0 缺失**；
 `vite build --outDir dist-verify` exit 0（186ms，JS 249.79 kB），产物已删。
 `public/assets/video-covers/` 现在 10 张、988 KB，全部被引用。
+
+## 参考图海报排版语言全量还原（2026-10-12 第七次，未提交）
+
+用户指令：「先做现有版本的存档，然后先分析图片的排版语言（字体衬线/无衬线、字重对比、是否全大写 / 字号层级 / 对齐方式 / 颜色体系 / 装饰元素 / 整体气质），然后把这套排版语言完整应用到每段文案上：字体/字号比例/颜色/布局全部还原参考图」，附一张 1920×1434 的黑底火光海报。
+存档 = 上一轮的 `f321f9f`；本轮 19 个文件的改动全部叠在它上面，**未提交、未推送**。
+各板块 CSS 文件头都写了本轮的落法与理由（搜「第四轮」），下面只记全局层与验收数字，别把这份文档当第二份注释抄。
+
+### 参考图实测（决策依据，别再重测）
+
+- **字体**：无衬线 neo-grotesque，实心不描边；同一行内 800 与 300 字重对撞；主标题全大写、微标签全大写 + 大字距。
+- **字号层级**：主标题 cap 273px = **19.0% 视口高**，横跨 **94% 视口宽**（x 3.1%–97.1%）；正文 28px；微标签 26px。→ **主标题:正文 ≈ 13.5:1**，**微标签:正文 ≈ 0.93:1**（同字号，差别只在大写 + 字距）。标题带落在 y 15.0%–34.0%，正文与 CTA 沉到 84.7%–96.3%。
+- **对齐**：左对齐为主，非对称多栏（左文右图 / 两角微标签）。
+- **颜色**：全部文字实测为纯 `#FFFFFF`，白墨只占画面 **5.5%**；橙色占 **29.7%**，均值 `#A4430B`、最亮一颗 `#FFC489`，**100% 来自画面光，没有一处是 UI 印的色**。
+- **装饰**：只有三样 —— 白药丸（CTA）、大写微标签、发丝分割线。没有 icon、没有点阵、没有发光描边。
+- **气质**：极简 + 强对比 + 大字压画面，呼吸感来自留黑而不是留白。
+
+### ⚠️ 中文做不到同一件事，本轮还原的是「满幅」这条轴
+
+拉丁大写平均 advance ≈ 0.5em，所以参考图能"满幅 + 19vh 高"同时成立；全角汉字 advance = 1em，
+一行 12 字要占满 94vw，字号上限就是 94vw/12 ≈ 7.8vw，此时字高只有约 9vh。
+**两条轴必须选一条**，本轮选满幅（视觉结果就是"大字压画面"），不选绝对高度：
+`--fs-display: clamp(30px, calc((100vw - 120px) / 14), 122px)`（首屏 14 个全角字铺满内容列）、
+`--fs-h2: clamp(30px, calc((100vw - 120px) / 10), 168px)`（板块标题最长一行 10 字）。
+
+### 全局层落了什么
+
+- 字号阶六档：`--fs-display` / `--fs-h2` / `--fs-h3` 19–27px / `--fs-body` 15px / `--fs-label` 12px / `--fs-micro` 10px；
+  `--lh-display` 0.92、`--lh-body` 1.6、`--track-display` −0.015em（全角负字距的可用下限）、`--track-label` 0.16em。
+- 字体栈：`--font-display` = Archivo → Noto Sans SC（拉丁走 Archivo 的 300/900 两端，汉字自动落到 Noto Sans SC 同字重），
+  `--font-sans` = Noto Sans SC，`--font-mono` = DM Mono（只剩 About / WorkModal 4 处引用）。
+- **一条墨规则（D2'）**：正文与标题一律白墨（`--text-bright` 1 / `--text-base` 0.88 / `--text-dim` 0.66），
+  火光色 `--accent` 只允许出现在 ≤`--fs-label` 的拉丁/数字微标签上，以及 hover/focus 这类瞬时状态。
+  例外都写在 `global.css` 头注释里，加新色文字前先对这条。
+- **分工**：只有 `h2` 出车道（`width:100%`，满幅压画面），`<p>` / 标签 / CTA 仍受 `--lane-w` 约束。
+  可读性由各板块顶部的 `--title-band-h` 渐变压暗层负责，不靠给文字加底板。
+- 本轮退役：`--font-pixel` / `--font-pixel-zh` / `--rim-rose(-a16/-a30)` / `--sky-*` / `.dot-matrix` 圆点遮罩 /
+  About 数据栏刻度底纹 / Silkscreen 与 Fusion Pixel 两套像素字。火光阶整体从 hue 340–10 的玫瑰平移到 20–30 的琥珀。
+
+### scrollytelling 独立页同步（`public/scrolly/`）
+
+纯 HTML/CSS/JS 那页与主站同源，`scrolly.css` 整个重写：token 抄 `global.css` 的实测值（改色两边都要对）、
+`.film` 加上与 `FilmStage.css:42` 同款的暖调 `sepia(.38) hue-rotate(-6deg) saturate(1.3) brightness(.74)`、
+scrim 从玫瑰/天光径向改成纯黑线性、点阵遮罩与天光带上的数字雨（`<canvas class="rain">` + `drawRain()`）全部删除、
+metrics 从 `<dl>`+字形 icon 改成 `<b class="m-val">`+`<span class="m-key">`、导航 active 从 LED 点改成 800 字重 + 1px 下划线、
+`.pill--mark` 换成主站同款 LZH wordmark。
+**这一页刻意没有还原对齐轴**：主站 h2 是满幅左对齐压画面，这一页的字浮在会动的短片上、主体在画面中央来回移，
+居中才压得住 —— 文件头有 ⚠️ 注释，别看到"没还原居左"就当成漏做。
+
+### 本轮踩到的两个坑（都是我自己先信了坏数据）
+
+1. **`getBoundingClientRect()` / `Range.getClientRects()` 不遵守祖先 `overflow:hidden` 的裁切。**
+   `contrast.js` 因此把 `.video-rail` 里一个**被裁掉、屏幕上根本不存在**的字幕行当成可见文字去采样，
+   报出 1.84–3.87:1 的假 AA 失败，我基于它改了两处 CSS（字幕提到 `--text-base`、scrim 只压封面带）。
+   `railprobe.js` 打出真实几何才发现：该元素盒 x 862..1129，而 `.video-rail-frame` 的右边界是 807。
+   两处改动**已全部回退**，`VideoRail.css` 的注释也重写过，不留基于假测量的"实测"字样。
+   修法：探针现在沿祖先链求 clip 交集，交集小于自身盒 60% 就跳过 —— 以后所有量屏的脚本都要这一层。
+2. **scrim 缩短 = 视觉更差。** 试过让 `.video-rail-frame::before/::after` 只盖封面带（不整列到底），
+   截图 `shotv14media.jpg` 里字幕行在 frame 边缘被拦腰硬切（「频」「AI 直播精彩片段」），
+   比原来的淡出难看得多，已回退成 `top:0; bottom:0`，`shotv15media.jpg` 复确认。
+
+### 验证（本轮实测）
+
+- `npx eslint src/` exit 0；`npx vite build --outDir dist-verify` exit 0（65 modules / 205ms，
+  CSS 51.96 kB → gzip 10.44，JS 249.68 kB → gzip 81.31），产物已删；`dist/scrolly/` 是本轮的最新文件。
+- **AA 对比度（合成截图回灌取样，clip-aware）：主站 4 档视口 × 8 板块 = 0 失败**。
+  全局最低：1440 → 5.17（`.account-ops`）、1280 → 5.49（`.hero`）、1024 → 5.31（`.account-ops`）、390 → 5.41（`.account-ops`）。
+- **scrolly 页 0 失败**：1280 五档滚动位置最低 8.66、390 最低 6.22。
+  ⚠️ 量这页必须用 `PAGE=http://localhost:5173/scrolly/index.html` —— dev server 的 SPA fallback 会把
+  `/scrolly/` 直接吞掉返回 React 首页，用那个 URL 跑出来的数字全是主站的，看着也像通过（本轮就中招一次）。
+  站内入口 `Media.jsx:51` 用的就是 `/scrolly/index.html`，是对的。
+- 车道未破：`geom.js 1240 .experience` → lane 48%（h2 宽 1105 出车道 / `p` 宽 366 受车道 / 内容列 410 = calc(48%−120px)）；
+  `geom.js 1150 .about` → lane 38%。
+- 影片层功能：`functional.js 1440 900` → 首屏跟随鼠标 OK、下滚 seek 递增 OK、上滚倒放 OK，
+  main 段最大 |want−got| = **0.02 s**（一帧 0.042 s）。
+- 截图复核：`scrolly-real-{0,0.45,0.9}.jpg`（1280×800）三档，`shotpage.js` 报
+  `fonts:"loaded"`、`missing:0`、`rain:false`，亮起的是 `cap-intro` / `cap-1` / `cap-3`。
+
+### 仍未做 / 待决定
+
+- `public/fonts/` 的 Fusion Pixel woff + woff2 共 **2.07 MB**（外加 19 KB OFL 许可）现在零引用，全仓无 `@font-face`。
+  等一句话就删；本轮没动。
+- `TiltCard.jsx` 已无引用（「保留待用」），同样等用户定。
+- 参考图的对齐轴（满幅左对齐）在 scrolly 页刻意没还原，见上。
+- 主站首屏是否再往"绝对字高 19vh"靠（代价是不满幅），本轮按满幅定了，要翻盘得重开这条轴。
+
 
 
