@@ -10,9 +10,9 @@
   justify-content: space-between;
   margin-top: 18px;
   padding: 20px 23px;
-  border: 1px solid var(--accent);
-  background: linear-gradient(135deg, var(--bg-elev-1), var(--bg-elev-2));
-  box-shadow: var(--shadow-warm-glow);
+  border: 1px solid var(--rim-brick-a40);
+  background: linear-gradient(135deg, var(--card-void), var(--card-void-hi));
+  box-shadow: var(--shadow-warm-glow), var(--ring-card);
   border-radius: 4px;
 }
 .portfolio-bar div {
@@ -38,10 +38,10 @@
 .account-section {
   margin-top: 70px;
   padding: 36px 28px;
-  /* Claude 风格：净白卡片 + 暖边框 */
+  /* 暗面卡 + 上缘一线光 */
   border: 1px solid var(--line);
-  background: var(--bg-elev-1);
-  box-shadow: var(--shadow-soft);
+  background: var(--card-void);
+  box-shadow: var(--shadow-soft), var(--ring-card);
   border-radius: 4px;
 }
 .account-title {
@@ -97,8 +97,8 @@
   text-align: center;
   padding: 16px 10px;
   border: 1px solid var(--line);
-  /* Claude 风格：stat 卡用暖奶油底，替代原深暖炭 */
-  background: var(--bg-elev-2);
+  /* 嵌在 .account-section 里，比所在卡再抬一档 */
+  background: var(--card-void-hi);
   border-radius: 4px;
 }
 .stat-item b {
@@ -106,7 +106,7 @@
   font-family: var(--font-sans);
   font-size: 26px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-bright);
   letter-spacing: -0.01em;
 }
 .stat-item span {

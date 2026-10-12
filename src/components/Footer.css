@@ -5,46 +5,35 @@
   display: flex;
   position: relative;
   overflow: hidden;
-  background: var(--bg-deep);
 }
-.footer-glow {
-  width: 78vw;
-  height: 78vw;
-  position: absolute;
-  left: 50%;
-  bottom: -34vw;
-  margin-left: -39vw;
-  /* 光域同族色提亮版：玫红→亮紫双光从页面尽头向上泛起 */
-  background:
-    radial-gradient(ellipse 55% 42% at 38% 58%, rgba(255, 45, 111, 0.2), transparent 62%),
-    radial-gradient(ellipse 48% 36% at 64% 50%, rgba(179, 157, 255, 0.14), transparent 60%),
-    radial-gradient(ellipse 40% 30% at 52% 44%, rgba(255, 157, 107, 0.1), transparent 60%);
-  pointer-events: none;
-  filter: blur(60px);
-}
+/* 收尾一镜（t≈15s）孩子端着咖啡站在画面中段偏右，所以这一屏不再居中。
+   ⚠️ 限宽不能写在 .footer-inner 上：它带 .wrap 的 margin:auto，
+   一被压到 52% 就重新居中，整块 CTA 反而挪到了人身上（实测标题右缘 x 980，
+   正好盖住脸）。所以内层保持整幅内容列，限宽交给下面的直接子元素。 */
 .footer-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  text-align: center;
+  text-align: left;
   padding: 100px 0;
 }
+.footer-inner > * {
+  max-width: var(--lane-w, 100%);
+}
 .footer h2 {
-  /* 极重无衬线（与 hero 标题同族），暗场上的"落幕标题" */
+  /* 极重无衬线（与 hero 标题同族），暗场上的"落幕标题"。
+     上限 72px 是被道宽卡住的：「从一次对话开始。」8 个字要在 47% 道（1440 下 620px）
+     里排成一行，字号过 77 就折行 —— 折行会把第二行推到角色身上。 */
   font-family: var(--font-sans);
-  font-size: clamp(48px, 6vw, 104px);
+  font-size: clamp(40px, 5vw, 72px);
   font-weight: 900;
   letter-spacing: 0.01em;
   line-height: 1.12;
   color: var(--text-bright);
   margin: 0;
-}
-.footer h2 i {
-  font-weight: 300;
-  color: var(--accent-warm);
 }
 /* 邮箱大字（保留原有 mailto 直达能力，改成轻字重数据感排版） */
 .email {
@@ -68,35 +57,36 @@
   gap: 10px;
   padding: 16px 34px;
   border-radius: 999px;
-  background: var(--surface-light);
-  color: var(--on-light);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 14px;
   font-weight: 700;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(247, 242, 239, 0.06);
+  box-shadow: var(--shadow-paper);
   transition:
     background 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude);
 }
 .footer-cta .arrow {
   font-size: 16px;
-  color: var(--on-light);
+  color: var(--ink);
 }
 .footer-cta:hover {
-  background: var(--glow-highlight);
+  background: var(--paper-hi);
+  color: var(--rim-brick);
   transform: translateY(-2px);
 }
 .footer-social {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 14px;
   margin-top: 36px;
 }
 .social-btn {
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(247, 242, 239, 0.14);
+  border: 1px solid var(--line-tag);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -113,9 +103,9 @@
   height: 20px;
 }
 .social-btn:hover {
-  border-color: rgba(233, 165, 127, 0.55);
+  border-color: var(--rim-ember-a40);
   color: var(--accent-warm);
-  background: rgba(233, 165, 127, 0.08);
+  background: var(--accent-a08);
   transform: translateY(-3px);
 }
 .social-wechat {
@@ -124,7 +114,7 @@
   gap: 9px;
   margin-left: 6px;
   padding: 11px 16px;
-  border: 1px solid rgba(247, 242, 239, 0.14);
+  border: 1px solid var(--line-tag);
   border-radius: 30px;
   font: 12px var(--font-mono);
   color: var(--text-dim);
@@ -140,10 +130,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 30px;
   font: 10px var(--font-mono);
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 .footer-bottom a {
   color: var(--accent);
@@ -158,9 +148,8 @@
   gap: 8px;
 }
 .footer-brand .footer-mark {
+  /* 字体与填色见 global.css 的 .wordmark 族（--lit 变体）；这里只定尺寸 */
   height: 22px;
-  width: auto;
-  display: block;
 }
 
 /* 响应式 —— 800px 断点 */

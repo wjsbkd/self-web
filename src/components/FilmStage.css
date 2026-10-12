@@ -1,0 +1,73 @@
+/* 全站影片层：固定在所有区块之下，首屏视频与主视频同时挂载，用 opacity 交棒。
+   层级：body 底色 → .film-stage(0) → 各 section(relative，DOM 在后所以自然压在上面)。
+   导航(50)/圆点(40)/噪点层(9999) 都在其上，不受影响。 */
+.film-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--void-7);
+}
+
+/* ⚠️ 盒子必须比视口宽，不能靠 object-fit:cover 的溢出。
+   cover 是把媒体裁到元素盒子里，不是画到盒子外面 —— 实测 inset:0 时
+   避让位移一超过 (1.12−1)/2×视口宽 = 85px，画面左缘就整条被拖走，
+   露出 .film-stage 的黑底（about 那一屏左边 90px 全黑，就是它）。
+   改成 112% 宽、左右各外扩 6%：盒子中心仍在视口正中，cover 的映射一点没变
+   （媒体都是 1.25 倍居中），只是裁切边界跟着盒子一起放宽了。
+   于是位移预算变成纯几何量，与素材无关：横向 ±0.06×1.12×W ≈ ±0.127W，
+   纵向 ±0.06×H。FilmStage.jsx 的 DODGE 就是照这两个上限定的。 */
+.film-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -6%;
+  width: 112%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-apple);
+  /* 素材本身偏亮，压一档再让各区块的半透明底色接管，
+     否则白字标题在咖啡泼溅那一幕上会整段消失 */
+  filter: brightness(0.82) saturate(0.88);
+}
+
+.film-layer--intro {
+  /* 鼠标视差最大 26/16px，预算是 0.0648W / 0.04H（1425×900 上 92 / 36px） */
+  transform: scale(1.08);
+}
+
+/* 主视频的 scale 不是装饰，是「主体避让」的位移预算的一部分：0.122W 的横移
+   要靠 1.12 这一档才够（见上）。JS 每帧覆写 transform，所以这里只给首帧的静态值。
+   ⚠️ 不要在这里加 will-change：实测它会把 <video> 提成独立合成层，
+   headless 的 Page.captureScreenshot 就再也等不到稳定帧（25s 超时）。
+   视频本身已由浏览器合成，这行提示只会帮倒忙。 */
+.film-layer--main {
+  transform: scale(1.12);
+}
+
+.is-intro .film-layer--intro,
+.is-main .film-layer--main {
+  opacity: 1;
+}
+
+/* 顶部与底部各压一道：顶部保住导航与首屏标题，底部让页面收尾回黑 */
+.film-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2, 2, 2, 0.52) 0%, rgba(2, 2, 2, 0) 26%),
+    linear-gradient(0deg, rgba(2, 2, 2, 0.6) 0%, rgba(2, 2, 2, 0) 30%);
+}
+
+@media (max-width: 640px) {
+  /* 窄屏上 cover 会把 16:9 裁成中间一条，人物容易只剩半张脸；
+     放大一点换取主体居中，代价是两侧裁得更多 */
+  .film-layer {
+    object-position: 50% 42%;
+  }
+  .film-layer--intro {
+    transform: scale(1.12);
+  }
+}

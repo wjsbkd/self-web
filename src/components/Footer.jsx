@@ -8,7 +8,7 @@ import { contactEmail, contactWechat, resumePdf } from '@/data/nav.js'
 export default function Footer() {
   return (
     <footer className="footer" id="contact">
-      <div className="footer-glow" />
+      <div className="footer-rim" aria-hidden="true" />
       <div className="wrap footer-inner">
         <Reveal>
           <p className="eyebrow">LET&apos;S CREATE SOMETHING MEANINGFUL</p>
@@ -82,10 +82,16 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <span className="footer-brand">
-            <svg className="footer-mark" viewBox="0 0 120 48" aria-label="LZH">
-              <text x="0" y="38" fill="#f3efec" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">L</text>
-              <text x="40" y="38" fill="#f3efec" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">Z</text>
-              <text x="78" y="38" fill="#85807c" fontFamily="'Inter','Helvetica Neue',Arial,sans-serif" fontWeight="800" fontStyle="italic" fontSize="42" letterSpacing="-2">H</text>
+            <svg className="footer-mark wordmark wordmark--lit" viewBox="0 0 120 48" aria-label="LZH">
+              <text className="bm-lzh" x="0" y="38">
+                L
+              </text>
+              <text className="bm-lzh" x="40" y="38">
+                Z
+              </text>
+              <text className="bm-h" x="78" y="38">
+                H
+              </text>
             </svg>
             <span>© 2026 LIZONGHENG</span>
           </span>

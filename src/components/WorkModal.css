@@ -11,7 +11,7 @@
 .work-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(7, 5, 8, 0.72);
+  background: var(--scrim);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: modal-fade-in 0.35s var(--ease-claude);
@@ -25,9 +25,9 @@
   position: relative;
   width: min(1100px, 100%);
   max-height: 85vh;
-  background: var(--bg-elev-1);
+  background: var(--card-void);
   border-radius: 8px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), var(--ring-card);
   overflow: hidden;
   animation: modal-scale-in 0.45s var(--ease-claude);
   transform-origin: center;
@@ -52,7 +52,7 @@
   height: 38px;
   border-radius: 50%;
   border: 1px solid var(--line-soft);
-  background: var(--bg-elev-1);
+  background: var(--card-void-hi);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -75,7 +75,8 @@
   transition: background 0.3s var(--ease-claude);
 }
 .work-modal-close:hover span {
-  background: #fff;
+  /* 按钮翻成 accent 底色后，叉号要转墨色才压得住；旧值 #fff 是白压白 */
+  background: var(--ink);
 }
 .work-modal-close span:first-child { transform: rotate(45deg); }
 .work-modal-close span:last-child { transform: rotate(-45deg); }
@@ -89,7 +90,8 @@
 
 /* 左侧媒体区 */
 .work-modal-media {
-  background: var(--bg-elev-2);
+  /* 图像井：配图/视频四周留的是纯暗，读作 letterbox */
+  background: var(--void-7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -203,17 +205,20 @@
   margin-top: auto;
   padding: 12px 22px;
   border-radius: 99px;
-  background: var(--surface-light);
-  color: var(--on-light);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
+  box-shadow: var(--shadow-paper);
   transition:
     background 0.3s var(--ease-claude),
+    color 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude);
 }
 .work-modal-link:hover {
-  background: var(--glow-highlight);
+  background: var(--paper-hi);
+  color: var(--rim-brick);
   transform: translateY(-2px);
 }
 .work-modal-pwd {

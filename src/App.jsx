@@ -1,4 +1,5 @@
 import Nav from '@/components/Nav.jsx'
+import FilmStage from '@/components/FilmStage.jsx'
 import Hero from '@/components/Hero.jsx'
 import About from '@/components/About.jsx'
 import Experience from '@/components/Experience.jsx'
@@ -26,6 +27,9 @@ export default function App() {
 
   return (
     <>
+      {/* 影片层必须在 <main> 之前：各 section 是 position:relative，
+          与它同层叠上下文时按 DOM 顺序压在它上面 */}
+      <FilmStage />
       <CursorGlow />
       <Nav active={active} />
       <SectionDots sections={dotSections} active={active} />

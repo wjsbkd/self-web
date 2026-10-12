@@ -31,6 +31,7 @@ npm-debug.log*
 .claude/
 .workbuddy/
 .deploy-tmp/
+.mimosa/
 
 # 重构前的手工代码快照，git 历史已覆盖同类内容
 backups/

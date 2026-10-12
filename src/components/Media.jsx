@@ -18,7 +18,7 @@ export default function Media() {
 
   return (
     <section className="media section wrap" id="media">
-      <div className="section-glow section-glow--media" aria-hidden="true" />
+      <div className="section-rim" aria-hidden="true" />
       <SectionHeading num="05" kicker="MEDIA ARCHIVE">
         <h2>
           留给作品，
@@ -41,6 +41,15 @@ export default function Media() {
         type="video"
         item={activeVideo}
       />
+
+      {/* 滚动驱动短片：纯 HTML/CSS/JS 独立页，不经 React，见 public/scrolly/ */}
+      <Reveal className="portfolio-bar" once>
+        <div>
+          <span>SCROLLYTELLING / 01</span>
+          <b>滚动看完这条片子</b>
+        </div>
+        <a href="/scrolly/index.html">向下滚就是进度条 <Arrow /></a>
+      </Reveal>
 
       {/* 完整作品集 PDF 入口 */}
       <Reveal className="portfolio-bar" once>

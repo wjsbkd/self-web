@@ -1,0 +1,403 @@
+/* ============================================================
+   scrollytelling 页面样式
+   设计语言与主站同源：暗场下潜 + 缘光 + 点阵。
+   token 取自 src/styles/global.css（同一份实测值），改色时两边都要对。
+   ============================================================ */
+
+:root {
+  /* 天光 */
+  --sky-core: #f0ebe7;
+  --sky-mid: #d5cdd8;
+  --sky-edge: #a8a6bd;
+
+  /* 缘光（全站唯一彩色） */
+  --rim-flare: #f7ece5;
+  --rim-peak: #f2c9b4;
+  --rim-ember: #daa7a1;
+  --rim-rose: #b8747e;
+  --rim-brick: #8a5055;
+  --rim-wine: #63424b;
+  --rim-brick-a10: rgba(138, 80, 85, 0.1);
+  --rim-brick-a18: rgba(138, 80, 85, 0.18);
+  --rim-brick-a28: rgba(138, 80, 85, 0.28);
+  --rim-brick-a40: rgba(138, 80, 85, 0.4);
+  --rim-ember-a40: rgba(218, 167, 161, 0.4);
+
+  /* 下潜梯度 */
+  --void-7: #020202;
+  --void-body: #0d0806;
+  --crest: #241c18;
+
+  /* UI 反转件 */
+  --paper: #fefefe;
+  --ink: #1a1614;
+  --charcoal: #282828;
+  --glass-void: rgba(2, 2, 2, 0.82);
+
+  /* 文字色阶 */
+  --text-bright: #f5f3ff;
+  --text-base: #c8c6c4;
+  --text-dim: #8f8b8e;
+  --text-muted: #6f6a6d;
+  --text-bright-a10: rgba(245, 243, 255, 0.1);
+  --text-bright-a16: rgba(245, 243, 255, 0.16);
+
+  /* 强调 */
+  --accent: #e2a58e;
+
+  /* 点阵：pitch 由宿主按 字号/12 覆盖，--dot-r 必须同步重算 */
+  --dot-pitch: 6px;
+  --dot-size: 4.2px;
+  --dot-r: 2.1px;
+  --dot-ox: 5.7px;
+  --dot-oy: 1.5px;
+
+  /* 字体栈 */
+  --font-sans: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'DM Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-pixel: 'Silkscreen', 'DM Mono', ui-monospace, monospace;
+  --font-pixel-zh: 'Fusion Pixel 12px Proportional SC', 'Noto Sans SC', sans-serif;
+
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  --fade: 0.5s;
+
+  /* 滚动轨道长度 = 主视频秒数，由 JS 用真实 duration 覆写 */
+  --screens: 15.08;
+
+  color-scheme: dark;
+}
+
+/* 中文像素字：与主站共用 /fonts 下的自托管字库 */
+@font-face {
+  font-family: 'Fusion Pixel 12px Proportional SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/fusion-pixel-12px-proportional-sc-latin-400-normal.woff2') format('woff2'),
+       url('/fonts/fusion-pixel-12px-proportional-sc-latin-400-normal.woff') format('woff');
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--void-7); }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-base);
+  background: var(--void-7);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── 舞台：三层同时渲染 ───────────────────────────────────── */
+.stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--void-7); }
+
+.layer {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity var(--fade) var(--ease-apple);
+}
+.layer.is-on { opacity: 1; }
+
+.film {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* 视频本身偏灰（实测 lum 99-124），压暗一档让白字站得住 */
+  filter: brightness(0.86) saturate(0.9);
+}
+/* 视差位移由 JS 每帧 lerp 写入，这里不能再挂 transition——两套时钟会互相拉扯。
+   scale 给位移留出余量，平移时不会露出画面外的黑边。 */
+.film--parallax { transform: scale(1.08); }
+
+/* 上天下底：复刻参考图「顶部天光 / 底部纯黑」的明度节拍 */
+.scrim { position: absolute; inset: 0; pointer-events: none; }
+.scrim--sky {
+  background:
+    radial-gradient(120% 62% at 50% -14%, rgba(240, 235, 231, 0.5) 0%, rgba(213, 205, 216, 0.22) 34%, transparent 68%),
+    radial-gradient(70% 40% at 12% 30%, rgba(230, 184, 186, 0.28) 0%, transparent 70%),
+    radial-gradient(70% 44% at 88% 26%, rgba(223, 194, 202, 0.26) 0%, transparent 72%);
+  mix-blend-mode: screen;
+}
+.scrim--floor {
+  background:
+    linear-gradient(to bottom, transparent 30%, rgba(13, 8, 6, 0.55) 56%, rgba(4, 3, 3, 0.9) 78%, var(--void-7) 100%),
+    linear-gradient(to top, rgba(154, 95, 99, 0.16) 0%, transparent 22%);
+}
+
+/* 数字雨：天光带上的浅色字形，canvas 一次性绘制 */
+.rain {
+  position: absolute; left: 0; top: 0; width: 100%; height: 46%;
+  opacity: 0.5; pointer-events: none; mix-blend-mode: soft-light;
+}
+
+/* ── 顶栏 HUD ─────────────────────────────────────────────── */
+.hud-top {
+  position: fixed; z-index: 30; top: 18px; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 0 max(14px, env(safe-area-inset-left)) 0 max(14px, env(safe-area-inset-right));
+  pointer-events: none;
+}
+.pill {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 999px; text-decoration: none;
+  font-size: 13px; line-height: 1;
+}
+.pill--mark {
+  width: 40px; height: 40px; justify-content: center;
+  background: var(--paper); color: var(--ink);
+}
+.mark-dot {
+  width: 14px; height: 14px; border-radius: 3px; background: var(--ink);
+  box-shadow: 7px 0 0 -3px var(--ink), 0 7px 0 -3px var(--ink), 7px 7px 0 -4px var(--ink);
+}
+.pill--nav {
+  background: var(--paper); color: var(--ink); padding: 12px 8px;
+  gap: 2px; font-weight: 500;
+}
+.nav-item {
+  padding: 6px 14px; border-radius: 999px; cursor: pointer;
+  position: relative; transition: background 0.25s ease, color 0.25s ease;
+  color: rgba(26, 22, 20, 0.62);
+}
+.nav-item:hover { color: var(--ink); }
+.nav-item.is-on { color: var(--ink); font-weight: 700; }
+.nav-item.is-on::after {
+  content: ''; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 4px;
+  background-image: radial-gradient(circle at 2px 2px, var(--ink) 1.4px, transparent 1.6px);
+  background-size: 5px 4px; background-repeat: repeat-x;
+}
+.pill--cta {
+  background: var(--charcoal); color: var(--text-bright);
+  padding: 13px 20px; font-weight: 600; letter-spacing: 0.01em;
+  transition: transform 0.25s var(--ease-apple), background 0.25s ease;
+}
+.pill--cta:hover { background: #3a3634; transform: translateY(-1px); }
+
+/* ── 文案层 ───────────────────────────────────────────────── */
+.captions {
+  position: fixed; inset: 0; z-index: 20;
+  display: grid; place-items: center;
+  padding: 96px 24px 104px;
+  pointer-events: none;
+}
+.caption {
+  grid-area: 1 / 1;
+  position: relative; z-index: 0;
+  width: min(1080px, 100%);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 0;
+  opacity: 0; visibility: hidden;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity var(--fade) var(--ease-apple),
+    transform 0.7s var(--ease-apple),
+    visibility 0s linear var(--fade);
+}
+/* 文案背后压一层柔和暗底。参考图的点阵字浮在近黑背景上，而这里的背景是会亮的
+   视频：脸上的高光、泼出的咖啡会把点阵整段吃掉。只在文字范围内做衰减，
+   不用整屏蒙版，画面其余部分保持素材本身的明暗。
+   z-index:-1 要求 .caption 自己是层叠上下文，所以上面显式写了 position+z-index。 */
+.caption::before {
+  content: '';
+  position: absolute; left: 50%; top: 50%;
+  width: min(1180px, 134%); height: 128%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse 62% 55% at 50% 48%,
+    rgba(2, 2, 2, 0.58) 0%, rgba(2, 2, 2, 0.42) 46%, rgba(2, 2, 2, 0.16) 68%, rgba(2, 2, 2, 0) 86%);
+  z-index: -1;
+  pointer-events: none;
+}
+.caption.is-on {
+  opacity: 1; visibility: visible;
+  transform: none;
+  transition-delay: 0s, 0s, 0s;
+}
+/* 只有当前段可点，避免隐藏层的链接吃键盘焦点 */
+.caption:not(.is-on) a { pointer-events: none; }
+
+/* 点阵大标题：遮罩挂在承载文字的最小元素上（每个 .line 自己 shrink-wrap），
+   这样居中排版也不会把点阵相位打散。宿主必须 letter-spacing:0。 */
+.dot-matrix {
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.6px));
+  -webkit-mask-size: var(--dot-pitch) var(--dot-pitch);
+  -webkit-mask-position: var(--dot-ox) var(--dot-oy);
+  mask-image: radial-gradient(circle at 50% 50%, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.6px));
+  mask-size: var(--dot-pitch) var(--dot-pitch);
+  mask-position: var(--dot-ox) var(--dot-oy);
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-pixel-zh);
+  font-weight: 400;
+  color: var(--text-bright);
+  letter-spacing: 0;
+  -webkit-font-smoothing: none;
+  display: flex; flex-direction: column; align-items: center;
+}
+.headline .line { display: inline-block; }
+
+/* 字号必须是 12 的整倍数：pitch = fs/12，一个字形像素正好一颗 LED */
+#cap-intro .headline { --hero-fs: 72px; font-size: var(--hero-fs); line-height: 1.25; }
+.headline--act { --hero-fs: 60px; font-size: var(--hero-fs); line-height: 1.3; }
+#cap-intro .headline .line,
+.headline--act .line {
+  --dot-pitch: calc(var(--hero-fs) / 12);
+  --dot-r: calc(var(--dot-pitch) * 0.35);
+  --dot-ox: calc(var(--dot-pitch) * 0.95);
+  --dot-oy: calc(var(--dot-pitch) * 0.25);
+}
+#cap-intro .headline { margin-top: 34px; }
+.headline--act { margin-top: 22px; }
+
+.badge {
+  margin: 0;
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--glass-void); color: var(--text-bright);
+  border: 1px solid var(--text-bright-a10);
+  border-radius: 999px; padding: 8px 16px 8px 8px;
+  font-size: 12.5px; letter-spacing: 0.02em;
+}
+.badge-avatars { display: inline-flex; }
+.badge-avatars i {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(150deg, var(--rim-peak), var(--rim-brick));
+  border: 1.5px solid var(--void-7); margin-left: -7px;
+}
+.badge-avatars i:first-child { margin-left: 0; }
+.badge-avatars i:nth-child(2) { background: linear-gradient(150deg, var(--sky-core), var(--sky-edge)); }
+.badge-avatars i:nth-child(3) { background: linear-gradient(150deg, var(--rim-ember), var(--rim-rose)); }
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  font-size: 13px; letter-spacing: 0.22em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.sub {
+  margin: 26px 0 0;
+  max-width: 46em;
+  font-size: 17px; font-weight: 300; line-height: 1.75;
+  color: var(--text-base);
+}
+.meta {
+  margin: 20px 0 0;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.btn-row { margin: 34px 0 0; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper); color: var(--ink);
+  border-radius: 999px; padding: 15px 30px;
+  font-size: 14px; font-weight: 700; text-decoration: none;
+  transition: transform 0.3s var(--ease-apple), box-shadow 0.3s ease;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }
+.btn--ghost {
+  background: transparent; color: var(--text-bright);
+  border: 1px solid var(--text-bright-a16);
+}
+.btn--ghost:hover { background: rgba(245, 243, 255, 0.06); }
+
+/* 数据栏：图标 / 数值 / 标签 三行，参考图底部那一排 */
+.metrics {
+  margin: 60px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 26px; width: min(760px, 100%);
+}
+.metrics > div { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.m-icon {
+  margin: 0; font-family: var(--font-pixel); font-size: 17px;
+  color: var(--text-bright-a16); line-height: 1;
+}
+.m-val {
+  margin: 0; font-size: 27px; font-weight: 500; color: var(--text-bright);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.m-key { margin: 0; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; }
+
+/* ── 底部 HUD ─────────────────────────────────────────────── */
+.hud-bottom {
+  position: fixed; z-index: 30; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: 18px; padding: 0 24px 20px; pointer-events: none;
+}
+.cue {
+  justify-self: start;
+  font-family: var(--font-pixel); font-size: 10px; letter-spacing: 0.3em;
+  color: var(--text-dim);
+  transition: opacity 0.4s ease;
+}
+.cue.is-gone { opacity: 0; }
+.bar {
+  justify-self: center;
+  width: min(360px, 46vw); height: 2px; background: var(--text-bright-a10);
+  border-radius: 2px; overflow: hidden;
+}
+.bar-fill {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--rim-ember), var(--accent));
+  transform: scaleX(0); transform-origin: 0 50%;
+}
+.readout {
+  justify-self: end;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.track { position: relative; z-index: 1; height: calc(var(--screens) * 100vh); pointer-events: none; }
+
+.noscript { position: fixed; inset: 0; display: grid; place-items: center; z-index: 50; background: var(--void-7); }
+
+/* ── 响应式：PC 多栏在移动端自动堆叠 ─────────────────────── */
+@media (max-width: 1180px) {
+  #cap-intro .headline { --hero-fs: 60px; }
+  .headline--act { --hero-fs: 48px; }
+  .sub { font-size: 16px; }
+}
+
+@media (max-width: 900px) {
+  .hud-top { gap: 8px; }
+  .pill--nav { display: none; }
+  #cap-intro .headline { --hero-fs: 48px; }
+  .headline--act { --hero-fs: 40px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; }
+}
+
+/* 窄屏：点阵遮罩撤掉。像素字保留，但 24-30px 下圆点会把中文笔画吃掉，
+   而且 12 的整倍数在 375px 上放不下 10 个全角字。 */
+@media (max-width: 640px) {
+  .captions { padding: 84px 18px 92px; }
+  #cap-intro .headline, .headline--act { --hero-fs: 30px; font-size: 30px; }
+  #cap-intro .headline .line, .headline--act .line {
+    -webkit-mask-image: none; mask-image: none;
+  }
+  .sub { font-size: 14.5px; line-height: 1.7; margin-top: 20px; }
+  .badge { font-size: 11px; }
+  .metrics { margin-top: 40px; }
+  .m-val { font-size: 22px; }
+  .readout { display: none; }
+  .bar { width: 40vw; }
+  .hud-bottom { grid-template-columns: auto 1fr; }
+}
+
+@media (max-width: 420px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .btn-row { flex-direction: column; align-items: stretch; }
+}
+
+/* ── 无障碍：滚动驱动属于用户主动触发的动效，保留；
+      自动播放的循环与光标视差属于自主运动，撤掉。 ────────── */
+@media (prefers-reduced-motion: reduce) {
+  .layer, .caption, .film--parallax, .btn, .pill--cta { transition-duration: 0.01ms !important; }
+  .caption { transform: none; }
+  .cue { display: none; }
+}

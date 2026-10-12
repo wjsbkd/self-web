@@ -1,153 +1,202 @@
-/* Nav 组件样式 —— 悬浮白药丸导航（暗场语言，参考图 2.3 对位）
-   白药丸水平居中、不贴边（A6 元素浮于背景之上）；active 项用 3px 小圆点（A9）；
-   「联系我」为右端独立深色药丸，与白药丸形成明暗对置（A2）。
-   滚动隐藏 / Magnetic 联系按钮 / 移动端抽屉全部保留。 */
+/* Nav 组件样式 —— 三段式浮件（暗场语言，参考图「贴边 + 明暗对置」对位）
+   .nav 本体不再是有底色的药丸，而是一条贴左右缘的透明轨道：
+     1) .brand      —— 纸白方块，独占左缘（字标破格，尾字母 H 用缘光色）
+     2) .nav-items  —— 墨色药丸，导航项；active 用 4 点缘光下划线
+     3) .nav-tail   —— 深炭药丸，装状态文案；里面的「联系我」是全组唯一纸白亮件
+   明度节拍：字标 paper → 导航 ink → 尾件 charcoal → 联系 paper，一亮一暗地折返；
+   UI 层零彩色，层级全部由明度差承担（缘光只描边和标 active）。
+   滚动隐藏 / Magnetic 联系按钮 / 移动端抽屉全部保留。
+   ⚠️ .magnetic 的样式已上移到 global.css：Hero 与 Footer 也用同一个包裹组件，
+      规则挂在导航组件里等于让两个板块依赖 Nav 的 CSS 是否被加载。 */
 
-/* 药丸容器：视口水平居中悬浮 */
+/* ── 轨道：视口水平居中、左右各留 40px，三段各自贴边 ── */
 .nav {
   position: fixed;
   z-index: 50;
-  top: 28px;
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
+  width: min(1700px, calc(100% - 80px));
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: var(--surface-light);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  justify-content: space-between;
+  gap: 14px;
+  /* 轨道本身无底色：三段浮件之间靠留白分组，不靠容器框 */
+  background: none;
+  border-radius: 0;
   transition:
     transform 0.55s var(--ease-claude),
-    opacity 0.45s var(--ease-claude),
-    box-shadow 0.45s var(--ease-claude);
+    opacity 0.45s var(--ease-claude);
 }
-/* 滚动后加深悬浮投影，强化"浮"感 */
-.nav.scrolled {
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-/* 向下滚动隐藏、向上滚动显现（iOS 26 标签栏行为） */
+/* 向下滚动隐藏、向上滚动显现（iOS 26 标签栏行为）；translateX 必须一起写回 */
 .nav.nav-hidden {
-  transform: translateX(-50%) translateY(-140%);
+  transform: translateX(-50%) translateY(-160%);
 }
 
+/* ── 1) 字标方块：纸白底 + 墨字，尾字母 H 用缘光色 ── */
 .brand {
   display: flex;
   align-items: center;
-  /* 字标微微溢出药丸左边界（呼应参考图 logo 破格，但用的是我们自己的字标） */
-  margin-left: -4px;
+  padding: 7px 13px 6px;
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(26, 22, 20, 0.1);
+  transition: box-shadow 0.45s var(--ease-claude);
 }
 .brand .brand-mark {
-  height: 26px;
-  width: auto;
-  display: block;
+  /* 字体与填色见 global.css 的 .wordmark 族；这里只定尺寸 */
+  height: 24px;
 }
 
+/* ── 2+3) 导航组：桌面是两段并置的浮件，移动端折叠成抽屉 ── */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 12px;
+}
+
+/* 墨色药丸：导航项。
+   ⚠️ 不用纸白：实测导航所在的一条横带（y≈45px）天光中心 lum≈225、左端 lum≈180，
+   纸白 #fefefe 压在最亮处只剩 29 级差，等于漂在天光里找不到边。暗场语言里
+   「层级靠明度差」，所以导航取 ink 档（最暗）→ 天光上是穹顶同款剪影，
+   下潜到 void 各档时又比所在底抬高一级，两段都成立。 */
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 11px 22px;
+  border-radius: 999px;
   font-size: 13px;
-  position: relative;
+  background: var(--ink);
+  /* 三层描边各管一段背景：外投影把药丸从天光上摘下来，
+     1px 缘光环让它在纯黑 void 里仍有轮廓，内上缘高光是卡片同款的「受光一线」。
+     只靠 ink 与 void 的明度差（#1a1614 vs #0b0706）不够，实测药丸边缘会消失。 */
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.45),
+    0 0 0 1px var(--rim-brick-a40),
+    inset 0 1px 0 var(--text-bright-a10);
+  transition: box-shadow 0.45s var(--ease-claude);
 }
-/* 竖向分隔：状态文案与导航项之间（发丝线，A9 状态指示的分组） */
-.nav-status {
-  font: 9px var(--font-pixel);
-  letter-spacing: 0.8px;
-  color: var(--accent-active);
-  padding-left: 22px;
-  border-left: 1px solid rgba(20, 20, 20, 0.12);
+.nav.scrolled .nav-items {
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.55),
+    0 0 0 1px var(--rim-brick-a40),
+    inset 0 1px 0 var(--text-bright-a16);
 }
-.nav-links a {
+.nav-items a {
   position: relative;
-  z-index: 1;
-  color: var(--on-light);
-  opacity: 0.62;
+  color: var(--text-base);
+  opacity: 0.72;
   transition:
     opacity 0.25s var(--ease-claude),
     color 0.25s var(--ease-claude);
 }
-.nav-links a:hover,
-.nav-links a.active {
+.nav-items a:hover,
+.nav-items a.active {
   opacity: 1;
-  color: var(--on-light);
+  color: var(--text-bright);
 }
-/* A9 微小状态指示：active 项下方 3px 小圆点（常驻极淡，hover/active 加深） */
-.nav-links a::after {
+/* active 指示：4 颗点阵（与全站 --dot-pitch 同族，按导航尺度取 5px 周期 / 3px 点径）
+   用 background-image 平铺而不是 4 个子元素，尺寸与间距都只由这两行决定。 */
+.nav-items a::after {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -7px;
-  width: 3px;
-  height: 3px;
-  margin-left: -1.5px;
-  border-radius: 50%;
-  background: var(--accent-active);
+  bottom: -6px;
+  width: 20px;
+  height: 5px;
+  margin-left: -10px;
+  background-image: radial-gradient(circle at 50% 50%, var(--rim-ember) 1.5px, transparent 1.9px);
+  background-size: 5px 5px;
+  background-repeat: repeat-x;
   opacity: 0;
-  transition: opacity 0.3s var(--ease-claude);
+  transform: translateY(2px);
+  transition:
+    opacity 0.3s var(--ease-claude),
+    transform 0.3s var(--ease-claude);
 }
-.nav-links a:hover::after {
+.nav-items a:hover::after {
   opacity: 0.4;
+  transform: none;
 }
-.nav-links a.active::after {
+.nav-items a.active::after {
   opacity: 1;
+  transform: none;
 }
 
-/* 磁性包裹元素：JS 逐帧写入位移，CSS 过渡负责离开后的平滑回弹 */
-.magnetic {
-  display: inline-block;
-  transition: transform 0.5s var(--ease-claude);
+/* 次级药丸：状态文案 + 联系我。比导航药丸再抬一档明度（charcoal），
+   两段深灰之间只靠缘光描边区分。 */
+.nav-tail {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: var(--charcoal);
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.45),
+    0 0 0 1px var(--rim-brick-a28),
+    inset 0 1px 0 var(--text-bright-a10);
+  transition: box-shadow 0.45s var(--ease-claude);
 }
-/* 跟手期间关掉过渡：否则 JS 每帧写 transform 与 CSS 0.5s 过渡是两套时钟互相拉扯，
-   元素明显滞后于光标（发涩）。离开时移除 is-tracking，恢复过渡做回弹。 */
-.magnetic.is-tracking {
-  transition: none;
+/* 状态文案走点阵字（D3：小标签一律 Silkscreen） */
+.nav-status {
+  font: 9px var(--font-pixel);
+  letter-spacing: 0.8px;
+  color: var(--rim-ember);
 }
-.magnetic > * {
-  transition: transform 0.5s var(--ease-claude);
-}
-
-/* 联系按钮：独立深色药丸（明暗对置，A2） */
+/* 联系按钮：全组唯一亮件 —— 纸白压在两层深灰之上，主操作一眼可辨 */
 .nav-contact {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
   padding: 9px 18px;
   font-size: 12px;
-  color: var(--text-bright);
-  background: var(--surface-dark);
-  border: 1px solid rgba(247, 242, 239, 0.14);
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--paper);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
   transition:
-    border-color 0.3s var(--ease-claude),
     background 0.3s var(--ease-claude),
-    color 0.3s var(--ease-claude);
+    color 0.3s var(--ease-claude),
+    box-shadow 0.3s var(--ease-claude);
 }
 .nav-contact:hover {
-  border-color: rgba(233, 165, 127, 0.55);
-  background: rgba(233, 165, 127, 0.12);
-  color: var(--accent-warm);
+  background: var(--paper-hi);
+  color: var(--rim-brick);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
 }
 
-/* 移动端汉堡按钮（默认隐藏） */
+/* ── 移动端汉堡：默认隐藏，窄屏成为第二块浮件（与导航药丸同为 ink 底）── */
 .nav-toggle {
   display: none;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   gap: 5px;
-  width: 40px;
-  height: 40px;
-  background: none;
+  width: 42px;
+  height: 42px;
+  background: var(--ink);
   border: none;
+  border-radius: 12px;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.45),
+    0 0 0 1px var(--rim-brick-a40),
+    inset 0 1px 0 var(--text-bright-a10);
   cursor: pointer;
   padding: 0;
-  margin-right: 2px;
 }
 .nav-toggle span {
   display: block;
-  width: 22px;
+  width: 20px;
   height: 2px;
-  background: var(--on-light);
-  transition: transform 0.35s var(--ease-claude), opacity 0.35s var(--ease-claude);
+  background: var(--text-bright);
+  transition:
+    transform 0.35s var(--ease-claude),
+    opacity 0.35s var(--ease-claude);
 }
 .nav.open .nav-toggle span:nth-child(1) {
   transform: translateY(6.5px) rotate(45deg);
@@ -159,7 +208,10 @@
   transform: translateY(-6.5px) rotate(-45deg);
 }
 
-/* 顶部滚动进度条（全宽细线；渲染在 nav 元素之外，不受其 transform 影响） */
+/* ── 顶部滚动进度条 ──
+   全宽细线；渲染在 nav 元素之外，不受其 transform 影响。
+   渐变色序取自缘光一族：从左端的酒红推进到右端的贴边亮线，
+   进度头就是「光爬过页面边缘」。 */
 .nav-progress {
   position: fixed;
   left: 0;
@@ -175,12 +227,12 @@
   width: 100%;
   transform-origin: left center;
   transform: scaleX(0);
-  /* 暖白进度线（暗场上的一线光） */
   background: linear-gradient(
     90deg,
-    var(--glow-magenta),
-    var(--accent),
-    var(--glow-lavender)
+    var(--rim-wine) 0%,
+    var(--rim-brick) 45%,
+    var(--rim-ember) 78%,
+    var(--rim-flare) 100%
   );
   transition: transform 0.1s linear;
 }
@@ -192,47 +244,63 @@
   .nav-status {
     display: none;
   }
-  .nav-links {
+  .nav-items {
     gap: 18px;
+    padding: 10px 18px;
     font-size: 12px;
   }
+  .nav-tail {
+    padding: 7px 7px 7px 14px;
+    gap: 12px;
+  }
+  .nav-contact {
+    padding: 8px 15px;
+    font-size: 11px;
+  }
   .nav {
+    gap: 10px;
+  }
+}
+
+/* 窄桌面（三段并排已到极限）：先把字号与间距压到底，再退到抽屉 */
+@media (max-width: 980px) {
+  .nav-items {
     gap: 14px;
-    padding: 9px 12px;
+    padding: 9px 14px;
+    font-size: 11px;
   }
 }
 
 @media (max-width: 800px) {
   .nav {
-    /* 移动端改为左右撑满的药丸（贴近边缘的全宽条，仍是悬浮容器） */
+    /* 移动端：轨道退成左右撑满的一条，只剩字标方块 + 汉堡两块纸白件 */
     top: 16px;
     left: 20px;
     right: 20px;
+    width: auto;
     transform: none;
-    justify-content: space-between;
   }
   .nav.nav-hidden {
-    transform: translateY(-140%);
+    transform: translateY(-160%);
   }
   .nav-toggle {
     display: flex;
-    z-index: 2;
   }
+  /* 抽屉：暗场玻璃，挂在轨道下方 */
   .nav-links {
     position: fixed;
     left: 20px;
     right: 20px;
-    top: 68px;
+    top: 70px;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 18px 24px 26px;
+    align-items: stretch;
+    gap: 0;
+    padding: 16px 20px 22px;
     border-radius: 20px;
-    /* 暗场玻璃下拉 */
-    background: rgba(20, 18, 26, 0.97);
+    background: var(--glass-ink);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(247, 242, 239, 0.08);
+    border: 1px solid var(--rim-brick-a28);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     transform: translateY(-12px);
     opacity: 0;
@@ -246,49 +314,48 @@
     opacity: 1;
     pointer-events: auto;
   }
-  .nav-links a {
+  /* 两段浮件在抽屉里失去自己的底，改由抽屉统一承底 */
+  .nav-items {
+    background: none;
+    box-shadow: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0;
+    border-radius: 0;
     font-size: 15px;
-    padding: 10px 0;
+  }
+  .nav-items a {
     color: var(--text-bright);
     opacity: 0.8;
+    padding: 10px 0;
   }
-  .nav-links a.active {
+  .nav-items a.active {
     opacity: 1;
   }
-  .nav-links a::after {
+  .nav-items a::after {
     left: 0;
-    bottom: 4px;
+    margin-left: 0;
+    bottom: 3px;
+  }
+  .nav-tail {
+    background: none;
+    box-shadow: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 0 0;
+    border-radius: 0;
+    margin-top: 10px;
+    border-top: 1px solid var(--rim-brick-a28);
   }
   .nav-status {
     display: block;
-    border-left: none;
-    padding-left: 0;
-    margin: 10px 0 4px;
-    color: var(--accent);
+    color: var(--rim-ember);
   }
   .nav-contact {
-    margin-top: 12px;
+    justify-content: center;
     font-size: 13px;
     padding: 11px 18px;
-    background: transparent;
-  }
-}
-
-/* 尊重减少动态效果 */
-@media (prefers-reduced-motion: reduce) {
-  .nav,
-  .nav-links,
-  .magnetic,
-  .magnetic > *,
-  .nav-toggle span {
-    transition: none;
-  }
-  .nav.nav-hidden {
-    transform: translateX(-50%) translateY(-140%);
-  }
-  @media (max-width: 800px) {
-    .nav.nav-hidden {
-      transform: translateY(-140%);
-    }
   }
 }

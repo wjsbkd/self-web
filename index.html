@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0d0a0c" />
+    <!-- theme-color 与页面最深档 --void-7 同值：手机浏览器的地址栏色应当是
+         页面尽头的那个黑，不是改造前的暖炭 #0d0a0c -->
+    <meta name="theme-color" content="#020202" />
+    <style>
+      /* 预绘制底色：CSS bundle 到位前先垫一层，避免首帧闪白 */
+      html {
+        background: #020202;
+        color-scheme: dark;
+      }
+    </style>
 
     <!-- 基础 SEO -->
     <title>李纵横 · 个人作品集 | AI 内容运营与视觉创作者</title>

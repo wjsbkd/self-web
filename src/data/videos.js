@@ -14,8 +14,8 @@ export const videos = [
   {
     title: '阿里云栖大会宣传视频',
     note: 'AI 产品出海实战活动',
-    cover: '/assets/pptx-media/image8.jpeg',
-    link: 'https://pan.baidu.com/s/1eWKSfh2euADVhJZV-MOhTQ?pwd=vk6p',
+    cover: '/assets/video-covers/yunqi-promo.jpg',
+    link: 'https://pan.baidu.com/s/1eWKsfh2euADVhJZV-MOhTQ?pwd=vk6p',
     pwd: 'vk6p',
     description:
       '为阿里云栖大会 / AI 产品出海实战活动制作的宣传视频，从活动亮点到嘉宾议题进行可视化呈现，辅助活动曝光与报名转化。',
@@ -24,7 +24,7 @@ export const videos = [
   {
     title: '飞书 AI 训练营宣传视频',
     note: 'AI 活动内容策划与制作',
-    cover: '/assets/pptx-media/image18.jpeg',
+    cover: '/assets/video-covers/feishu-camp.jpg',
     link: 'https://pan.baidu.com/s/1rnzd1Vm0GD_xrV9fuz-Uyw?pwd=mwcy',
     pwd: 'mwcy',
     description:
@@ -34,7 +34,7 @@ export const videos = [
   {
     title: '阿里云栖大会总结视频',
     note: '大会宣发与复盘表达',
-    cover: '/assets/pptx-media/image15_compressed.jpg',
+    cover: '/assets/video-covers/yunqi-recap.jpg',
     link: 'https://pan.baidu.com/s/1TmTO_seRjggh4u1xG55xNA?pwd=xxx4',
     pwd: 'xxx4',
     description:
@@ -44,7 +44,7 @@ export const videos = [
   {
     title: '百度秒哒直播切片',
     note: '平台直播内容分发',
-    cover: '/assets/pptx-media/image10.png',
+    cover: '/assets/video-covers/miaoda-cut.jpg',
     link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
     pwd: 'c8st',
     description:
@@ -54,7 +54,7 @@ export const videos = [
   {
     title: '阿里万相活动视频',
     note: 'AI 活动创意内容制作',
-    cover: '/assets/pptx-media/image7.jpeg',
+    cover: '/assets/video-covers/wanxiang-act.jpg',
     link: 'https://pan.baidu.com/s/1KhAvAlJgoEWjBEiio9Fv7g?pwd=hn42',
     pwd: 'hn42',
     description:
@@ -64,7 +64,7 @@ export const videos = [
   {
     title: '阿里万相直播切片',
     note: 'AI 直播精彩片段',
-    cover: '/assets/pptx-media/image11.png',
+    cover: '/assets/video-covers/wanxiang-cut.jpg',
     link: 'https://pan.baidu.com/s/1hHiJn78qtUY4rNuKnw2Rsw?pwd=rniu',
     pwd: 'rniu',
     description:
@@ -74,7 +74,7 @@ export const videos = [
   {
     title: '直播切片合集',
     note: '多平台直播内容',
-    cover: '/assets/pptx-media/image12.png',
+    cover: '/assets/video-covers/live-cut.jpg',
     link: 'https://pan.baidu.com/s/1Y2GuXraC54ibVII3gNGVlA?pwd=d3wg',
     pwd: 'd3wg',
     description:
@@ -84,7 +84,7 @@ export const videos = [
   {
     title: '视频剪辑加调色',
     note: 'DaVinci Resolve 后期制作',
-    cover: '/assets/pptx-media/image6.png',
+    cover: '/assets/video-covers/edit-grade.jpg',
     link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
     pwd: 'c8st',
     description:
@@ -94,7 +94,7 @@ export const videos = [
   {
     title: '动漫混剪',
     note: '创意剪辑作品',
-    cover: '/assets/pptx-media/image13.jpeg',
+    cover: '/assets/video-covers/anime-mix.jpg',
     link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
     pwd: 'c8st',
     description:
@@ -104,7 +104,7 @@ export const videos = [
   {
     title: 'AI 工作流分享视频',
     note: '海辛 & 阿文 AI 创作经验',
-    cover: '/assets/pptx-media/image23.jpeg',
+    cover: '/assets/video-covers/ai-workflow.jpg',
     link: 'https://pan.baidu.com/s/1rnzd1Vm0GD_xrV9fuz-Uyw?pwd=mwcy',
     pwd: 'mwcy',
     description:

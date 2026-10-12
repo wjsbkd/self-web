@@ -1,317 +1,77 @@
-/* Hero 组件样式 —— 暗场单光源 × 居中单轴构图（2026-10 视觉语言迁移）
-   背景由"羊皮纸 + 暖色光晕 + 工程网格" → 近黑暗场 + 彩色光雾（强 blur，颗粒溶解）+ 数字点阵
-   构图由"左文右球" → 全部元素共用一条垂直中轴（导航/徽章/标题/副文案/CTA）
-   灯泡移到中轴上部成为光域的物理光源；hover 点亮 / rAF 自转 / 轨道环全部保留
-   动效：三行 stagger 入场 + 多层视差 + 滚动退出 + 光标提亮聚光灯（screen）+ 磁性按钮 */
+/* Hero 组件样式 —— 背景换成全站影片层（FilmStage）后只剩内容层。
+   原先手工搭的天光 / 数字雨 / 穹顶 / 缘光 / 手灯五层已随 Hero.jsx 一起移除，
+   首屏画面与跟随鼠标的视差都由 .film-stage 承担。 */
 .hero {
   --hero-exit: 0;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+  /* 内容下压到画面下半：首屏视频的主体（人物）实测坐在中线偏下，
+     标题落在暗体区才不会被亮部吃掉对比 */
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   color: var(--text-bright);
-  /* 120px 像素标题较高：上下 padding 收窄，给标题让出最大空间 */
-  padding: 96px 0 84px;
-  /* 近黑底 + 上下暗角：中心提亮、四周压暗（暗场 vignette），
-     并隔离层叠上下文，使聚光灯（screen）能与"背景 + 文字"在同一上下文内正确混合 */
+  padding: 96px 0 0;
+  /* 两层压暗，不是实底：这里以前是不透明的 --void-7，会把 .film-stage 整个糊住。
+     contrast.js 实测首屏右栏背景 L=0.142，是全站最亮的一块（人头右缘到 x 1033，
+     右边整条都是打光的墙），副文案 #c8c6c4 压上去只有 3.1:1。
+     左侧不动（标题是 #f5f3ff，实测 5.0:1 起），只把右下这一角压下去：
+     横向收在 55%→82%（正好从脸的右缘之后开始），纵向从底部往上 60% 收干净。 */
   background:
-    radial-gradient(ellipse 120% 80% at 50% 38%, transparent 40%, rgba(7, 5, 8, 0.5) 100%),
-    var(--bg-base);
-  isolation: isolate;
+    linear-gradient(to right, rgba(2, 2, 2, 0) 55%, rgba(2, 2, 2, 0.62) 82%),
+    linear-gradient(to top, rgba(2, 2, 2, 0.55) 0%, rgba(2, 2, 2, 0.28) 32%, rgba(2, 2, 2, 0) 60%);
 }
 
-/* === 背景画布层 === */
-.hero-canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* 随滚动退出逐渐隐去背景，强化首屏"被推走"的纵深感 */
-  opacity: calc(1 - var(--hero-exit, 0) * 0.5);
-}
-
-/* === 彩色光雾（第二轮：明亮丰富，粉/玫红/蜜桃/紫四段色相）===
-   结构：.hero-glow 负责视差/绽放的合成层包装（JS 写 transform）；
-   内部色块强 blur 组成有机云雾。透明度与尺寸全面上调——光效要"读得出彩色"，
-   不是暗场里的微弱点缀。blur 只加在色块上（一次性栅格化），漂移动画只走 transform。 */
-.hero-glow {
-  position: absolute;
-  inset: -12%;
-  will-change: transform;
-}
-.hero-glow-blob {
-  position: absolute;
-  border-radius: 50%;
-  /* 每个色块独立缓漂（30–45s 大尺度往复） */
-  animation: blobDrift 42s ease-in-out infinite alternate;
-  will-change: transform;
-}
-.hero-glow-blob--magenta {
-  width: 52vw;
-  height: 44vw;
-  left: 2%;
-  top: 8%;
-  background: var(--glow-magenta);
-  opacity: 0.75;
-  filter: blur(80px);
-}
-.hero-glow-blob--pink {
-  width: 34vw;
-  height: 30vw;
-  left: 24%;
-  top: 22%;
-  background: var(--glow-pink);
-  opacity: 0.5;
-  filter: blur(70px);
-  animation-duration: 38s;
-  animation-delay: -18s;
-}
-.hero-glow-blob--peach {
-  width: 44vw;
-  height: 36vw;
-  left: 32%;
-  top: 2%;
-  background: var(--glow-peach);
-  opacity: 0.62;
-  filter: blur(75px);
-  animation-duration: 36s;
-  animation-delay: -12s;
-}
-.hero-glow-blob--lavender {
-  width: 42vw;
-  height: 34vw;
-  right: 0%;
-  top: 12%;
-  background: var(--glow-lavender);
-  opacity: 0.55;
-  filter: blur(80px);
-  animation-duration: 48s;
-  animation-delay: -24s;
-}
-.hero-glow-blob--core {
-  /* 暖白最亮处：正落在标题区上方，天然 spotlight 打光 */
-  width: 30vw;
-  height: 22vw;
-  left: 38%;
-  top: 22%;
-  background: var(--glow-highlight);
-  opacity: 0.42;
-  filter: blur(65px);
-  animation-duration: 40s;
-  animation-delay: -6s;
-}
-@keyframes blobDrift {
-  from {
-    transform: translate3d(-2.5%, 1.5%, 0) scale(1);
-  }
-  to {
-    transform: translate3d(2.5%, -2%, 0) scale(1.08);
-  }
-}
-
-/* === 数字点阵纹理（A5）=== */
-.hero-digits {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-/* === 中轴灯泡（光域核心；120px 像素标题下让出中轴空间）=== */
-.hero-globe-wrap {
-  position: absolute;
-  width: min(210px, 26vh);
-  height: min(210px, 26vh);
-  left: 50%;
-  top: 3.5%;
-  margin-left: calc(min(210px, 26vh) / -2);
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: default;
-  pointer-events: auto;
-  will-change: transform;
-  --globe-tilt-x: 0deg;
-}
-/* 3D 轨道环：用 CSS 3D 旋转模拟交叉轨道 */
-.hero-globe-wrap::before,
-.hero-globe-wrap::after {
-  content: '';
-  position: absolute;
-  inset: -8%;
-  border: 1px solid rgba(233, 165, 127, 0.14);
-  border-radius: 50%;
-  transform: rotateX(72deg);
-  transform-style: preserve-3d;
-  animation: orbitSpin 34s linear infinite;
-  pointer-events: none;
-  transition: border-color 0.5s var(--ease-claude);
-}
-.hero-globe-wrap::after {
-  transform: rotateY(72deg);
-  animation: orbitSpin 28s linear infinite reverse;
-}
-.hero-globe-wrap:hover::before,
-.hero-globe-wrap:hover::after {
-  border-color: rgba(233, 165, 127, 0.36);
-}
-.hero-globe-wrap:hover::before {
-  animation-duration: 9s;
-}
-.hero-globe-wrap:hover::after {
-  animation-duration: 11s;
-}
-@keyframes orbitSpin {
-  to {
-    transform: rotateX(72deg) rotateZ(360deg);
-  }
-}
-.hero-globe-wrap::after {
-  animation-name: orbitSpinTilt;
-}
-@keyframes orbitSpinTilt {
-  to {
-    transform: rotateY(72deg) rotateZ(360deg);
-  }
-}
-
-.hero-globe {
-  width: 100%;
-  height: 100%;
-  transform: perspective(800px) rotateX(var(--globe-tilt-x, 0deg));
-  transform-style: preserve-3d;
-  /* 倾斜改由 JS 每帧驱动（含回正），此处不再加 transition，避免双重平滑发涩 */
-}
-.hero-globe-svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.hero-globe-body {
-  transform-origin: 210px 185px;
-  will-change: transform;
-}
-
-/* === 灯泡：未点亮 = 暗场里的"暗玻璃"轮廓（描边整体提亮，否则暗底上隐身）；
-   hover 落于本体 = 点亮并向四周散发暖光 === */
-.hero-bulb-shape {
-  transform-origin: 210px 185px;
-}
-
-/* 光晕层（默认隐藏，hover 时淡入）：暖色径向渐变向外散开 */
-.bulb-ambient {
-  opacity: 0;
-  transform-origin: 210px 185px;
-  pointer-events: none;
-  transition: opacity 0.55s var(--ease-claude);
-}
-.bulb-rays {
-  opacity: 0;
-  transform-origin: 210px 185px;
-  pointer-events: none;
-  transition: opacity 0.55s var(--ease-claude);
-}
-.bulb-ray {
-  stroke: rgba(255, 224, 150, 0.8);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-}
-
-.bulb-glass {
-  fill: rgba(247, 242, 239, 0.06);
-  stroke: rgba(247, 242, 239, 0.6);
-  stroke-width: 2;
-  transition: fill 0.5s var(--ease-claude), stroke 0.4s var(--ease-claude);
-}
-.bulb-filament {
-  fill: none;
-  stroke: rgba(220, 213, 255, 0.75);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: stroke 0.4s var(--ease-claude), filter 0.4s var(--ease-claude);
-}
-.bulb-base {
-  fill: rgba(133, 128, 124, 0.55);
-  stroke: rgba(176, 170, 164, 0.45);
-  stroke-width: 1;
-  transition: fill 0.4s var(--ease-claude);
-}
-.bulb-thread {
-  stroke: rgba(176, 170, 164, 0.5);
-  stroke-width: 1.5;
-}
-.bulb-tip {
-  fill: rgba(158, 152, 143, 0.6);
-}
-
-/* hover 落于灯泡本体：点亮，向四周散发暖光 */
-.hero-globe-wrap.is-lit .bulb-glass {
-  fill: url(#bulbGlassOn);
-  stroke: rgba(255, 214, 130, 0.9);
-}
-.hero-globe-wrap.is-lit .bulb-filament {
-  stroke: #fff6d0;
-  filter: drop-shadow(0 0 5px rgba(255, 222, 130, 0.95))
-          drop-shadow(0 0 12px rgba(255, 200, 100, 0.6));
-}
-.hero-globe-wrap.is-lit .bulb-base {
-  fill: rgba(160, 145, 120, 0.7);
-}
-.hero-globe-wrap.is-lit .bulb-ambient {
-  opacity: 1;
-  animation: bulbPulse 3.2s ease-in-out infinite;
-}
-.hero-globe-wrap.is-lit .bulb-rays {
-  opacity: 0.8;
-}
-
-@keyframes bulbPulse {
-  0%, 100% { opacity: 0.78; }
-  50%      { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-globe-wrap::before,
-  .hero-globe-wrap::after,
-  .hero-glow-blob {
-    animation: none;
-  }
-  .hero-globe-wrap.is-lit .bulb-ambient {
-    animation: none;
-  }
-}
-
-/* === 内容层：居中单轴 === */
+/* === 内容层（近景视差 + 滚动退出）===
+   首屏分区（2026-10 留白分配）。实测首屏 t=0 那一镜（face.js：降采样 + 大窗模糊
+   做背景减除，逐行取主体左右边界，再按 cover+scale(1.08) 映回视口）：
+   人头占 x 418–1033、y 0–607，头发最左到 418；607 以下是端肩的深色毛衣。
+   所以左栏只有一条窄列可走 —— 标题从「两行 × 7 字」改成「四行 × ≤4 字」，
+   96px 下整列宽 384px（x 60–444），正好停在头发左侧；右栏装元信息 / 副文案 / CTA。
+   顺带把底部居中的 SCROLL 提示让了出来：它原先就压在第二行标题上。
+   用 grid-template-areas 而不是包一层 div：Hero.jsx 的 DOM 结构零改动。 */
 .hero .hero-content {
   position: relative;
   z-index: 2;
+  /* ⚠️ 只写 0 auto —— margin:auto 的纵向 auto 会覆盖 align-items:flex-end，
+     把内容重新拽回画面中段 */
+  margin: 0 auto;
   width: min(1700px, calc(100% - 120px));
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  padding-bottom: 72px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 30%);
+  grid-template-areas:
+    "title meta"
+    "title sub"
+    "title cta";
+  align-content: end;
+  align-items: end;
+  column-gap: 48px;
+  text-align: left;
   will-change: transform, opacity, filter;
 }
 
-/* 徽章药丸：深色半透明浮层 */
+/* 徽章药丸：深炭实底 + 缘光描边。
+   justify-self:end 而不是 start：实测首屏那一镜人头右缘到 x 1033，而右栏从
+   984 起 —— 药丸左半正好压在耳朵上。它是这一栏里唯一不需要和正文对齐的
+   装饰件，贴到内容列右缘（1090–1380）就彻底让开了，副文案与 CTA 仍从 984 起。 */
 .hero .hero-badge {
+  grid-area: meta;
+  justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  margin: 0 0 56px;
+  margin: 0 0 28px;
   padding: 9px 18px;
   border-radius: 999px;
-  background: var(--surface-dark);
-  border: 1px solid rgba(247, 242, 239, 0.08);
+  background: var(--charcoal);
+  border: 1px solid var(--rim-brick-a40);
   font: 10px var(--font-pixel);
   letter-spacing: 1.2px;
-  color: var(--text-dim);
+  color: var(--text-base);
   opacity: 0;
-  animation: heroFadeUp 0.8s var(--ease-claude) 0.1s both;
+  animation: heroFadeUp 0.8s var(--ease-claude) 0.6s both;
 }
 .hero .hero-badge span + span::before {
   content: '·';
@@ -319,34 +79,78 @@
   color: var(--accent);
 }
 .hero .hero-badge span:first-child {
-  color: var(--accent-warm);
+  color: var(--rim-peak);
 }
 
-/* 中文像素大标题（缝合像素 Fusion Pixel 12px 放大）：
-   真点阵字形——方块感与阶梯轮廓来自字形本身，非 CSS 模拟。
-   字号取 12px 基准的整倍数（84/132/156），保证点阵像素对齐、锐利不糊。
-   极大字号 + 多行排版 + 充足留白，标题即首页视觉焦点。
-   -webkit-font-smoothing 必须关掉：像素字要的就是硬边，抗锯齿会糊掉方块感。 */
+/* === 点阵大标题 ===
+   两层点阵叠加：
+     ① 字形层 —— Fusion Pixel 12px 网格放大，字号取 12 的整倍保证像素对齐；
+     ② 遮罩层 —— .dot-matrix 的圆点网格，pitch 取「一个字形像素」= 字号/12，
+        于是每个方块正好一颗 LED，点径 0.7·pitch 复刻实测的 5:7 亮暗比。
+   line-height 必须是 pitch 的整倍（1.25 → 150/8/90 = 15/15/15 颗），
+   否则换行后第二行的点阵与字形错位。
+   相位实测：120px 下四组 mask-position 对照截图择优，0.95·pitch（横）/
+   0.25·pitch（纵）时点形最圆、笔画最离散。偏移量写成 pitch 的倍数才能跟断点缩放。
+   -webkit-font-smoothing: none —— 像素字要硬边，抗锯齿会糊掉方块感。 */
 .hero .hero-headline {
+  grid-area: title;
+  --hero-fs: 96px;
+  --dot-pitch: calc(var(--hero-fs) / 12);
+  /* ⚠️ --dot-r 必须在这里重算：:root 的 --dot-r 在根元素上就把 var(--dot-size)
+     代入成了 2.5px，后代只改 --dot-size 不会传下去 */
+  --dot-r: calc(var(--dot-pitch) * 0.35);
+  --dot-ox: calc(var(--dot-pitch) * 0.95);
+  --dot-oy: calc(var(--dot-pitch) * 0.25);
   font-family: var(--font-pixel-zh);
   font-weight: 400;
-  /* 字号严格取 12px 基准的整倍数（断点切换而非连续 vw），保证点阵像素对齐锐利。
-     ≤800px: 72px / ≤1200px: 96px / ≤1600px: 120px / >1600px: 156px */
-  font-size: 120px;
-  line-height: 1.22;
-  letter-spacing: 0.02em;
+  font-size: var(--hero-fs);
+  line-height: 1.25;
+  /* 字距必须为 0：全角字宽 = 12·pitch，任何非零字距都会让点阵逐字漂移 */
+  letter-spacing: 0;
   color: var(--text-bright);
-  margin: 0 0 40px;
+  margin: 0 0 36px;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
-  /* 极淡暖色投影：让暖白字在亮光域上也保持边缘可辨（不发光、不做像素模拟） */
-  text-shadow: 0 2px 0 rgba(13, 10, 12, 0.55);
+  /* 极淡缘光描边式投影：点阵在暗体上也要能读出「被照亮的颗粒」 */
+  text-shadow: 0 0 26px var(--rim-brick-a28);
 }
-@media (max-width: 1600px) {
-  .hero .hero-headline { font-size: 120px; }
+@media (min-width: 1601px) {
+  .hero .hero-headline {
+    --hero-fs: 108px;
+  }
 }
 @media (max-width: 1200px) {
-  .hero .hero-headline { font-size: 96px; }
+  .hero .hero-headline {
+    --hero-fs: 84px;
+  }
+}
+@media (max-width: 900px) {
+  .hero .hero-headline {
+    --hero-fs: 72px;
+    /* 竖屏 cover 只留画面中间一条，整张脸都退到标题后面：白点阵压在眼白、
+       脸颊这些亮部上会糊掉（窄屏没有「另一侧」可让，见 global.css 的分区撤销）。
+       所以给标题垫一块边缘羽化的暗板 —— radial-gradient 而不是纯色矩形，
+       免得读成贴上去的色块。挂在 h1 上而不是 .line 上：.line 带点阵遮罩，
+       背景会被一起遮成点。 */
+    background:
+      radial-gradient(
+        78% 62% at 34% 50%,
+        rgba(2, 2, 2, 0.66) 0%,
+        rgba(2, 2, 2, 0.44) 52%,
+        rgba(2, 2, 2, 0) 82%
+      );
+  }
+  /* 副文案同一套做法：窄屏它排在脸颊/眼白那一条上，实测背景 L=0.091，
+     #c8c6c4 压上去 3.87:1。垫到 0.6 档后实测 7.52:1。 */
+  .hero .hero-sub {
+    background:
+      radial-gradient(
+        120% 190% at 38% 50%,
+        rgba(2, 2, 2, 0.6) 0%,
+        rgba(2, 2, 2, 0.44) 58%,
+        rgba(2, 2, 2, 0) 88%
+      );
+  }
 }
 .hero .hero-headline .line {
   display: block;
@@ -363,12 +167,9 @@
 .hero .hero-headline .line:nth-child(3) {
   animation-delay: 0.59s;
 }
-/* 词重音 —— "被看见，"用浅蜜桃做低语式强调（像素字同字体，色相重音） */
-.hero .hero-headline .line i {
-  font-weight: 400;
-  color: var(--accent-warm);
+.hero .hero-headline .line:nth-child(4) {
+  animation-delay: 0.76s;
 }
-
 @keyframes heroLineReveal {
   to {
     opacity: 1;
@@ -386,22 +187,23 @@
   }
 }
 
-/* 副文案：居中限宽，暖灰 */
 .hero .hero-sub {
-  max-width: 560px;
-  margin: 0 0 44px;
+  grid-area: sub;
+  max-width: none;
+  margin: 0 0 36px;
   font-size: 16px;
   line-height: 1.75;
-  color: var(--text-dim);
+  color: var(--text-base);
   opacity: 0;
   animation: heroFadeUp 1s var(--ease-claude) 0.72s forwards;
 }
 
-/* CTA：白药丸（命令级，全屏对比最强处）+ 深色药丸（明暗对置） */
+/* === CTA：白药丸（命令级）+ 深炭药丸（明暗对置）=== */
 .hero .hero-cta-group {
+  grid-area: cta;
+  justify-self: start;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 16px;
   opacity: 0;
   animation: heroFadeUp 1s var(--ease-claude) 0.9s forwards;
@@ -411,8 +213,8 @@
   align-items: center;
   gap: 10px;
   padding: 16px 32px;
-  background: var(--surface-light);
-  color: var(--on-light);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 14px;
   font-weight: 700;
   border-radius: 999px;
@@ -420,74 +222,48 @@
     background 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude),
     box-shadow 0.3s var(--ease-claude);
-  /* 极轻光晕分离背景（悬浮，非硬阴影） */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(247, 242, 239, 0.07);
+  box-shadow: var(--shadow-paper);
 }
 .hero .hero-cta-primary:hover {
-  background: var(--glow-highlight);
+  background: var(--paper-hi);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 80px rgba(247, 242, 239, 0.12);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--rim-ember-a40);
 }
 .hero .hero-cta-primary .arrow {
   font-size: 16px;
-  color: var(--on-light);
+  color: var(--ink);
 }
-/* 次 CTA：深色药丸（与白 CTA 明暗对置） */
 .hero .hero-cta-secondary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 16px 28px;
-  border: 1px solid rgba(247, 242, 239, 0.16);
+  border: 1px solid var(--rim-brick-a40);
   color: var(--text-bright);
   font-size: 13px;
   border-radius: 999px;
-  background: var(--surface-dark);
+  background: var(--charcoal);
   transition:
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
     background 0.3s var(--ease-claude);
 }
 .hero .hero-cta-secondary:hover {
-  border-color: rgba(233, 165, 127, 0.5);
-  color: var(--accent-warm);
-  background: rgba(233, 165, 127, 0.06);
+  border-color: var(--rim-ember);
+  color: var(--rim-peak);
+  background: var(--charcoal-hi);
 }
 .hero .hero-cta-secondary .arrow {
   font-size: 14px;
 }
 
-/* === 光标提亮聚光灯（D2：difference → screen）===
-   关键：mix-blend-mode 必须直接施加在「独立层叠上下文的根元素」上，
-   才能与下方 hero 的背景/文字混合；若放在 ::before 上，父容器已成独立
-   上下文会隔断混合。opacity 在本元素上不影响混合。
-   暗场上白色圆斑经 screen 混合 = "手电提亮"，与主题自洽。 */
-.hero-invert-spotlight {
-  position: absolute;
-  left: var(--ix, 50%);
-  top: var(--iy, 50%);
-  width: 200px;
-  height: 200px;
-  margin: -100px 0 0 -100px;
-  border-radius: 50%;
-  background: #fff;
-  mix-blend-mode: screen;
-  filter: blur(2px);
-  pointer-events: none;
-  opacity: 0;
-  z-index: 3;
-  transition: opacity 0.22s ease, left 0.08s ease-out, top 0.08s ease-out;
-}
-.hero-invert-spotlight.is-active {
-  opacity: 1;
-}
-
-/* === 滚动提示（极简指示器 + 流动光点） === */
+/* === 滚动提示 === */
 .hero .hero-scroll-cue {
   position: absolute;
-  /* 居中刻意不用 translateX(-50%)：heroFadeUp 的结束态是 transform:none，
-     带 forwards 的动画会覆盖基础 transform 并抹掉这半格自身宽度的位移。
-     改为左右撑满 + align-items:center，位移动画即可自由使用 transform。 */
+  /* 居中刻意不用 translateX(-50%)：heroFadeUp 的终态是 transform:none，
+     带 forwards 的动画会覆盖基础 transform，抹掉这半格自身宽度的位移 */
   left: 0;
   right: 0;
   bottom: 36px;
@@ -498,14 +274,14 @@
   gap: 10px;
   font: 10px var(--font-pixel);
   letter-spacing: 1.2px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   opacity: 0;
   animation: heroFadeUp 1s var(--ease-claude) 1.2s forwards;
 }
 .hero .scroll-line {
   width: 1px;
   height: 40px;
-  background: linear-gradient(to bottom, var(--accent), transparent);
+  background: linear-gradient(to bottom, var(--rim-ember), transparent);
   position: relative;
   overflow: hidden;
 }
@@ -516,7 +292,7 @@
   left: 0;
   width: 100%;
   height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--accent));
+  background: linear-gradient(to bottom, transparent, var(--rim-peak));
   animation: scrollDown 2.2s var(--ease-claude) infinite;
 }
 @keyframes scrollDown {
@@ -533,21 +309,33 @@
   bottom: 36px;
   right: 22px;
   font-size: 9px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   z-index: 2;
 }
 .hero .side-note span {
-  background: var(--accent);
+  background: var(--rim-ember);
 }
 
-/* === 响应式 —— 800px 断点 === */
+/* === 响应式 === */
 @media (max-width: 800px) {
   .hero {
-    padding: 110px 0 70px;
-    align-items: flex-start;
+    padding-top: 110px;
+  }
+  .hero .hero-content {
+    /* .wrap 的 100%-120px 在窄屏会把 7 字标题挤到折行（7×48×1.02=343px），
+       点阵标题一旦自动换行，第二行就脱离 pitch 的整倍行高、相位错开 */
+    width: calc(100% - 40px);
+    padding-bottom: 84px;
+    /* 窄屏竖屏裁切下人头几乎占满整幅，没有左右两栏可分，退回单列 */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "meta"
+      "sub"
+      "cta";
   }
   .hero .hero-badge {
-    margin-bottom: 40px;
+    margin-bottom: 22px;
     gap: 10px;
     padding: 8px 14px;
     font-size: 8px;
@@ -556,34 +344,12 @@
     margin-right: 10px;
   }
   .hero .hero-headline {
-    /* 12px 基准整倍数（72px），保持点阵对齐 */
-    font-size: 72px;
+    --hero-fs: 60px;
     margin-bottom: 32px;
-    line-height: 1.22;
   }
   .hero .hero-sub {
     font-size: 14px;
     margin-bottom: 36px;
-  }
-  .hero-globe-wrap {
-    width: min(160px, 22vh);
-    height: min(160px, 22vh);
-    margin-left: calc(min(160px, 22vh) / -2);
-    top: 2%;
-    opacity: 0.8;
-  }
-  .hero-glow-blob--magenta {
-    filter: blur(60px);
-  }
-  .hero-glow-blob--peach,
-  .hero-glow-blob--lavender,
-  .hero-glow-blob--core {
-    filter: blur(55px);
-  }
-  .hero-invert-spotlight {
-    width: 130px;
-    height: 130px;
-    margin: -65px 0 0 -65px;
   }
   .hero .hero-cta-group {
     flex-direction: column;
@@ -600,3 +366,7 @@
     display: none;
   }
 }
+
+/* 标题字号阶梯全部取 12 的整倍（Fusion Pixel 的点阵基准）。
+   改成四行短列后，最宽一行只有 4 字，320px 视口下 4×60=240 ≤ 280 的内容宽，
+   所以窄屏不再需要原来那两档 48/36 的补救——自动折行会打散点阵相位，宁可不缩。 */
