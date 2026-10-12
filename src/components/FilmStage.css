@@ -44,7 +44,7 @@
 }
 
 .film-layer--intro {
-  /* 鼠标视差最大 26/16px，预算是 0.0648W / 0.04H（1425×900 上 92 / 36px） */
+  /* 纯取景裁切：首屏要的是脸占满上半屏，JS 在这一层不写 transform（眼神只动 currentTime）。 */
   transform: scale(1.08);
 }
 
