@@ -179,41 +179,14 @@
     window.scrollTo({ top: max * p, behavior: reduce ? 'auto' : 'smooth' });
   });
 
-  /* ── 天光带上的数字雨（一次性绘制，不逐帧动画） ───────── */
-  function drawRain() {
-    var c = document.getElementById('rain');
-    var w = c.clientWidth, h = c.clientHeight;
-    if (!w || !h) return;
-    var dpr = Math.min(2, window.devicePixelRatio || 1);
-    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
-    var g = c.getContext('2d');
-    g.scale(dpr, dpr);
-    g.clearRect(0, 0, w, h);
-    var glyphs = '01S8X#&%3A6E';
-    var size = w < 640 ? 11 : 14;
-    var stepX = size * 1.5, stepY = size * 1.9;
-    g.font = '500 ' + size + 'px "DM Mono", monospace';
-    g.textBaseline = 'top';
-    for (var y = 0; y < h; y += stepY) {
-      for (var x = 0; x < w; x += stepX) {
-        /* 上密下疏：越接近天光下沿越淡，与参考图的衰减一致 */
-        var fade = 1 - y / h;
-        if (Math.random() > 0.34 + fade * 0.34) continue;
-        g.fillStyle = 'rgba(255,255,255,' + (0.1 + fade * 0.42).toFixed(3) + ')';
-        g.fillText(glyphs[(Math.random() * glyphs.length) | 0], x, y);
-      }
-    }
-  }
+  /* ── 天光带上的数字雨已随第三轮点阵语言退役（第四轮）：
+     参考图的装饰只有药丸、微标签、发丝线三样，画面上不再叠字形层。 ── */
 
   function boot() {
-    drawRain();
     readScroll();
     intro.play().catch(function () {});
     requestAnimationFrame(tick);
   }
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawRain);
-  var rz;
-  window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(drawRain, 220); }, { passive: true });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

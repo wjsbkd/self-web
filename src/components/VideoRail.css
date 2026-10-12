@@ -18,6 +18,9 @@
   content: '';
   position: absolute;
   top: 0;
+  /* 整列到底，不能只压封面带：轨道 overflow:hidden 会在 frame 边缘硬切卡片，
+     scrim 负责把这条切口化开。改成只盖封面后实测（shotv14media）字幕行
+     在边缘被拦腰切断，比原来"淡出"更难看，所以回退。 */
   bottom: 0;
   width: 68px;
   z-index: 2;
@@ -161,21 +164,28 @@
   padding: 18px 20px 22px;
 }
 .video-rail-info span {
-  font: 10px var(--font-mono);
-  letter-spacing: 1px;
+  /* 拉丁微标签（VIDEO / 01）：参考图的角标语言 —— 大写 + 0.16em 字距，
+     全站唯一允许的火光色文字之一就是这一档 */
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
   color: var(--accent);
 }
 .video-rail-info h4 {
-  font-family: var(--font-sans);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
   margin: 8px 0 6px;
   color: var(--text-bright);
 }
 .video-rail-info p {
-  font-size: 12px;
-  line-height: 1.6;
+  /* 中文说明行属于正文，不并入上方那档火光色拉丁微标签（全站只允许 ≤--fs-label
+     的拉丁/数字件带颜色）。这里保持 --text-dim 是为了和 h4 标题拉开一档。 */
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  letter-spacing: 0.04em;
   color: var(--text-dim);
   margin: 0;
 }

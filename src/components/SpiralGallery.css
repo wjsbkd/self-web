@@ -144,9 +144,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font: 11px var(--font-mono);
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.06em;
   color: var(--text-dim);
-  letter-spacing: 1px;
   padding: 9px 20px;
   border-radius: 100px;
   /* 提示条浮在滚动的卡片流之上，必须留半透：卡片经过时能透出来一点 */

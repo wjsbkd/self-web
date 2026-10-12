@@ -10,7 +10,10 @@
 <link rel="preload" as="image" href="/assets/scrolly/outro-poster.jpg">
 <link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>
 <style>
-@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Silkscreen:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+/* 字体清单与主站 src/styles/global.css 同源：Archivo（拉丁显示体）+ Noto Sans SC。
+   Silkscreen / Fusion Pixel 随第三轮的像素点阵语言一起退役，DM Mono 这一页已无引用，
+   本轮也不再加载。走 .cn 镜像，Google Fonts 在本机网络下会超时。 */
+@import url('https://fonts.googleapis.cn/css2?family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
 </style>
 <link rel="stylesheet" href="scrolly.css">
 </head>
@@ -31,12 +34,17 @@
   </div>
   <div class="scrim scrim--sky"></div>
   <div class="scrim scrim--floor"></div>
-  <canvas class="rain" id="rain"></canvas>
 </div>
 
-<!-- 顶栏：悬浮药丸，与主站同一套语言 -->
+<!-- 顶栏：悬浮药丸，与主站同一套语言（字标沿用 Nav / Footer 那枚 LZH 锁定） -->
 <header class="hud-top">
-  <a class="pill pill--mark" href="/" aria-label="返回作品集首页"><span class="mark-dot"></span></a>
+  <a class="pill pill--mark" href="/" aria-label="返回作品集首页">
+    <svg class="wordmark" viewBox="0 0 120 48" aria-label="LZH">
+      <text class="bm-lzh" x="0" y="38">L</text>
+      <text class="bm-lzh" x="40" y="38">Z</text>
+      <text class="bm-h" x="78" y="38">H</text>
+    </svg>
+  </a>
   <nav class="pill pill--nav" aria-label="章节">
     <span class="nav-item is-on" data-jump="0">首屏</span>
     <span class="nav-item" data-jump="0.16">乱想</span>
@@ -52,56 +60,56 @@
   <div class="captions">
 
     <section class="caption is-on" id="cap-intro" data-stage="intro">
-      <p class="badge"><span class="badge-avatars" aria-hidden="true"><i></i><i></i><i></i></span>李纵横 · 内容 / 运营 · 作品集</p>
+      <p class="badge"><b>李纵横</b> 内容 / 运营 · 作品集</p>
       <h1 class="headline">
-        <span class="line dot-matrix">把脑子里的热闹</span>
-        <span class="line dot-matrix">做成看得见的东西</span>
+        <span class="line">把脑子里的热闹</span>
+        <span class="line">做成看得见的东西</span>
       </h1>
       <p class="sub">一条 15 秒的短片，从发呆到收工。<br>向下滚动，你就是这条片子的进度条。</p>
       <p class="btn-row"><a class="btn" href="#" data-jump="0.06">开始滚动</a></p>
-      <dl class="metrics">
-        <div><dt class="m-icon" aria-hidden="true">&#9001;</dt><dd class="m-val">15s</dd><dd class="m-key">主视频时长</dd></div>
-        <div><dt class="m-icon" aria-hidden="true">&#8258;</dt><dd class="m-val">03</dd><dd class="m-key">叙事节拍</dd></div>
-        <div><dt class="m-icon" aria-hidden="true">&#42;</dt><dd class="m-val">24</dd><dd class="m-key">帧每秒</dd></div>
-        <div><dt class="m-icon" aria-hidden="true">&#8862;</dt><dd class="m-val">100%</dd><dd class="m-key">滚动驱动</dd></div>
-      </dl>
+      <div class="metrics">
+        <div><b class="m-val">15s</b><span class="m-key">主视频时长</span></div>
+        <div><b class="m-val">03</b><span class="m-key">叙事节拍</span></div>
+        <div><b class="m-val">24</b><span class="m-key">帧每秒</span></div>
+        <div><b class="m-val">100%</b><span class="m-key">滚动驱动</span></div>
+      </div>
     </section>
 
     <section class="caption" id="cap-1" data-stage="1">
-      <p class="kicker">01 / STATIC NOISE</p>
+      <p class="kicker"><span>01</span>STATIC NOISE</p>
       <h2 class="headline headline--act">
-        <span class="line dot-matrix">灵感先在脸上</span>
-        <span class="line dot-matrix">乱涂一遍</span>
+        <span class="line">灵感先在脸上</span>
+        <span class="line">乱涂一遍</span>
       </h2>
       <p class="sub">脸上贴满草稿的那几分钟，是所有作品的起点。<br>没有一张图是干净的，就像没有念头是安静的。</p>
       <p class="meta">00:00.0 &mdash; 00:06.8 &nbsp;/&nbsp; 特写 &nbsp;/&nbsp; 发呆 &rarr; 托腮 &rarr; 瞪眼</p>
     </section>
 
     <section class="caption" id="cap-2" data-stage="2">
-      <p class="kicker">02 / OVERWHELM</p>
+      <p class="kicker"><span>02</span>OVERWHELM</p>
       <h2 class="headline headline--act">
-        <span class="line dot-matrix">坐下来认真做</span>
-        <span class="line dot-matrix">却被念头抛上半空</span>
+        <span class="line">坐下来认真做</span>
+        <span class="line">却被念头抛上半空</span>
       </h2>
       <p class="sub">工具、需求、参考图同时起飞，咖啡泼了一脸。<br>这一段我最想留给你看：失控也是过程的一部分。</p>
       <p class="meta">00:06.8 &mdash; 00:11.6 &nbsp;/&nbsp; 中景 &rarr; 全景 &nbsp;/&nbsp; 开工 &rarr; 腾空</p>
     </section>
 
     <section class="caption" id="cap-3" data-stage="3">
-      <p class="kicker">03 / LANDED</p>
+      <p class="kicker"><span>03</span>LANDED</p>
       <h2 class="headline headline--act">
-        <span class="line dot-matrix">摔在地上也</span>
-        <span class="line dot-matrix">先把咖啡端稳</span>
+        <span class="line">摔在地上也</span>
+        <span class="line">先把咖啡端稳</span>
       </h2>
       <p class="sub">把失控收回来，交付一个能用的东西——<br>这就是我做设计的全部，也是我想跟你继续聊的。</p>
       <p class="meta">00:11.6 &mdash; 00:15.1 &nbsp;/&nbsp; 落地 &rarr; 起身 &rarr; 走向镜头</p>
     </section>
 
     <section class="caption" id="cap-outro" data-stage="outro">
-      <p class="kicker">04 / NEXT</p>
+      <p class="kicker"><span>04</span>NEXT</p>
       <h2 class="headline headline--act">
-        <span class="line dot-matrix">人看完了</span>
-        <span class="line dot-matrix">接下来看作品</span>
+        <span class="line">人看完了</span>
+        <span class="line">接下来看作品</span>
       </h2>
       <p class="sub">项目、经历、账号运营都在主站里。<br>这条片子往回滚，可以倒着放完。</p>
       <p class="btn-row">

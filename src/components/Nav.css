@@ -68,7 +68,12 @@
   gap: 24px;
   padding: 11px 22px;
   border-radius: 999px;
-  font-size: 13px;
+  /* 顶栏取"工具条"尺度：Archivo + 字距，和参考图居中的 MENU 同一档读数感。
+     中文没有大小写可用，所以只吃字距这一半（见 global.css 微标签注释）。 */
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.1em;
   background: var(--ink);
   /* 三层描边各管一段背景：外投影把药丸从天光上摘下来，
      1px 缘光环让它在纯黑 void 里仍有轮廓，内上缘高光是卡片同款的「受光一线」。
@@ -98,7 +103,7 @@
   opacity: 1;
   color: var(--text-bright);
 }
-/* active 指示：4 颗点阵（与全站 --dot-pitch 同族，按导航尺度取 5px 周期 / 3px 点径）
+/* active 指示：4 颗点阵（导航尺度自写 5px 周期 / 3px 点径，全站第三轮的 --dot-pitch token 已退役）
    用 background-image 平铺而不是 4 个子元素，尺寸与间距都只由这两行决定。 */
 .nav-items a::after {
   content: '';
@@ -141,11 +146,15 @@
     inset 0 1px 0 var(--text-bright-a10);
   transition: box-shadow 0.45s var(--ease-claude);
 }
-/* 状态文案走点阵字（D3：小标签一律 Silkscreen） */
+/* 状态文案：微标签同款（第四轮起 Silkscreen 退役，见 global.css 字体栈注释）。
+   对应参考图顶栏左端那串 `GMT+5 // LOCAL 22:45:54` 的读数感，取火光最亮档。 */
 .nav-status {
-  font: 9px var(--font-pixel);
-  letter-spacing: 0.8px;
-  color: var(--rim-ember);
+  font-family: var(--font-display);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--accent);
 }
 /* 联系按钮：全组唯一亮件 —— 纸白压在两层深灰之上，主操作一眼可辨 */
 .nav-contact {
@@ -153,8 +162,10 @@
   align-items: center;
   border-radius: 999px;
   padding: 9px 18px;
-  font-size: 12px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--ink);
   background: var(--paper);
   border: 1px solid var(--paper);
@@ -351,7 +362,10 @@
   }
   .nav-status {
     display: block;
-    color: var(--rim-ember);
+    /* 这里原来是 --rim-ember（#d96a12，L≈0.185）：压在 --glass-ink（L≈0.006）上只有
+       约 3.4:1，而状态字是 10px 的小字，AA 要 4.5:1。抽屉里的底比桌面的 --charcoal
+       更深，同样不够 → 与桌面档统一到 flare（#ffc489，L≈0.68 → 约 9:1）。 */
+    color: var(--accent);
   }
   .nav-contact {
     justify-content: center;

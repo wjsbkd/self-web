@@ -1,8 +1,9 @@
 /* AccountOperations —— 账号运营板块
  *
- * 设计融合：
+ * 2026-10-11 第四轮：参考图海报排版语言（token 见 global.css）
  * - 全站暗场语言：下潜档位底色 + .section-rim 顶缘光 + 暗面卡（--card-void 族）
- * - mono 小标 + 近白数字的数据感排版
+ * - 三档字：平台标签（--fs-label 方括号微标签）、账号名（display 800 大字）、
+ *   读数（--fs-h3 同族 800）+ 中文说明（11px 0.04em）。等宽小标退役。
  * - Apple 产品宣发：3D 螺旋照片墙（SpiralGallery）、scroll-reveal、springy hover
  * ─────────────────────────────────────────────── */
 
@@ -44,20 +45,28 @@
 }
 
 .identity-platform {
-  font: 10px var(--font-mono);
-  letter-spacing: 1.7px;
-  color: var(--accent);
-  padding: 5px 12px;
-  border: 1px solid var(--line-tag);
-  border-radius: 100px;
-  text-transform: uppercase;
+  /* 原来是描边小胶囊 + 等宽大写字距；「抖音」是两个全角字，大写没有意义、
+     0.16em 的拉丁字距会把词拉开 → 改成参考图的方括号微标签（见 .spec--bracket） */
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.identity-platform::before {
+  content: '[';
+  margin-right: 0.45em;
+  opacity: 0.6;
+}
+.identity-platform::after {
+  content: ']';
+  margin-left: 0.45em;
+  opacity: 0.6;
 }
 
 .identity-name {
-  font-family: var(--font-sans);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2vw, 34px);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
   color: var(--text-bright);
   display: inline-flex;
   align-items: center;
@@ -65,7 +74,8 @@
   transition: color 0.3s var(--ease-claude);
 }
 .identity-name:hover {
-  color: var(--accent-warm);
+  /* 静态一律白墨，只有交互态用火光色做反馈 */
+  color: var(--accent);
 }
 .identity-name .arrow {
   font-size: 14px;
@@ -79,7 +89,7 @@
   opacity: 1;
 }
 
-/* 统计数字（Claude 衬线数字风格） */
+/* 统计读数：与 About 数据栏同一档（display 800、-0.02em），中文说明 11px */
 .identity-stats {
   display: flex;
   gap: 6px;
@@ -94,19 +104,19 @@
 }
 .id-stat b {
   display: block;
-  font-family: var(--font-sans);
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 1.9vw, 30px);
+  font-weight: 800;
   color: var(--text-bright);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   line-height: 1.1;
 }
 .id-stat span {
   display: block;
-  font: 10px var(--font-mono);
+  font: 500 11px/1.4 var(--font-display);
   color: var(--text-dim);
   margin-top: 6px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
 }
 
 /* ── 响应式 ── */
