@@ -16,23 +16,32 @@ const HANDOFF = 0.35 // 滚过首屏高度的 35% 就交棒给主视频；未滚
 const FILM_K = 1.12
 
 /* ── 首屏眼神跟随 ──
-   intro.mp4 是一条 10s 的「表情 + 视线」素材：正面 → 右上 → 大笑 → 左 → 下 → 正面。
-   下面这张锚点表是逐张看过抽帧后定的（x 正=看向画面右、y 正=看向画面上，视线单位向量）：
-   0.15 正面平视 / 1.30 水平看向画面右 / 2.85 右上 / 5.40 看向画面左 / 5.75 左下 / 6.80 正下。
+   intro.mp4 是一条 10s 的「表情 + 视线」素材。锚点表是逐张看过抽帧后定的
+   （x 正=看向画面右、y 正=看向画面上，视线单位向量）。
+   `from` 是**起播点**：指针方向一变就先 seek 到 from，再用素材自己的 24fps 播进 t，
+   转头那一下是原生播放，一次过渡只发 2 次 seek（起播 + 落点校准）。
+   上一版按 0.18 逐帧插值（算式，不是量出来的）：从左(5.40)换到右(1.30) 要跨 4.1s 素材
+   = 98 帧，收敛到一帧以内需 ln(0.0417/4.1)/ln(0.82) ≈ 23 个 rAF 拍 ≈ 0.4s，
+   而且每拍跳的是剩余距离的 18% —— 头三拍就是 17/14/12 帧（一跳跨过 0.5–0.7s 素材，
+   中间把朝右大笑那一整段扫过去），这就是"滞后 + 卡顿 + 倒着扫不相干表情"三个毛病同时成立。
+   起播点一律只往回 0.30–0.35s（逐帧看过每段进入动作后定的）：再长就要穿过素材
+   自己的其它表情，反而不像"眼神动了"。
    素材里没有「纯上」和「纯右下」的镜头，那两个方向由最接近的锚点代打。
-   指针方向取点积最大的锚点，再把 currentTime 平滑推过去 —— 中间走的是素材自己的帧，
-   所以看起来是"眼睛转过去"而不是"跳切"。
-   ⚠️ 时间不能按方向加权平均：这条视线轨迹在时间轴上不是单调的（2.85s 的右上和 5.40s 的左
-   之间隔着整段朝右的大笑），平均出来的时刻对应的还是朝右。只能选一个锚点再平滑。 */
+   ⚠️ 时刻不能按方向加权平均：这条视线轨迹在时间轴上不单调，两个锚点之间隔着
+   素材自己的其它表情，平均出来的时刻对应的是别的方向。只能选一个锚点再播进。 */
 const GAZE = [
-  { t: 0.15, x: 0, y: 0 },
-  { t: 1.3, x: 1, y: 0.05 },
-  { t: 2.85, x: 0.55, y: 0.85 },
-  { t: 5.4, x: -1, y: 0 },
-  { t: 5.75, x: -0.6, y: -0.8 },
-  { t: 6.8, x: 0, y: -1 },
+  { t: 0.15, from: 0.15, x: 0, y: 0 },
+  { t: 1.3, from: 0.95, x: 1, y: 0.05 },
+  { t: 2.85, from: 2.5, x: 0.55, y: 0.85 },
+  { t: 5.4, from: 5.05, x: -1, y: 0 },
+  { t: 5.75, from: 5.45, x: -0.6, y: -0.8 },
+  { t: 6.8, from: 6.45, x: 0, y: -1 },
 ]
 const GAZE_DEAD = 0.1 // 指针落在这个半径内（以短边一半为单位）视为"贴在脸上"→ 正面
+/* 横扫（左→右）的指针路径必然从脸上掠过，死区是它中途的一站。所以"切回正面"要额外
+   等指针在死区里停够 120ms 才认 —— 否则一次横扫被拆成"回正→再转向"两段，
+   多一对 seek，看着就是两次抖。门槛只加在"切回正面"这一边，别的方向变化照常立即响应。 */
+const GAZE_DWELL = 120
 /* 双眼中点在源片里的位置，实测自 t=0.15 那帧的 128px/90px 网格叠图：
    左眼 (575,295) / 右眼 (700,295) → 中点 (638,295) ÷ 1280×720。 */
 const FACE = { x: 0.498, y: 0.41 }
@@ -82,9 +91,10 @@ export default function FilmStage() {
     let mx = 0
     let my = 0
     let moved = false // 鼠标还没动过 → 停在正面那一帧，别把 (0,0) 当成"左上角"
-    let gazeT = GAZE[0].t
-    let introSeeking = false
-    let issuedIntroFrame = -1
+    let want = null // 指针此刻对应的锚点
+    let aim = null // 正在播进的锚点；播进过程不打断，落位后再回头看 want
+    let phase = 'hold' // hold 静止 / arming 等起播 seek / playing 播进中 / settle 落点校准
+    let frontAt = 0 // 指针进入脸上死区的时刻
     let introSeekAt = 0
     let faceX = 0
     let faceY = 0
@@ -97,6 +107,8 @@ export default function FilmStage() {
 
     /* 触屏（没有可跟随的指针）才让首屏循环播；有指针或开了减少动效就钉在某一帧上。 */
     const looping = () => !fine && !reduce.matches
+    /* 眼神状态机只在「有指针可跟 且 没开减少动效」时活着 */
+    const gazeLive = () => fine && !reduce.matches
 
     function measure() {
       const hero = document.querySelector('.hero')
@@ -118,13 +130,13 @@ export default function FilmStage() {
       }).sort((a, b) => a.y - b.y)
     }
 
-    /* 指针方向 → 锚点时刻 */
-    function gazeTargetT() {
-      if (!moved) return GAZE[0].t
+    /* 指针方向 → 锚点（点积最大的那个） */
+    function gazeAnchor() {
+      if (!moved) return GAZE[0]
       const vx = mx - faceX
       const vy = faceY - my // 屏幕 y 向下，取反成"向上为正"
       const len = Math.hypot(vx, vy)
-      if (len < Math.min(window.innerWidth, window.innerHeight) * 0.5 * GAZE_DEAD) return GAZE[0].t
+      if (len < Math.min(window.innerWidth, window.innerHeight) * 0.5 * GAZE_DEAD) return GAZE[0]
       const ux = vx / len
       const uy = vy / len
       let best = GAZE[0]
@@ -138,7 +150,30 @@ export default function FilmStage() {
           best = a
         }
       }
-      return best.t
+      return best
+    }
+
+    /* seek 目标量化到整帧：落点必须是确定的那一帧，否则每次静止看到的画面会漂。 */
+    function q(to) {
+      return Math.round(to * FPS) / FPS
+    }
+
+    function seekIntro(to) {
+      try {
+        intro.currentTime = q(to)
+        introSeekAt = performance.now()
+        return true
+      } catch {
+        // metadata 还没到时浏览器会拒，下一帧重试
+        return false
+      }
+    }
+
+    function armIntro(a) {
+      const to = a.from === a.t ? a.t : a.from
+      if (!seekIntro(to)) return false
+      phase = a.from === a.t ? 'hold' : 'arming'
+      return true
     }
 
     function dodgeAt(y) {
@@ -181,7 +216,13 @@ export default function FilmStage() {
         root.classList.toggle('is-intro', stage === 'intro')
         // 隐藏的循环层停掉解码，否则一份 1280×720 常驻；显示时再续上
         if (stage === 'intro') {
-          if (looping() && intro.paused) intro.play().catch(() => {})
+          if (looping()) {
+            if (intro.paused) intro.play().catch(() => {})
+          } else if (gazeLive()) {
+            // 交棒期间 aim 可能已经落伍（滚走时指针还在动），回滚后先重新钉一次锚点帧
+            phase = 'settle'
+            seekIntro(aim ? aim.t : GAZE[0].t)
+          }
         } else if (!intro.paused) {
           intro.pause()
         }
@@ -216,22 +257,36 @@ export default function FilmStage() {
         }
       }
 
-      // 首屏眼神：这一层不做位移、不自动播，只把 currentTime 推到指针方向对应的锚点帧
-      if (stage === 'intro' && fine && !reduce.matches) {
-        const gt = gazeTargetT()
-        gazeT += (gt - gazeT) * 0.18
-        if (Math.abs(gt - gazeT) < 0.004) gazeT = gt
-        const f = Math.round(gazeT * FPS)
-        if (f !== issuedIntroFrame && (!introSeeking || now - introSeekAt > SEEK_STALL)) {
-          issuedIntroFrame = f
-          introSeeking = true
-          introSeekAt = now
-          try {
-            intro.currentTime = f / FPS
-          } catch {
-            introSeeking = false
+      // 首屏眼神：这一层不做位移、不常驻播放，只在方向变化时播进对应锚点
+      if (stage === 'intro' && gazeLive()) {
+        want = gazeAnchor()
+        if (want === GAZE[0]) {
+          if (!frontAt) frontAt = now
+        } else {
+          frontAt = 0
+        }
+        const dwell = want !== GAZE[0] || now - frontAt >= GAZE_DWELL
+        if (phase === 'hold' && want !== aim && dwell) {
+          if (armIntro(want)) aim = want
+        }
+        if (
+          phase === 'playing' &&
+          (intro.currentTime >= q(aim.t) - 0.001 || intro.currentTime < q(aim.from) - 0.001)
+        ) {
+          // 到位（或万一 loop 绕回来了）→ 停住并把画面钉在锚点那一帧。
+          // 两边都比"量化后的整帧"：拿原始秒数比会在 from 被舍入变小那档（5.05→5.0417）
+          // 一开播就误判成绕回，直接跳过播进。
+          intro.pause()
+          if (Math.abs(intro.currentTime - q(aim.t)) > 0.001) {
+            phase = 'settle'
+            seekIntro(aim.t)
+          } else {
+            phase = 'hold'
           }
         }
+        // seeked 迟迟不回来：起播那一步重试，落点那一步直接认了，别把状态机钉死
+        if (phase === 'arming' && now - introSeekAt > SEEK_STALL) armIntro(aim)
+        if (phase === 'settle' && now - introSeekAt > SEEK_STALL) phase = 'hold'
       }
     }
 
@@ -240,7 +295,15 @@ export default function FilmStage() {
     }
 
     const onIntroSeeked = () => {
-      introSeeking = false
+      // seeked 是这台机器上唯一可靠的「画面已换帧」信号，状态机靠它推进
+      if (phase === 'arming') {
+        phase = 'playing'
+        intro.play().catch(() => {
+          phase = 'hold'
+        })
+      } else if (phase === 'settle') {
+        phase = 'hold'
+      }
     }
 
     const onVisibility = () => {
@@ -248,16 +311,22 @@ export default function FilmStage() {
       // 后台标签页里 seek 会被挂起，回到前台后必须允许重新发一次
       issuedFrame = -1
       seeking = false
-      issuedIntroFrame = -1
-      introSeeking = false
+      // 播进中途被切走的话 currentTime 已不可信：直接落回锚点那一帧，不再重播一遍转头
+      phase = 'hold'
+      if (aim) {
+        if (!intro.paused) intro.pause()
+        phase = 'settle'
+        seekIntro(aim.t)
+      }
     }
 
-    /* 把首屏钉在当前注视帧上：有指针可跟、或开了「减少动效」时用。 */
+    /* 把首屏钉在注视帧上：触屏、开了「减少动效」或状态机复位时用。 */
     function holdIntro() {
       if (!intro.paused) intro.pause()
-      issuedIntroFrame = Math.round(gazeT * FPS)
+      phase = 'hold'
+      aim = null
       try {
-        intro.currentTime = gazeT
+        intro.currentTime = q(want ? want.t : GAZE[0].t)
       } catch {
         // metadata 还没到时浏览器会拒，tick 里下一帧会补上
       }
@@ -289,19 +358,22 @@ export default function FilmStage() {
       holdIntro()
     }
 
-    main.addEventListener('loadedmetadata', () => {
+    main.addEventListener('seeked', onSeeked)
+    intro.addEventListener('seeked', onIntroSeeked)
+    intro.addEventListener('loadedmetadata', measure)
+    const onMainMeta = () => {
       duration = main.duration
       main.pause()
       measure()
       onScroll()
-    })
-    main.addEventListener('seeked', onSeeked)
-    intro.addEventListener('seeked', onIntroSeeked)
-    intro.addEventListener('loadedmetadata', measure)
-    intro.addEventListener('play', () => {
-      // autoplay 的启动是排队任务，会跑在脚本 pause() 之后，只能在事件上钉回
-      if (!looping()) holdIntro()
-    })
+    }
+    main.addEventListener('loadedmetadata', onMainMeta)
+    const onIntroPlay = () => {
+      // autoplay 的启动是排队任务，会跑在脚本 pause() 之后，只能在事件上钉回。
+      // phase==='playing' 时不能钉回：那正是我们自己发的播进。
+      if (!looping() && phase !== 'playing') holdIntro()
+    }
+    intro.addEventListener('play', onIntroPlay)
     document.addEventListener('visibilitychange', onVisibility)
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
@@ -317,6 +389,8 @@ export default function FilmStage() {
       main.removeEventListener('seeked', onSeeked)
       intro.removeEventListener('seeked', onIntroSeeked)
       intro.removeEventListener('loadedmetadata', measure)
+      main.removeEventListener('loadedmetadata', onMainMeta)
+      intro.removeEventListener('play', onIntroPlay)
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
