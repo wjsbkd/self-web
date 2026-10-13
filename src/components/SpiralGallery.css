@@ -1,14 +1,16 @@
-/* SpiralGallery v3 —— 暗场水波螺旋照片墙
+/* SpiralGallery —— 暗场无限螺旋照片墙（几何见 SpiralGallery.jsx 的 InfiniteSpiral）
  *
  * 视觉构成：
  * - 容器是最深档的一口"井"，上缘吃一线缘光（--ring-card）
  * - 中心光晕走缘光族（rim-brick），不再用站外色
- * - 卡片边缘自然羽化（图片本身无硬切割）
- * - 远景卡片：半透明 + 降饱和 → "水波散开"感（由 JS 逐帧写 inline opacity/filter）
+ * - 卡片越界由四边暗角羽化（.spiral-edge-mask），不再是 overflow:hidden 的硬切线
+ * - 远景卡片：半透明 + 高斯模糊 → 淡出并遮住螺旋的回绕接缝
  * - 前景卡片：锐利 + 大尺寸
  *
- * ⚠️ JS 会在 .spiral-card 上写 inline opacity 与 filter（saturate），
- *   这两项不要在这里用 CSS 覆写；动画层里也别用 transform —— 会被逐帧覆盖。
+ * ⚠️ JS 会逐帧在 .spiral-card 上写 inline transform / opacity / filter / z-index /
+ *   pointer-events，并在 img 上写 inline width / height / object-fit / filter。
+ *   这几项不要在这里覆写；动画层里也别用 transform —— 会被逐帧覆盖。
+ *   卡片尺寸与圆角同样由 JS 按断点给出，所以这里不再有尺寸断点。
  */
 
 /* ── 外层容器：暗场深底大留白 ── */
@@ -24,15 +26,7 @@
   box-shadow: var(--shadow-soft), var(--ring-card);
   border-radius: 16px;
   overflow: hidden;             /* 深底容器需要硬切割以保持干净边缘 */
-  cursor: grab;
-  user-select: none;
-  /* perspective 3200：大透视消除 3D 拉伸感，让图像"散落暗场"而非唱片架 */
-  perspective: 3200px;
-  perspective-origin: 50% 50%;
   -webkit-tap-highlight-color: transparent;
-}
-.spiral-gallery:active {
-  cursor: grabbing;
 }
 
 /* ── 中心光晕：缘光族，只留砖红一档的暖 ── */
@@ -49,78 +43,60 @@
     );
 }
 
-/* ── 四边柔化遮罩：图片滑到边缘自然淡入 ──
-   mask 默认按 alpha 取用，所以两端的实色写什么都一样（alpha 1 = 保留），
-   这里的 var(--void-7) 只是与容器底色同值、读代码时不骗人。 */
-.spiral-edge-mask {
+/* ── 螺旋场：InfiniteSpiral 根节点，自带 perspective ──
+   isolation 让卡片的 z-index（按深度算到六位数）留在本层内，
+   于是光晕(1) < 场(2) < 四边遮罩(18) < 提示条(20) 的层序仍然成立。 */
+.spiral-field {
   position: absolute;
   inset: 0;
-  z-index: 18;
-  pointer-events: none;
-  -webkit-mask-image:
-    linear-gradient(to right,
-      var(--void-7) 0%, transparent 6%, transparent 94%, var(--void-7) 100%
-    ),
-    linear-gradient(to bottom,
-      var(--void-7) 0%, transparent 8%, transparent 92%, var(--void-7) 100%
-    );
-  mask-image:
-    linear-gradient(to right,
-      var(--void-7) 0%, transparent 6%, transparent 94%, var(--void-7) 100%
-    ),
-    linear-gradient(to bottom,
-      var(--void-7) 0%, transparent 8%, transparent 92%, var(--void-7) 100%
-    );
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 /* ── 3D 舞台 ── */
 .spiral-stage {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transform-style: preserve-3d;
-  z-index: 2;
 }
 
-/* ── 螺旋卡片：飘浮卡，无手机框硬边 ── */
+/* ── 螺旋卡片：飘浮卡，无手机框硬边 ──
+   定位靠 top/left 50% + JS transform 里的 translate(-50%,-50%)，不再用负 margin。 */
 .spiral-card {
   position: absolute;
   top: 50%;
   left: 50%;
-  /* 保留 800×1709 手机截图比例 (~9:19.2) */
-  width: 178px;
-  height: 380px;
-  margin-left: -89px;
-  margin-top: -190px;
-  background: var(--card-void);
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
   border: none;
-  border-radius: 14px;        /* 软圆角，无硬切割 */
+  font: inherit;
+  color: inherit;
+  background: var(--card-void);
   overflow: hidden;
   /* 暗场飘浮阴影：深投影 + 微光边 */
   box-shadow:
     0 22px 50px -18px rgba(0, 0, 0, 0.55),
     0 6px 18px -6px rgba(0, 0, 0, 0.4),
     0 0 0 1px var(--text-bright-a06);
-  will-change: transform, opacity, filter;
+  transform-style: preserve-3d;
   backface-visibility: hidden;
-  pointer-events: auto;
+  will-change: transform, opacity, filter;
   transition: box-shadow 0.4s ease;
 }
 
-/* ── 图片：默认完整展示（正前方的图绝不能被裁切）──
-   侧面/远景图的羽化由 JS 动态写入 el.style.webkitMaskImage ，
-   根据 front = cos(angle) 判断"是否正前方"：
-   - 正前方（front > 0.9）→ maskImage = 'none'，图完整露出
-   - 侧面/远景 → 上下轻微渐隐，保留散落梦幻感 */
 .spiral-card img {
+  position: absolute;
+  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  object-position: center;
+  user-select: none;
 }
 
 /* ── 近处卡片 hover 阴影加深 ── */
@@ -135,7 +111,29 @@
   outline-offset: 4px;
 }
 
-/* ── 滚动提示（首次进入时显示，滚动后淡出）── */
+/* ── 四边暗角：把越界的硬切线羽化成"沉进井底" ──
+   为什么不用 mask：上一版写的是 mask-image 两层渐变 + mask-composite: intersect。
+   intersect 取两层的"重叠"部分，而这两层各自的不透明区分别在左右边和上下边、互不重叠，
+   交集为空 → 整个 div 一个像素都不画；加上它本身没有 background，遮没遮住都不产生像素。
+   2026-10-12 用等尺寸纯红探针 + 同一套 mask 实测：正中、四边带、角上采样点全是底色，确认死规则。
+   现在改成两层 background 线性渐变（取并集，正是"四周压成底色、中间透明"），
+   端点用 transparent：#020202 本身就是黑，渐变按预乘 alpha 插值，不会掺出灰边。
+   层序：光晕(1) < 螺旋场(2) < 本层(18) < 提示条(20)，所以提示条不会被压暗。 */
+.spiral-edge-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+  background:
+    linear-gradient(to right,
+      var(--void-7) 0%, transparent 8%, transparent 92%, var(--void-7) 100%
+    ),
+    linear-gradient(to bottom,
+      var(--void-7) 0%, transparent 10%, transparent 90%, var(--void-7) 100%
+    );
+}
+
+/* ── 交互提示（首次行进后淡出）── */
 .spiral-hint {
   position: absolute;
   bottom: 28px;
@@ -175,35 +173,23 @@
   50%      { transform: translateX(-50%) translateY(-4px); }
 }
 
-/* ── 响应式 ── */
+/* ── 响应式：只调容器，卡片尺寸与螺旋几何由 JS 分档 ── */
 
 @media (max-width: 1024px) {
   .spiral-gallery {
     height: 80vh;
     min-height: 540px;
-    perspective: 2600px;
     margin-top: 36px;
-  }
-  .spiral-card {
-    width: 158px;
-    height: 337px;
-    margin-left: -79px;
-    margin-top: -168.5px;
   }
 }
 
 @media (max-width: 700px) {
+  /* 与桌面同为 92vh：手机容器 591 高时，正面卡已占 371，
+     螺旋第 5 张必然越界且当时不透明度还有 0.56 —— 硬切挡不住，只能给高度。 */
   .spiral-gallery {
-    height: 70vh;
-    min-height: 440px;
-    perspective: 2200px;
+    height: 92vh;
+    min-height: 560px;
     border-radius: 12px;
-  }
-  .spiral-card {
-    width: 132px;
-    height: 282px;
-    margin-left: -66px;
-    margin-top: -141px;
   }
   .spiral-hint {
     bottom: 18px;
@@ -212,16 +198,7 @@
   }
 }
 
-@media (max-width: 400px) {
-  .spiral-card {
-    width: 110px;
-    height: 235px;
-    margin-left: -55px;
-    margin-top: -117.5px;
-  }
-}
-
-/* 减少动态效果偏好 */
+/* 减少动态效果偏好：JS 里已停掉自动行进与滚动驱动，这里只收掉装饰动画 */
 @media (prefers-reduced-motion: reduce) {
   .spiral-card {
     will-change: auto;

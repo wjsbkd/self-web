@@ -22,9 +22,6 @@ margin-bottom: 40px;
 .heading-row p {
 margin-top: 20px;
 }
-.side-note {
-display: none;
-}
 }
 @media (max-width: 600px) {
 .wrap {
