@@ -574,9 +574,11 @@ footer[id] {
   content: ']';
   margin-left: 0.55em;
 }
+/* 箭头跟随悬停位移。原先这条挂在 .contact-row a 和 .email 上，
+   而这两个类名全站没有任何元素使用（页脚的邮件按钮实际是 .footer-cta），
+   所以三分支里只有导航那条生效 —— 页脚 CTA 的箭头只变色、不位移。改成真实类名。 */
 .nav-contact:hover .arrow,
-.contact-row a:hover .arrow,
-.email:hover .arrow {
+.footer-cta:hover .arrow {
   transform: translate(3px, -3px);
 }
 
