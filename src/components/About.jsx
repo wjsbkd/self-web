@@ -8,7 +8,7 @@ import { contactEmail, contactPhone, contactPhoneTel, contactWechat, resumePdf }
 export default function About() {
   return (
     <section className="about section wrap" id="about">
-      <div className="section-rim" aria-hidden="true" />
+      <div className="section-rim section-rim--lit" aria-hidden="true" />
       <SectionHeading num="01" kicker="ABOUT ME" />
       <div className="about-links">
         <a href={`mailto:${contactEmail}`} aria-label={`发送邮件到 ${contactEmail}`}>

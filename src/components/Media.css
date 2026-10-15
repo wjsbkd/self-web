@@ -1,8 +1,40 @@
 /* Media 组件样式 —— 2026-10-11 第四轮：参考图海报排版语言（token 见 global.css）
-   已删：.account-section 到 .stat-item 的整段（Media.jsx 只渲染 .portfolio-bar，
-   那 81 行是从旧版「运营账号区块」留下的死规则；现行账号区块在 AccountOperations.css）。 */
+   已删：.account-section 到 .stat-item 的整段（那 81 行是从旧版「运营账号区块」
+   留下的死规则；现行账号区块在 AccountOperations.css）。
+   2026-10-13：接收了从 Strengths 挪来的 .tool-gallery*（能力展示）。 */
 .media {
   padding-bottom: 170px;
+}
+
+/* 能力展示（2026-10-13 由 Strengths 挪来，排在视频轨道上方）
+   网格铺满内容列而不收进 --lane-w —— 本板块的轨道本来就是整幅图片带，
+   信息道是为压在影片上的文字设的，图片件没有避让问题。
+   margin-top 归零：它现在是本板块第一件内容，.heading-row 自带 75px 下边距，
+   再叠上原来那个 70px 就成了 145px 的空场；顶线仍留，作为标题与展品之间的分隔。
+   margin-bottom 70：给到下面「视频案例」那条顶线的呼吸距离（10-13 晚加了标题层之后，
+   轨道不再是本区块的直接后继，原来那句「与 .video-rail 的 50 折叠取大值」已经不成立）。 */
+.tool-gallery {
+  padding-top: 46px;
+  border-top: 1px solid var(--line-soft);
+  margin-bottom: 70px;
+}
+.tool-gallery-heading,
+.video-gallery-heading {
+  /* 与条目名同一档，但取 800 —— 参考图里同级标题靠字重而不是字号分主次 */
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  letter-spacing: var(--track-display);
+  color: var(--text-bright);
+  margin-bottom: 28px;
+}
+
+/* 视频案例（2026-10-13 晚，他提的第二条「这个区域没有二级标题」）
+   顶线与标题上间距照上面 .tool-gallery 那一档，标题本身与它共用一条规则（见上）。
+   这里不给下边距：轨道外层 .video-rail-block 自带 margin-top 50，和标题的 28 相邻折叠后就是 50。 */
+.video-gallery {
+  padding-top: 46px;
+  border-top: 1px solid var(--line-soft);
 }
 
 /* 完整作品集 PDF 入口条：按参考图的「一行微标签 + 一行实心大字 + 一枚白药丸」重排。
@@ -25,7 +57,10 @@
   align-items: center;
   gap: 18px;
 }
-.portfolio-bar span {
+.portfolio-bar div span {
+  /* 必须带 div：这条规则的本意只是那行拉丁微标签，写成 `.portfolio-bar span`
+     会连带把右侧药丸里的 <Arrow/>（它也是个 span）一起染色 —— 特异度 (0,1,1) 压过
+     .arrow 的继承。翻墨之前是"半透明白压深药丸"看不出来，翻墨之后实测 1.01:1 直接隐形。 */
   font: 500 var(--fs-label)/1.4 var(--font-display);
   letter-spacing: var(--track-label);
   text-transform: uppercase;
@@ -48,7 +83,8 @@
   padding: 0.95em 1.7em;
   transition:
     translate 0.3s var(--ease-claude),
-    background 0.3s var(--ease-claude);
+    background 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .portfolio-bar > a:hover {
   translate: 0 -2px;

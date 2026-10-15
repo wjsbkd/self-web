@@ -80,7 +80,7 @@ export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
   return (
     <div className="work-modal" onClick={handleClose} role="dialog" aria-modal="true" aria-label={item.title}>
       <div className="work-modal-backdrop" />
-      <div className="work-modal-panel" ref={panelRef} onClick={(e) => e.stopPropagation()}>
+      <div className={'work-modal-panel' + (isVideo ? ' is-video' : '')} ref={panelRef} onClick={(e) => e.stopPropagation()}>
         <button className="work-modal-close" onClick={handleClose} aria-label="关闭">
           <span />
           <span />

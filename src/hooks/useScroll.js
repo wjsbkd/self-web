@@ -66,36 +66,3 @@ export function useScrollDirection() {
 
   return { dir, scrolled }
 }
-
-/**
- * 视差 hook：根据元素相对视口位置返回进度（-1 ~ 1，0 为元素中心与视口中心对齐）
- * 用于 Hero 多层视差，元素以不同速度移动创造深度感（苹果官网标志性效果）
- */
-export function useParallax(ref, speed = 0.3) {
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let raf = 0
-
-    const update = () => {
-      raf = 0
-      const rect = el.getBoundingClientRect()
-      const viewportH = window.innerHeight
-      // 元素中心相对视口中心的偏移比例
-      const offset = (rect.top + rect.height / 2 - viewportH / 2) / viewportH
-      const translate = offset * speed * 100
-      el.style.transform = `translate3d(0, ${translate.toFixed(2)}px, 0)`
-    }
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update)
-    }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [ref, speed])
-}

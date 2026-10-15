@@ -14,7 +14,7 @@
 @import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
 
 /* 中文像素显示字（Fusion Pixel）随第三轮点阵标题一起退役；
-   public/fonts/ 下那两个 woff 暂时保留，等确认没有回退需求再删。 */
+   public/fonts/ 那两个 woff 已于 2026-10-15 删除，需要回退时走 git 历史。 */
 
 /* ── Design Token ── */
 /* 命名约定：rim=火光 / void=下潜档位 / paper·ink·charcoal=UI 反转件。
@@ -59,7 +59,6 @@
   /* ── UI 反转件（实测：白药丸 #fefefe / 深炭药丸 #282828） ── */
   --paper: #fefefe;
   --paper-hi: #ffffff;
-  --paper-a92: rgba(254, 254, 254, 0.92); /* 半透明白件（播放键这类要压在后景上的圆） */
   --ink: #1a1614; /* 白底上的文字；暗场里也当「剪影件」底色（导航药丸、汉堡） */
   --charcoal: #282828; /* 次级药丸底 */
   --card-void: #0f0a09; /* 卡片底，比所在档位略抬 */
@@ -117,8 +116,22 @@
      同时成立；全角汉字 advance = 1em，一行 12 字要占满 94vw，字号上限就是 94vw/12 ≈ 7.8vw，
      此时字高只有约 9vh。所以本轮按「满幅」这条还原（视觉结果就是"大字压画面"），
      而不是按参考图的绝对高度。 */
-  --fs-display: clamp(30px, calc((100vw - 120px) / 14), 122px); /* 首屏 14 个全角字（含标点）铺满 .wrap 内容列 */
-  --fs-h2: clamp(30px, calc((100vw - 120px) / 10), 168px); /* 板块标题最长一行 10 个全角字 */
+  /* 内容列的真实宽度 = .wrap 那条 min(1700px, 100% − 120px)。
+     ⚠️ 凡是"按栏宽反推字号"的公式一律用它，不要再写 100vw − 120px，两处偏差：
+     1) 1700 封顶以后视口再宽列也不变宽，用 vw 反推的字号却继续涨 ——
+        实测 2532 视口下页脚 h2 字号 159.8px、栏宽只有 901px，8 字的一行被压成 5 字；
+     2) 100vw 含经典滚动条占的 15px，而 .wrap 的 100% 不含 —— 不补这个余量，
+        公式恒比真实列宽 15px，负字距那 1.4% 的余量刚好抵不住，实测 1100 视口下
+        strengths/experience/work/media/account 五个板块的 8~10 字长行全部折行。
+     这里只含字面量与 vw，不含别的自定义属性，所以挂在 :root 上是安全的
+     （上面 --fs-h2 那条注释记的就是挂在 :root 却引用下层属性的反面例子）。 */
+  --col-w: min(1700px, calc(100vw - 120px - 15px));
+  --fs-display: clamp(30px, calc(var(--col-w) / 14), 122px); /* 首屏 14 个全角字（含标点）铺满 .wrap 内容列 */
+  /* --fs-h2 这一轮从字号阶里删掉了：它现在依赖板块自己的 --head-k / --head-max，
+     而自定义属性里的 var() 是在**声明它的那个元素**上代入完再往下继承的 ——
+     挂在 :root 上就等于永远吃 fallback（实测七个板块全退回 132px 满幅档）。
+     表达式因此改写在用它的两条规则里（.heading-row h2 与 .footer h2），
+     推导过程见信息道那节的注释。 */
   --fs-h3: clamp(19px, 1.5vw, 27px); /* 条目标题（学校 / 公司 / 项目名） */
   --fs-body: 15px; /* 正文基准，与参考图的 28px@1920 同档（约 1.46vw） */
   --fs-label: 12px; /* 微标签：参考图里它与正文同字号 */
@@ -135,11 +148,27 @@
   --shadow-warm-glow: 0 0 60px var(--rim-brick-a18);
   --shadow-paper: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--text-bright-a06);
   --scrim: rgba(2, 2, 2, 0.72); /* 弹窗遮罩：与页面最深档同色，只压暗不染色 */
+  /* ghost 药丸（次级 CTA）的描边与 hover 填充。原先这两处把 rgba(255,255,255,…)
+     硬写在 .pill--ghost 里：浅底板翻墨之后白描边在白板上直接隐形，
+     所以收成 token，板内那组见「板内墨色」一节。 */
+  --ghost-line: rgba(255, 255, 255, 0.5);
+  --ghost-fill: rgba(255, 255, 255, 0.08);
 
   /* ── 缓动曲线 ──
      --ease-spring 已删：第三轮的卡片弹跳换成 translateY/translate 之后就没有引用了。 */
   --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-claude: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* --ease-out-soft：按下这种 160ms 的短反馈要"起步快、收尾软"，上面两条都不合适
+     （--ease-claude 收尾太黏，--ease-apple 是入场曲线的形状）。取自 BellToggle 的
+     --bt-ease-out 原值，全站按压与展开共用。 */
+  --ease-out-soft: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* ── 按压反馈档（源：BellToggle 的 --bt-press / --bt-fade）──
+     全站按钮共用这三个数，改幅度只在这里改。0.97 是源件原值 —— 药丸尺度上
+     刚好读得出"吃进去一点"，又不会让 12px 的字糊掉。 */
+  --press-scale: 0.97;
+  --press-ms: 160ms;
+  --fade-ms: 200ms;
 
   font-family: var(--font-sans);
   color: var(--text-base);
@@ -244,20 +273,30 @@ footer[id] {
   padding: 170px 0;
 }
 
-/* ── 信息道：画面与文字的分区（2026-10 留白分配）──
+/* ── 信息道与白板：画面与文字的分区（2026-10-13 第二十一轮：黑磨砂底板 → 渐变白板）──
    依据 lanes.js / face.js 的实测：对每个板块各自落在影片上的那一帧做背景减除
    （降采样 4× + 14px 大窗模糊当墙面），逐行取主体左右边界，再按 cover+scale
    与当前避让位移映回视口。下面每条注释里的数字就是「那一帧人头最靠左在哪」。
-   板块内容列本身占 x 60–1380（1320px），所以道宽一律按 1320 的百分比算。
-   主体在 600 以下的部分是端肩的深色毛衣，白字压上去照样可读，不算越界。
-   ⚠️ 2026-10-11：整页改铺滚动影片（FilmStage）后，这七档不能再是不透明色，
-   否则视频被完全糊住。改成同色的半透明版，「越往下越沉」的阅读顺序保持不变，
-   只是从「沉进黑色」变成「沉进越来越浓的黑里，画面逐渐透不出来」。
-   所以每个板块拆成两层：
-     --sink    平坦档：整幅统一压暗，只负责「越往下越沉」的阅读顺序
-     方向遮罩  一道从信息道一侧横扫过来的暗渐变，把墙面亮度拉到可读区间；
-               主体那一侧不加遮罩，保持影片原亮度 —— 这就是「分配」本身。
-   两层合在 background 里（而不是 ::after），避免和 .section-rim 的层级打架。 */
+   板块内容列占 x 60–1380（1320px），所以 --lane-w / --head-k 按 1320 的宽度算；
+   --plate-x 按**视口宽**的百分比算（板铺满整幅，基准是视口），两者基准不同，别混。
+
+   这一轮改了板的三件事：
+   1. 板是一块**横向渐变**，不是均匀玻璃：文字这一侧 α .93（磨砂，压得住深墨），
+      到主体左缘收到 .56，右缘只剩 --plate-tail。人物是「透过一层薄白被看见」，
+      不是被板让开 —— 这是"浅的一侧露人"的唯一实现方式，因为人物在 <video> 里，
+      板永远盖在他前面，做不到"把板挪到人后面"。
+   2. 磨砂必须**停在人之前**：backdrop-filter 整元素生效、没法只糊一侧，
+      所以 blur 挂在 ::before 上用 mask-image 局部化，与背景共用同一支横向渐变方向。
+      实测代价：blur 铺到人身上时人侧清晰度只剩 32–41%、人物明暗跨度 120→84~102，
+      人塌成一块斑（样品 y3）。
+   3. 浅底必须整套翻墨，见下面「板内墨色」那一节。
+
+   ⚠️ 结构约束（第十七次量出来的，别再试）：板只能挂在 section::before 这块真盒子上；
+   给 section 加 `isolation:isolate` 或 `z-index` 会让它变成 backdrop root，糊不到身后的影片。
+   内容抬到板上方靠现成的 `.section-rim ~ *`（见下面缘光那节），所以 .section-rim
+   必须是板块的第一个子元素。
+   ⚠️ 帧率不是理由：真窗口实测 blur 12/24/40px 的 p50 全是 6.1ms、吞吐 96–101%，
+   与"没有板"同档。 */
 .about,
 .strength,
 .experience,
@@ -266,65 +305,89 @@ footer[id] {
 .account-ops {
   position: relative;
 }
-/* 道宽 = (该板块居中帧的主体最左 x − 60) / 1320，向下取整留 10px 气口。
-   括号里是 lanes2.log 量到的主体最左 x 与它所在的视口 y 档。 */
+/* 每板块三个数，都从「那一帧人头最靠左在哪」推出来：
+     --plate-x   板收到 .56 的位置 = 主体最左 x / 视口宽（基准 1440）
+     --head-k    大标题的行宽上限 = 实测「深墨大字站得住」的右界换算成内容列比例（无量纲）
+     --plate-tail 右缘残余白度，越往下越厚（顶替原先「越往下越沉」的那条阅读顺序）
+   ⚠️ --head-k 用无量纲数而不是 51%，是因为它要同时喂两处：`width: calc(k*100%)`
+   和 --fs-h2 里的 `length * k`。calc 里 length×percentage 非法、length×number 合法。
+   ⚠️ --head-k 不是审美值，是量出来的：样品轮在 1440 上逐列取底色中位，
+   深墨 #14100e 要底 ≥ 灰阶 101（3:1）才站得住，实测右界 about 631 / strength 735 /
+   work 1126，减掉 60 的左边距再除以 1320 就是这三档。超出这个宽，字就压到人身上失去底。
+   --head-max = 本板块 h2 最长一行的全角字数（--fs-h2 按它反推字号，
+   这样"大字压画面"的比例在窄道上不塌，也不会折行）。各段实测行数见各条注释。 */
 .about {
-  /* 576 @y200–250：发梢。原先 46% 时导语的「的」字压在耳朵上。 */
-  --lane-w: 38%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.6) 0%, rgba(2, 2, 2, 0.34) 34%, rgba(2, 2, 2, 0) 62%),
-    rgba(11, 7, 6, 0.34);
+  /* 576 @y200–250：发梢。原先 46% 时导语的「的」字压在耳朵上。
+     第二十二轮 38% → 30%：道宽要收到板的**实心段**里 —— mask 从 plate-x−8% 开始收，
+     38% 的道右缘（1440 上 562 / 1100 上 432）已经落在淡出带里，
+     实测 1100 上联系条的箭头 x401–421 底灰只有 113 → 3.66:1。
+     30% 的右缘是 456 / 354，正好压在实心段（461 / 352）之内。
+     本板块没有 h2（SectionHeading 只给序号标签），所以不挂 --head-*。 */
+  --lane-w: 30%;
+  --plate-x: 40%;
+  --plate-tail: 0.42;
 }
 .strength {
-  /* 706 @y150–200：避让到 0.115 后画面让得很开，48% 仍留 50px 余量。 */
-  --lane-w: 48%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.56) 0%, rgba(2, 2, 2, 0.3) 42%, rgba(2, 2, 2, 0) 74%),
-    rgba(9, 6, 5, 0.4);
+  /* 706 @y150–200：避让到 0.115 后画面让得很开。
+     第二十二轮 48% → 42%：48% 时格子右缘 694、右上角箭头落在 x645–665，
+     那一段已经在 mask 淡出带之外（实心段只到 plate-x−8% = 590），
+     最坏一帧底灰只有 78 —— 任何墨色都站不住。收到 42% 后箭头在 x561–581。 */
+  --lane-w: 42%;
+  --plate-x: 49%;
+  --head-k: 0.51; /* 两行「不止完成，」/「更在意如何抵达。」→ 8 字 */
+  --head-max: 8;
+  --plate-tail: 0.45;
 }
 .experience {
-  /* 587 @y350–450：这一镜是仰视，头在画面偏上，正文区正好撞上发际。 */
-  --lane-w: 48%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.58) 0%, rgba(2, 2, 2, 0.32) 38%, rgba(2, 2, 2, 0) 68%),
-    rgba(8, 5, 5, 0.46);
+  /* 587 @y350–450：这一镜是仰视，头在画面偏上，正文区正好撞上发际。
+     ⚠️ 原先这里写 48%（=694px），比本板块量到的主体最左 587 还宽 107px，
+     与文件自己记的公式不符 —— 本轮按公式收回 40%，导语少一行。 */
+  --lane-w: 40%;
+  --plate-x: 41%;
+  --head-k: 0.44; /* 「积累解决问题的能力。」→ 10 字 */
+  --head-max: 10;
+  --plate-tail: 0.47;
 }
 .work {
   /* 1075 @y250–300：沙发那一镜主体整个坐在右侧，全页最宽松的一屏。
-     道宽故意不收满 —— 左边大片空墙是这一屏的呼吸，不是浪费。 */
+     道宽故意不收满 —— 左边大片空墙是这一屏的呼吸，不是浪费。
+     但大标题这一轮可以铺到 0.81：主体在 75% 之外，浅区一直够宽。 */
   --lane-w: 46%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.54) 0%, rgba(2, 2, 2, 0.28) 32%, rgba(2, 2, 2, 0) 56%),
-    rgba(7, 5, 4, 0.52);
+  --plate-x: 75%;
+  --head-k: 0.81; /* 「变成可见的回响。」→ 8 字 */
+  --head-max: 8;
+  --plate-tail: 0.49;
 }
 .media {
   /* ⚠️ 例外：这一镜（泼咖啡）满屏都是飞散的物件，轮廓检测在 x 73–297
-     就报警，没有「干净的一侧」可收。所以这里不按主体定道宽，
-     改由对比度定：标题走左上角最暗的墙，平坦档给到全站最强的 0.66。 */
+     就报警，没有「干净的一侧」可让。所以这里不按主体定，
+     板按信息道定，右缘白度给到全站最厚的一档。 */
   --lane-w: 46%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.66) 0%, rgba(2, 2, 2, 0.4) 36%, rgba(2, 2, 2, 0) 60%),
-    rgba(5, 4, 4, 0.58);
+  --plate-x: 46%;
+  --head-k: 0.5; /* 「更大的展示空间。」→ 8 字 */
+  --head-max: 8;
+  --plate-tail: 0.52;
 }
 .account-ops {
   /* 645 @y350–450：身份卡原先铺满内容列，卡片的上下边线正好横切过角色的眼睛。 */
   --lane-w: 43%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.5) 0%, rgba(2, 2, 2, 0.26) 34%, rgba(2, 2, 2, 0) 62%),
-    rgba(3, 3, 3, 0.66);
+  --plate-x: 45%;
+  --head-k: 0.48; /* 「每一条都是一次对话。」→ 10 字 */
+  --head-max: 10;
+  --plate-tail: 0.54;
 }
 /* 尾屏：站立一镜的主体在中段偏右（实测 700 @y300–400），信息道同样靠左。
-   限宽挂在 .footer-inner 的直接子元素上，百分比基准是 1320px 内容列，
-   所以 47% = 620px —— 标题字号同步降到 68px 上限，8 字才不会再折。
-   平坦档从 0.92 降到 0.74，否则「下一个故事」整屏是纯黑，影片等于没接上。 */
+   限宽挂在 .heading-row h2 / p 与 .footer h2 上，比例基准是 1320px 内容列。 */
 .footer {
   --lane-w: 47%;
-  background:
-    linear-gradient(96deg, rgba(2, 2, 2, 0.62) 0%, rgba(2, 2, 2, 0.34) 40%, rgba(2, 2, 2, 0) 70%),
-    rgba(2, 2, 2, 0.74);
+  --plate-x: 49%;
+  --head-k: 0.53; /* 「从一次对话开始。」→ 8 字 */
+  --head-max: 8;
+  --plate-tail: 0.56;
 }
 /* 窄屏取消分区：手机上是竖屏裁切，头肩几乎占满整幅，没有「另一侧」可让。
-   退回到「整幅压暗 + 内容满宽」，方向遮罩和道宽一起撤掉。 */
+   板退成整幅均匀的浅纱（α .86，够深墨站住），磨砂一起撤掉 —— 竖屏上 blur 糊的是人不是墙，
+   而且移动端合成器比桌面紧。道宽/标题宽同时放满。 */
 @media (max-width: 900px) {
   .about,
   .strength,
@@ -334,47 +397,47 @@ footer[id] {
   .account-ops,
   .footer {
     --lane-w: 100%;
+    --head-k: 1;
   }
-  .about { background: rgba(11, 7, 6, 0.72); }
-  .strength { background: rgba(9, 6, 5, 0.74); }
-  .experience { background: rgba(8, 5, 5, 0.76); }
-  .work { background: rgba(7, 5, 4, 0.78); }
-  .media { background: rgba(5, 4, 4, 0.8); }
-  .account-ops { background: rgba(3, 3, 3, 0.84); }
-  .footer { background: rgba(2, 2, 2, 0.88); }
-  .heading-row { gap: 18px; }
+  /* ⚠️ 板本身的窄屏覆盖**不能留在这里**：下面的「白板本体」那条
+     `.about::before, …` 特异度与它相同 (0,1,1) 却排在后面，同特异度靠打包顺序决胜，
+     写在这儿会被整条静默吃掉。第二十二轮在 800×900 首次量到后果：28 个件不达标，
+     about/strength/experience 最差 1.00:1、底灰 10–30 —— 手机宽度上板根本没铺平，
+     用的还是横向渐变，x368 之外就是裸影片。现在这份覆盖挪到了白板本体之后。
+   同一条媒体查询里原先还有 `.heading-row{gap:18px}`：删了 —— .heading-row 从定义到
+   responsive.css 的窄屏版都是 display:block，块容器没有 flex 轴，gap 从来不起作用，
+   而且它排在下面 .heading-row (display:block) 之前，本来就会被同特异度覆盖。 */
 }
 /* 限宽只限内容：这五个板块同时带 .section 与 .wrap，而 .wrap 的宽度约束会把
-   下潜底色和 .section-rim 一起切成中间一根柱子（>1820px 视口时两侧露出 body 的
-   纯黑）。改成等价的 padding-inline 后内容列宽不变（窄屏 100%-120px、宽屏封顶
-   1700px），底色与缘光却能铺满整幅 —— 下潜是一整条梯度，不是居中的条。 */
-.about,
-.strength,
-.experience,
-.media,
-.account-ops {
+   白板铺不满整幅（>1820px 视口时两侧露出 body 的底）。改成等价的 padding-inline 后
+   内容列宽不变（窄屏 100%-120px、宽屏封顶 1700px），板与缘光却能铺满整幅。
+   ⚠️ 选择器必须写成 .about.section 这种 (0,2,0)：responsive.css 在 ≤800/≤600 有
+   `.section, .work { padding: 80px 0 }` 的短写，同特异度靠打包顺序决胜，
+   会把这里的 padding-inline 整条静默清掉（第十七次实测 boxL=14 pad=0px）。 */
+.about.section,
+.strength.section,
+.experience.section,
+.media.section,
+.account-ops.section {
   width: 100%;
   padding-inline: max(60px, calc((100% - 1700px) / 2));
 }
 
-/* ── 标题带的顶部压暗（第四轮：大字出血之后才需要）──
-   参考图顶部 8.6% 实测是 #060405（近黑），它的巨型标题就是站在这块黑场上的；
-   我们把 h2 放出信息道横穿主体之后，同样需要一条自上而下的暗带，否则大字会
-   直接压在 relLum 0.26 的墙面上（白字 3.3:1，不过 AA）。
-   用 ::before 而不是再往七个板块的 background 简写里塞一层：
-   车道遮罩是横向的、这条是纵向的，分开写各自的注释和窄屏行为才不会互相遮蔽。
-   ⚠️ ::before 是区块的第一个子元素，绘制顺序在 .section-rim 之下 —— 这正是想要的：
-   发丝线要浮在暗带上。窄屏（≤900px）车道撤掉但这条保留，因为大字照样横穿画面。 */
-.hero,
-.about,
-.strength,
-.experience,
-.work,
-.media,
-.account-ops,
-.footer {
-  --title-band-h: 46%;
-}
+/* ── 白板本体（2026-10-13 第二十一轮）──
+   一块横向渐变的磨砂玻璃，替掉原先「板块顶部一条自上而下的压暗带」+「background 里
+   那道横向方向遮罩」两层 —— 那两层是为白墨服务的（把底压暗到白字站得住），
+   这一轮换墨色之后它们整体反向，留在原地只会把白板重新压黑。
+   三个要点：
+   1. α 斜坡：.93（文字侧，磨砂、深墨站得住）→ .74 → .56（主体最左缘）→ --plate-tail。
+   2. blur 用 mask-image 局部化：停在 --plate-x 之前（-8% 起收，+6% 收干净）。
+      不这么做的话人就被糊平了 —— 样品 y3 实测人侧清晰度只剩 32–41%。
+      ⚠️ 起收点从 -12% 收到 -8% 是第二十二轮改的：mask 一收，整棵 box 都跟着淡
+      （渐变尾巴在 -12% 之后其实根本没画出来），于是 -12%～plate-x 这一段成了"淡出带"，
+      压在那上面的小字底色随影片每帧在灰 120–190 之间跳，11–12px 的 α 档墨随时掉到 4.5 以下。
+      实心段加宽 4%（约 58px）之后，道内的正文/小字基本都落回实心段。
+   3. 板必须在内容之下、影片之上：z-index:0 的 ::before 加上现成的
+      `.section-rim ~ *{z-index:1}` 正好做到这件事，所以 .section-rim 仍是每个板块的
+      第一个子元素。窄屏的均匀版见本条规则**下面**紧跟的那段 @media (max-width:900px)。 */
 .about::before,
 .strength::before,
 .experience::before,
@@ -385,22 +448,185 @@ footer[id] {
   content: '';
   position: absolute;
   top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: var(--title-band-h);
   z-index: 0;
   pointer-events: none;
   background: linear-gradient(
-    180deg,
-    rgba(2, 2, 2, 0.52) 0%,
-    rgba(2, 2, 2, 0.3) 38%,
-    rgba(2, 2, 2, 0) 100%
+    96deg,
+    rgb(255 255 255 / 0.93) 0%,
+    rgb(255 255 255 / 0.74) calc(var(--plate-x) * 0.5),
+    rgb(252 248 245 / 0.56) var(--plate-x),
+    rgb(252 248 245 / var(--plate-tail)) 100%
   );
+  -webkit-backdrop-filter: blur(12px) saturate(1.06);
+  backdrop-filter: blur(12px) saturate(1.06);
+  /* 两层遮罩求**交**：横向那层管"板停在人之前"，竖向那层管"板在板块顶/底缘化开"。
+     没有竖向层时板是一整根通栏的柱子，被板块边界一刀切断 —— 交界处的观感是
+     "上一屏糊了、下一屏突然对上焦"，而 .section-rim 那条发丝线正好压在这道切口上，
+     读起来像画错的分隔线。加 90px 竖向坡以后白度和 blur 一起淡出（必须一起：
+     只淡 background 不淡 mask 的话，留下的是一条没有白度、却仍然糊人的对焦线，
+     比原来更怪），发丝线才回到它本来的身份——一块柔光雾的边缘。
+     90px 这个数是照着内容起笔量的（cdp_gap.js，1440×900 逐板块量墨到板块缘的距离）：
+     顶缘最小的是 footer 的「LET'S CREATE」100px，其余 130–170px；底缘最小的是 about 最后一行
+     「内容累计播放」87px —— 它只吃进坡的最后 3px，那一段 mask α 仍有 0.97，实测该件 6.72:1、不受影响。
+     再往下调坡长之前先重跑这个量，别照抄这里的数。
+     ⚠️ mask-composite 需要 Chrome/Edge 120+、Safari 15.4+；
+     不支持时默认是 add（并集），竖向层会把整块板放出来糊到人身上 —— 改之前先回读
+     computed mask-composite 确认 intersect 真的生效（本轮实测 "intersect, intersect"）。 */
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(var(--plate-x) - 8%),
+    transparent calc(var(--plate-x) + 6%)
+  ), linear-gradient(
+    180deg,
+    transparent 0,
+    #000 90px,
+    #000 calc(100% - 90px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(var(--plate-x) - 8%),
+    transparent calc(var(--plate-x) + 6%)
+  ), linear-gradient(
+    180deg,
+    transparent 0,
+    #000 90px,
+    #000 calc(100% - 90px),
+    transparent 100%
+  );
+  mask-composite: intersect;
+}
+/* 窄屏取消分区（必须排在上面那条之后，理由见那里面的 ⚠️）：
+   整幅均匀浅纱 α .86 —— 影片最黑的一帧下底色仍有 0.86×252 = 灰 217，
+   base/dim 两档都站在 4.5 之上；磨砂撤掉，竖屏上糊的是人不是墙。 */
+@media (max-width: 900px) {
+  .about::before,
+  .strength::before,
+  .experience::before,
+  .work::before,
+  .media::before,
+  .account-ops::before,
+  .footer::before {
+    background: rgba(252, 248, 245, 0.86);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  /* 窄屏没有竖向坡（上面 mask: none）→ 交界处根本没有暗槽，补光带会凭空压出一条亮横带。
+     所以只关中性带；hero→about 那道暖雾（--lit::before）维持原样不动。 */
+  .section-rim:not(.section-rim--lit)::before,
+  .account-ops::after {
+    display: none;
+  }
+}
+
+/* ── 板内墨色：浅底必须整套翻墨（第十七次的结论，直接抄）──
+   深色系统整个挂在 :root 的变量上，所以翻墨是改变量、不是改组件。
+   ⚠️ 必须在这里自己声明 `color: var(--text-base)`：:root 上的 color 在根元素就解析成了
+   白墨，继承链不会重读 token —— 漏一个板块实测 1.48:1。
+   ⚠️ --accent 必须从 flare #ffc489 降到 wine #6b1e04：L 0.68 的暖色压在 L 0.66 的板上
+   等于隐形（第十七次量到 1.02:1）。暖色在浅色语言里退回**描边与发光**的职责，
+   不再当文字色；--rim-brick 仍用于缘光线。
+   --paper / --ink / --charcoal 是「UI 反转件」，一起反向：白药丸翻成墨药丸，
+   这样导航（在板外、仍吃 :root 的深色档）与板内同时各自成立。 */
+.about,
+.strength,
+.experience,
+.work,
+.media,
+.account-ops,
+.footer {
+  --void-1: #fbf7f4; --void-2: #f9f4f1; --void-3: #f7f2ee; --void-4: #f5efeb;
+  --void-5: #f3ede8; --void-6: #f1eae5; --void-7: #efe8e2;
+  --text-bright: #14100e;
+  /* base/dim 这两档在这一轮从 0.86/0.66 抬到 0.92/0.80：
+     1440×900 全量 186 个文字件里，落在 4.2–4.5:1 的一整簇全是这两档的 11–12px 小字，
+     它们压在板尾（mask 淡出后）的灰阶 171–182 上。反推到 4.5:1 需要 α.80，
+     和第十七次独立解出的数是同一个。 */
+  --text-base: rgba(20, 16, 14, 0.92);
+  --text-dim: rgba(20, 16, 14, 0.80);
+  --text-bright-a06: rgba(20, 16, 14, 0.07);
+  --text-bright-a10: rgba(20, 16, 14, 0.12);
+  --text-bright-a16: rgba(20, 16, 14, 0.2);
+  --paper: #1a1614;
+  --paper-hi: #14100e;
+  --ink: #fefefe;
+  --charcoal: #e9e1d9;
+  --card-void: #fffdfa;
+  --card-void-hi: #f6efe7;
+  --glass-void: rgba(255, 255, 255, 0.86);
+  --glass-ink: rgba(20, 16, 14, 0.97);
+  --accent: #6b1e04;
+  --accent-active: #8f3a02;
+  --accent-a08: rgba(107, 30, 4, 0.1);
+  --accent-a32: rgba(107, 30, 4, 0.3);
+  --line: rgba(20, 16, 14, 0.14);
+  --line-soft: rgba(20, 16, 14, 0.08);
+  --line-tag: rgba(20, 16, 14, 0.22);
+  /* 接缝线单独一档：交界两侧各有 90px 的白板淡出坡（见上面 .about::before 那段的 ⚠️），
+     两条坡在板块交界处接上 → 一条约 180px 高、白板缺席的暗槽。槽补亮之后这条线成了
+     整片唯一的暗东西，实测 .14 的线位落差反而从 −17.49 走到 −19.09、逐行台阶 13.29→23.51，
+     所以补槽与降 α 必须同时生效；.07 是台阶回到"没有线"那一档（12.66）的最大值。
+     内部各条分割线仍用 --line / --line-soft，不跟着降。 */
+  --line-seam: rgba(20, 16, 14, 0.07);
+  --ring-card: inset 0 1px 0 var(--rim-brick-a28), inset 0 0 0 1px rgba(20, 16, 14, 0.1);
+  --shadow-soft: 0 6px 26px rgba(20, 16, 14, 0.12);
+  --shadow-card: 0 1px 2px rgba(20, 16, 14, 0.1), 0 12px 30px rgba(20, 16, 14, 0.12);
+  --shadow-warm-glow: 0 0 60px rgba(187, 77, 5, 0.1);
+  --shadow-paper: 0 8px 32px rgba(20, 16, 14, 0.16), 0 0 0 1px rgba(20, 16, 14, 0.1);
+  --scrim: rgba(252, 248, 245, 0.78);
+  --ghost-line: rgba(20, 16, 14, 0.42);
+  --ghost-fill: rgba(20, 16, 14, 0.06);
+  /* 缘光发丝线在浅底上吃深色档（wine/brick 压白板都有 4:1 以上），
+     0.75 是给它配在黑底上的浓度，压白板上显得怯 → 抬满。 */
+  --rim-opacity: 1;
+  color: var(--text-base);
+}
+/* 板外的浮层 HUD（弹窗）保持深色件：它是盖在全页之上的取景框，不跟着板块翻。
+   WorkModal 在 DOM 上是 .strength 的子节点，所以会吃到上面那组变量，必须显式还原。 */
+.work-modal {
+  --text-bright: #ffffff;
+  --text-base: rgba(255, 255, 255, 0.88);
+  --text-dim: rgba(255, 255, 255, 0.66);
+  --text-bright-a06: rgba(255, 255, 255, 0.06);
+  --text-bright-a10: rgba(255, 255, 255, 0.1);
+  --text-bright-a16: rgba(255, 255, 255, 0.16);
+  --void-5: #080505; --void-7: #020202;
+  --paper: #fefefe; --paper-hi: #ffffff;
+  --ink: #1a1614; --charcoal: #282828;
+  --card-void: #0f0a09; --card-void-hi: #16100e;
+  --glass-void: rgba(2, 2, 2, 0.82); --glass-ink: rgba(20, 16, 14, 0.97);
+  --accent: #ffc489; --accent-active: #f08a2a;
+  --accent-a08: rgba(255, 196, 137, 0.08); --accent-a32: rgba(255, 196, 137, 0.32);
+  --line: rgba(255, 255, 255, 0.1); --line-soft: rgba(255, 255, 255, 0.06);
+  --line-tag: rgba(255, 255, 255, 0.16);
+  --ring-card: inset 0 1px 0 var(--rim-brick-a28);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6), 0 10px 34px rgba(0, 0, 0, 0.5);
+  --shadow-paper: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--text-bright-a06);
+  /* 弹窗遮罩压到 .50：白板的 backdrop-filter 只能采「遮罩之后」的画面，
+     .72 那档把后景压成近黑（实测灰阶 ~8），板面 blur 再大也是在糊一块黑布。
+     压到 .50 后板面采得到明暗块，才谈得上「只见大概轮廓」。
+     实测：遮罩维持 .72 时，板面 18px blur 与「板面完全无 blur」采样数字一致（sd .0324 / .0326）。 */
+  --scrim: rgba(2, 2, 2, 0.5);
+  color: var(--text-base);
 }
 
 /* ── 缘光构件（D2）：替换原 .section-glow / .work-glow 彩色 blob 体系 ──
    参考图的辨识度来自「一条被照亮的边缘」而非「一团雾」：
-   板块顶部一条渐隐发丝线 + 线上方极窄的暖光晕。纯装饰，不拦截交互。 */
+   板块顶部一条渐隐发丝线 + 线上方极窄的暖光晕。纯装饰，不拦截交互。
+
+   第二十三轮（接缝）：同一条暖缘光在 7 个板块头上各印一遍之后，它就不再是
+   「被照亮的边缘」，而读起来像一条贴在板块交界处的橙色分隔线 —— 而且它压的那道
+   切口是磨砂板 mask 淡出的地方，两边一糊一锐，于是"线 + 灰影"一起跳出来。
+   现在暖缘光只留在 hero→about 这一道（全站唯一一次"画面里的光打到板的边缘"），
+   其余接缝退回站内已有的中性发丝（--line，和 .metrics / .experience-list /
+   .capability-grid 那几条内部分割线同一个语言），暖雾跟着只在亮缘那道出现。 */
 .section-rim,
 .footer-rim {
   position: absolute;
@@ -412,6 +638,79 @@ footer[id] {
   z-index: 0;
   background: linear-gradient(
     90deg,
+    transparent 12%,
+    var(--line-seam) 30%,
+    var(--line-seam) 70%,
+    transparent 88%
+  );
+}
+/* 接缝补光带（补集透镜）：白板竖向淡出坡在交界处留下约 180px 的暗槽，这条带子
+   画的是那两截坡的**补集** —— 横向沿用白板自己那层 mask（同一个 --plate-x，板在
+   --plate-x−8% 起收、+6% 收干净），纵向用一条 0→0.8→0 的三角峰（±90px，正好跟坡等长），
+   所以带子的亮度剖面 = 白板剖面的镜像缺口，两者相加在交界上下基本是平的。
+   ⚠️ 试过"一条等 α 的平带"（.30，左右界写 right:calc(94% - var(--plate-x))）：
+   平带填不平有坡度的槽 —— 实测沿 x 分段还剩 [−31.5 … +15.1] 的斜（左边仍暗、右边过亮），
+   逐行台阶 8.76；补集透镜 k=0.8 分段 [7.7, 6.5, 4.6, 4.4, 9.1, 1.9]、台阶 3.03。
+   ⚠️ 横向 stop 的百分比基准是**带子自己的盒子**，所以带子必须满幅（left:0;right:0）；
+   一旦把带子收窄（像平带那样 right:calc(94% - var(--plate-x))），--plate-x 那些 stop
+   会被重新压缩到窄盒里，剖面直接反号（实测 +7 左 / −39 右）。
+   ⚠️ 不羽化会在带的左右各留一条看得见的竖直硬边（一块"贴上去的亮方块"）——
+   这里不用额外羽化，横向 mask 自己那条 14% 宽的收口坡已经把它化开了。
+   排除 --lit：hero→about 那道已经有暖雾在补，再叠一层会成亮带。
+   ⚠️ account→footer 那道不能由 .footer-rim 自己画：.footer 带 overflow:hidden
+   （Footer.css:10，它压住的是巨型标题的出血），带的上半会被裁在板块外，
+   实测在交界上留下一条 39 个亮度的硬台阶（比不补更难看）；改成让上一板块
+   .account-ops 的 ::after 从上面盖过来 —— 同一个几何、同一个剖面，只是锚在上一板块的底缘。 */
+.section-rim:not(.section-rim--lit)::before,
+.account-ops::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  left: 0;
+  right: 0;
+  top: -90px;
+  height: 180px;
+  background: linear-gradient(
+    96deg,
+    rgb(255 255 255 / 0.93) 0%,
+    rgb(255 255 255 / 0.74) calc(var(--plate-x) * 0.5),
+    rgb(252 248 245 / 0.56) var(--plate-x),
+    rgb(252 248 245 / 0) calc(var(--plate-x) + 6%)
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(var(--plate-x) - 8%),
+    transparent calc(var(--plate-x) + 6%)
+  ), linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0),
+    rgb(0 0 0 / 0.8) 50%,
+    rgb(0 0 0 / 0)
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 calc(var(--plate-x) - 8%),
+    transparent calc(var(--plate-x) + 6%)
+  ), linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0),
+    rgb(0 0 0 / 0.8) 50%,
+    rgb(0 0 0 / 0)
+  );
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+/* 上一条给 .account-ops::after 换成锚在底缘（其余全同） */
+.account-ops::after {
+  top: auto;
+  bottom: -90px;
+}
+/* 亮缘变体：只加在 About.jsx 的那道接缝上 */
+.section-rim--lit {
+  background: linear-gradient(
+    90deg,
     transparent 4%,
     var(--rim-wine) 22%,
     var(--rim-brick) 42%,
@@ -420,11 +719,10 @@ footer[id] {
     var(--rim-wine) 84%,
     transparent 96%
   );
-  opacity: 0.75;
+  opacity: var(--rim-opacity, 0.75);
 }
 /* 线上方 90px 的窄暖雾：缘光的"溢出的光"，只在线附近，不铺满板块 */
-.section-rim::before,
-.footer-rim::before {
+.section-rim--lit::before {
   content: '';
   position: absolute;
   left: 8%;
@@ -441,11 +739,18 @@ footer[id] {
   z-index: 1;
 }
 
-/* ── 板块标题行：参考图的海报分工 ──
-   大字出血压画面、小字缩在信息道里。第三轮把整行收进 --lane-w 是为了让开人物，
-   本轮还原参考图的满幅巨型标题：只有 h2 出车道（width:100%），<p> 仍受 --lane-w 约束。
-   ⚠️ 出血的大字会横穿主体，靠两件事兜住可读性：板块顶部那条自上而下的压暗带
-   （见各板块 background 的第二层渐变），以及 contrast.js 的逐节复测。 */
+/* ── 板块标题行：y5 的「大字收进亮区」──
+   第二十一轮（全站按 y5）改了这一行的分工：h2 不再出车道出血，而是 clamp 到
+   --head-w（略宽于 --lane-w，因为它站在板的浅端而非暗端）。
+   实测依据（grad4 那一组，1440×900）：y4 让 h2 横穿主体时，人物侧的明暗跨度
+   本来就没被板削弱（123/130/120），但大字的右半落在 α 0.56→tail 的过渡带上，
+   背景灰度掉到 101 以下 —— 深色墨在大字号上直接跌破 3:1。y5 把大字收回来，
+   同一屏的人侧清晰度与底板对比度都不变，代价只是大字不再横穿整幅。
+   为把代价压到最低，--fs-h2 这一轮跟着 --head-k 一起缩（按"标题栏宽 ÷ 最长行字数"反推），
+   所以每个板块的大字仍把它自己那一栏铺满 —— 只是栏比整幅窄。1440 下实测
+   strength 84px / experience 58px / projects 134px / media 82px / account 63px。
+   ⚠️ --head-w 与 --lane-w 一样是「1320px 内容列的百分比」，不是视口宽；
+   --plate-x 才是视口百分比（板的右界相对视口，不随 .wrap 收窄）。 */
 .section-kicker {
   color: var(--text-dim);
   display: flex;
@@ -474,14 +779,24 @@ footer[id] {
   max-width: 100%;
   margin-bottom: 75px;
 }
+.heading-row h2,
+.footer h2 {
+  /* 栏宽 ÷ 最长行字数 = 这一板块的大字字号。fallback (1 / 10) 就是旧的满幅 10 字档。
+     栏宽一律取 --col-w（真实内容列，1700 封顶），不取 100vw − 120px，理由见 :root 那条注释。 */
+  font-size: clamp(
+    30px,
+    calc(var(--col-w) * var(--head-k, 1) / var(--head-max, 10)),
+    168px
+  );
+}
 .heading-row h2 {
   font-family: var(--font-display);
-  font-size: var(--fs-h2);
   font-weight: 800;
   line-height: var(--lh-display);
   letter-spacing: var(--track-display);
   color: var(--text-bright);
   margin: 0;
+  width: calc(var(--head-k, 1) * 100%);
 }
 /* 同一行内的字重对撞是参考图主标题最显眼的特征（DJ Zak ≈800 / Derdan ≈300）。
    实测两半同为纯白 #FFFFFF —— 颜色在这套语言里不参与层级，所以去掉第三轮给的
@@ -530,7 +845,8 @@ footer[id] {
     background 0.3s var(--ease-claude),
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
-    translate 0.3s var(--ease-claude);
+    translate 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .pill:hover {
   translate: 0 -2px;
@@ -541,12 +857,12 @@ footer[id] {
 }
 .pill--ghost {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: var(--ghost-line);
   color: var(--text-bright);
 }
 .pill--ghost:hover {
   border-color: var(--text-bright);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ghost-fill);
 }
 
 /* ── 角标签：标题下方左右各一枚（参考图的 CLASSIC… / [ SPEC-01 // … ]）── */
@@ -596,8 +912,67 @@ footer[id] {
 .magnetic.is-tracking {
   transition: none;
 }
-.magnetic > * {
-  transition: transform 0.5s var(--ease-claude);
+/* 原来这里还有一条 `.magnetic > * { transition: transform 0.5s }`，删掉，理由是它只在做坏事：
+   JS 写的是**包裹层**的 transform（Magnetic.jsx 第 38 行 el 就是 .magnetic 自己），
+   子元素从不被 JS 动，所以这条对四个 Magnetic 使用者（Hero 两枚药丸、Nav 联系我、
+   Footer 发邮件 + 三枚社交钮）里没有一条是必需的；
+   而 `.pill` 的 transition 恰好也声明在 global.css、且写在它**前面** —— 同特异度后写先赢，
+   `.pill` 那五条过渡（background / border-color / color / translate / scale）被这一条
+   `transition: transform` 整简写覆盖掉，首屏两枚 CTA 的悬停抬起一直是瞬跳。
+   其余三件的 transition 写在各自的组件 CSS 里、加载顺序在 global.css 之后，所以躲过了。
+   实测（cdp_motion.js，1440×900）：删之前 .pill 的 scale 在按下后 4ms 就到 0.970（无过渡），
+   删之后与 .nav-contact 同档 —— 160ms 走完。
+   ⚠️ 这条就是本项目第三次踩的同一个坑：global.css 里的规则会被组件 CSS 的同名简写覆盖，
+   而它自己也会覆盖同文件里写在它前面的同特异度规则。 */
+
+/* ── 按压反馈层（全站按钮共用）──
+   源自动效件 BellToggle 的 .bell-toggle[data-pressed] { transform: scale(--bt-press) }。
+   移植时改了一处结构：源件把按压缩放挂在**外层包裹**上（缩放与内层的底色过渡分属两个盒子），
+   我们没有那层包裹，若照写 `transform: scale()` 就会和按钮自己已有的 hover transform
+   互相覆盖（.social-btn 的 translateY、.video-rail-btn 的 scale(1.08) 都会消失）。
+   改用独立的 scale 属性：它与 transform / translate / rotate 各自独立、按
+   translate→rotate→scale→transform 的顺序相乘，所以"抬起 2px + 按下去 3%"能同时成立。
+   ⚠️ 过渡时长必须写在各按钮自己的 transition 列表里，不能在这里统一给 ——
+   global.css 在 main.jsx 里最先导入，这里写 transition 简写会被组件 CSS 的同名简写整条覆盖
+   （本轮 ≤900px 白板覆盖就是死在这条上，见上文「板」一节）。这里只声明 :active 的值。 */
+.pill:active,
+.brand:active,
+.nav-items a:active,
+.nav-contact:active,
+.nav-toggle:active,
+.footer-cta:active,
+.social-btn:active,
+.portfolio-bar > a:active,
+.work-modal-link:active,
+.work-modal-close:active,
+.video-rail-btn:active,
+.video-rail-play-toggle:active,
+.identity-name:active {
+  scale: var(--press-scale);
+}
+/* 触屏卫生（源件 __button 同款两条）：manipulation 去掉点击后 300ms 的双击等待，
+   tap-highlight 去掉 Android/ iOS 上那层灰蓝方块 —— 它会盖掉刚做的按压。 */
+.pill,
+.brand,
+.nav-items a,
+.nav-contact,
+.nav-toggle,
+.footer-cta,
+.social-btn,
+.portfolio-bar > a,
+.work-modal-link,
+.work-modal-close,
+.video-rail-btn,
+.video-rail-play-toggle,
+.identity-name {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 箭头 / 雪佛龙的摆动挂点：源件 ringPivot 16% = 钟顶。全站按钮的图标只有 ↗ 与  ›，
+   绕自身上部摆才像被拨了一下，绕中心只会像整枚图标在抖。
+   独立 rotate 属性不影响已有的 transform: translate(3px,-3px)（位移与摆动叠加）。 */
+.arrow {
+  transform-origin: 50% 16%;
 }
 
 /* 尊重系统"减少动态效果"偏好：关闭所有非必要动画
@@ -613,6 +988,24 @@ footer[id] {
     transition-duration: 0.001ms !important;
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+  /* 按压的缩放本身也要关：上面那条只把过渡压成 0.001ms，:active 的 scale 仍然生效，
+     减少动效的人点下去看到的是一帧瞬时的尺寸跳变。源件同样是在 reduce 档里
+     显式把 [data-pressed] 的 transform 归零。 */
+  .pill:active,
+  .brand:active,
+  .nav-items a:active,
+  .nav-contact:active,
+  .nav-toggle:active,
+  .footer-cta:active,
+  .social-btn:active,
+  .portfolio-bar > a:active,
+  .work-modal-link:active,
+  .work-modal-close:active,
+  .video-rail-btn:active,
+  .video-rail-play-toggle:active,
+  .identity-name:active {
+    scale: none;
   }
 }
 
@@ -635,17 +1028,6 @@ footer[id] {
 .section-kicker span {
   display: inline-block;
   animation: breathe 4.5s var(--ease-claude) infinite;
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 /* ── Reveal 组件：滚动揭示动画 ──
@@ -748,20 +1130,3 @@ footer[id] {
   }
 }
 
-/* ── TiltCard 3D 倾斜卡片光泽（当前未被引用，保留待用）── */
-.tilt-card {
-  position: relative;
-  transform-style: preserve-3d;
-}
-.tilt-glare::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  border-radius: inherit;
-  background: radial-gradient(circle 200px at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 255, 255, 0.18) 0%, transparent 60%);
-  opacity: var(--glare-opacity, 0);
-  transition: opacity 0.4s var(--ease-claude);
-  mix-blend-mode: overlay;
-}

@@ -20,7 +20,10 @@
 .identity-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* 内容居中于卡片：卡宽是道宽 43%（2532 下 731px），而 header 只有 297px、
+     三个读数 441px，原先一律 flex-start 贴着左内边距，右半 200~370px 空着，
+     看起来像没排完。卡片本身仍留在信息道左界，与上面的 h2 / kicker 同一条轴。 */
+  align-items: center;
   gap: 22px;
   padding: 28px 32px;
   margin-top: 50px;
@@ -71,7 +74,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: color 0.3s var(--ease-claude);
+  transition:
+    color 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .identity-name:hover {
   /* 静态一律白墨，只有交互态用火光色做反馈 */
@@ -93,8 +98,14 @@
 .identity-stats {
   display: flex;
   gap: 6px;
+  /* 卡片改成内容居中后，这一行撑满卡内宽，三格等分 ——
+     否则"居中"只是把 148/166/115 这一串不等宽的格子整体往右挪，右边仍留白 */
+  align-self: stretch;
 }
 .id-stat {
+  /* 等分：flex-basis 0 让三格只按容器分，不按各自文字长度分；
+     min-width 110 保留作窄屏地板（800/480 两档另有覆盖） */
+  flex: 1 1 0;
   text-align: center;
   padding: 16px 22px;
   background: var(--card-void-hi);
@@ -147,13 +158,22 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
+  /* 手机上改竖排。横排在这一档装不下：三个数字都不可断行，
+     min-content 实测 86.1 + 98.2 + 54.8 + 2 个 gap = 247px，
+     而卡内宽只有 187px（375 视口 → .wrap 左右各 60 → 卡 255 → 减 padding 32×2 与边框）。
+     nowrap 的后果不是"挤一下"：溢出被 ≤1024 那条 justify-content:center 往两边均分，
+     三格各吃掉 28px 卡片内边距（离边框只剩 4px），标签被切成「单条最高播/放」「直播切/片产出」。
+     竖排后每格 187px 宽，标签一行放得下（6 个全角字 ≈ 69px + padding 28）。
+     ⚠️ 档位是量出来的，不是 480：横排要三格都不折行，需每格内容宽 ≥69px → 格宽 99 → 卡内宽 307
+     → 视口 495。实测 495 起 1/1/1 不折行，481 时格宽 94.3、两条标签各折成 2 行。
+     520 = 495 + 25px 余量（字族换人、标签加字都会吃掉这点余量）。 */
   .identity-stats {
-    gap: 4px;
+    flex-direction: column;
+    gap: 6px;
   }
   .id-stat {
-    padding: 10px 8px;
-    min-width: auto;
+    min-width: auto; /* padding 沿用 ≤800 那档的 12px 14px，这里只撤掉 88px 地板 */
   }
 }
 

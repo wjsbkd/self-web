@@ -62,6 +62,34 @@
   opacity: 1;
 }
 
+/* 指针涟漪层（src/components/ripple.js 画）：盒子必须和 .film-layer 完全一样，
+   但**不跟着吃那条 CSS filter** —— 着色器里已经把 sepia/hue-rotate/saturate/brightness
+   复刻了一遍（原型实测：平色块与浏览器逐字节相同、整帧差 0.548/通道），再套一层就是上两遍色。
+   所以它自己写盒子，不 join .film-layer。
+   进场不给过渡：这一层画出来的就是下面那张 <video> 的同一帧，硬切看不出来；
+   交棒时跟着首屏原来那 0.5s 淡出（它在 DOM 里夹在两张片之间，溶解形状和接 WebGL 之前一样）。 */
+.film-ripple {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -6%;
+  width: 112%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-apple);
+}
+
+/* has-ripple 由 ripple.js 在**真画出第一帧之后**才挂上：
+   那一层是 alpha:false 的不透明画布，万一画不出来还盖上去，首屏就成黑屏了。 */
+.is-intro.has-ripple .film-ripple {
+  opacity: 1;
+  transition: none;
+}
+.is-intro.has-ripple .film-layer--intro {
+  opacity: 0;
+  transition: none;
+}
+
 /* 顶部与底部各压一道：顶部保住导航与首屏标题，底部让页面收尾回黑 */
 .film-scrim {
   position: absolute;

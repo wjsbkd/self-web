@@ -12,6 +12,7 @@ import CursorGlow from '@/components/CursorGlow.jsx'
 import SectionDots from '@/components/SectionDots.jsx'
 import useScrollSpy from '@/hooks/useScrollSpy.js'
 import useKeyboardNav from '@/hooks/useKeyboardNav.js'
+import usePressSwing from '@/hooks/usePressSwing.js'
 import { navLinks } from '@/data/nav.js'
 
 // 应用根组件：固定导航 + 按页面结构顺序组合各区块
@@ -21,6 +22,9 @@ export default function App() {
 
   // 键盘导航：方向键跳转章节（含 Hero 顶部）
   useKeyboardNav(['top', ...ids])
+
+  // 按钮按压时图标的阻尼摆动（document 级委托，只挂一次）
+  usePressSwing()
 
   // SectionDots 数据（与导航一致）
   const dotSections = [{ id: 'top', label: '首页' }, ...navLinks.map((l) => ({ id: l.id, label: l.label }))]
