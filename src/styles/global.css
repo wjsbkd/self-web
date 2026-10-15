@@ -9,9 +9,13 @@
       （板块序号、卡片编号、导航状态字），以及 hover/focus 这类瞬时状态。正文与标题一律白墨。
    3. 层级靠字号（D3'）：实测参考图 主标题:正文 ≈ 13.5:1、微标签:正文 ≈ 0.93:1（同字号，
       差别只在大写 + 字距）。中文全角做不到"满幅 + 19vh 高"同时成立，见 --fs-display 注释。
-   字体：Archivo（拉丁无衬线显示体，扛标题与微标签）+ Noto Sans SC（中文显示与正文）
-   + DM Mono（等宽元数据）。 */
-@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+   字体：Archivo（拉丁无衬线显示体，扛标题与微标签）+ DM Mono（等宽元数据）。
+   中文不再下载字体（2026-10-15 Q03 走「只砍 Noto」）：Noto Sans SC 一个文件 1,036,805 B、
+   占全站字体的 79%，而在这台装了它的机器上删掉前后的逐像素差只有平均 0.0002（位移 0 px），
+   本地字面已经把画面顶住了 —— 花 1 MB 买一份没人看得见的观感，不划算。
+   栈里仍把 'Noto Sans SC' 排在中文位：装了它的机器照用，没装的落系统中文，两种都不额外下载。
+   代价：没装 Noto 的访客中文换成微软雅黑（实测残差 29.5，字形真的不同），记在 HANDOVER 第六十次。 */
+@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&display=swap');
 
 /* 中文像素显示字（Fusion Pixel）随第三轮点阵标题一起退役；
    public/fonts/ 那两个 woff 已于 2026-10-15 删除，需要回退时走 git 历史。 */
@@ -103,7 +107,8 @@
   /* ── 字体栈 ──
      --font-display 先 Archivo 后 Noto Sans SC：拉丁字符走 Archivo（neo-grotesque，
      有 300/900 两端，正是参考图"同一行字重对撞"要的能力），汉字 Archivo 没有字形，
-     自动落到 Noto Sans SC 的对应字重。 */
+     自动落到栈里的中文位。注意 Noto Sans SC 现在只是**本机字面名**（已不下载，见文件头 @import 注释）：
+     装了它的机器命中，没装的继续往后落系统中文。 */
   --font-display: 'Archivo', 'Noto Sans SC', -apple-system, 'PingFang SC', 'Segoe UI', Arial,
     sans-serif;
   --font-sans: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Segoe UI', Arial, sans-serif;
