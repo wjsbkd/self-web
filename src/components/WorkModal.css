@@ -185,6 +185,10 @@
   --ink: #fefefe;
   --accent: #6b1e04;
   --line-soft: rgba(20, 16, 14, 0.08);
+  /* 这颗药丸和 .footer-cta 同款是墨底，hover 字色不能沿用 :root 的 brick：
+     实测 brick 压在真实 pill 像素上 3.17(均值)/3.51(p95)，换 ember 后 5.85/6.46。
+     数字与选档理由记在 global.css 翻墨块那一档的注释里，两处同一个值。 */
+  --rim-brick-on-ink: #e5843b;
   --shadow-paper: 0 8px 32px rgba(20, 16, 14, 0.16), 0 0 0 1px rgba(20, 16, 14, 0.1);
   /* α .62 + blur 48：板底是 --scrim rgba(2,2,2,.5) 压过的后景，板面自己再糊 48px，
      后景只剩大块明暗（1470 实测板面 sd .0255、8px 分块 blob .0099、逐像素 edge .0026，
@@ -268,7 +272,9 @@
 }
 .work-modal-link:hover {
   background: var(--paper);
-  color: var(--rim-brick);
+  /* 同一条规则管两颗药丸：白药丸（视频占位里那颗）吃 :root 默认=brick，压白底 4.99:1 过的；
+     墨药丸（.work-modal-info 里）由上面那档 --rim-brick-on-ink 换成 ember。 */
+  color: var(--rim-brick-on-ink);
   translate: 0 -2px;
 }
 .work-modal-pwd {

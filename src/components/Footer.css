@@ -84,11 +84,14 @@
 }
 .footer-cta:hover {
   background: var(--paper);
-  color: var(--rim-brick);
+  /* 这一档必须是 --rim-brick-on-ink 而不是 --rim-brick：footer 在翻墨板块里，
+     药丸本身已是近黑，brick 压上去实测 2.53:1（vs均值）/ 2.73:1（vs p95），
+     理由与两处的数字见 global.css 那一档的注释。 */
+  color: var(--rim-brick-on-ink);
   translate: 0 -2px;
 }
 .footer-cta:hover .arrow {
-  color: var(--rim-brick);
+  color: var(--rim-brick-on-ink);
 }
 .footer-social {
   display: flex;
