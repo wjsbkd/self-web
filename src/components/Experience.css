@@ -6,16 +6,21 @@
 .experience {
   padding-bottom: 120px;
 }
-/* 分隔线也要收进信息道：整幅 1px 亮线横穿画面时正好刮在头发边缘上，
-   比正文更容易被眼睛抓到。收到阅读块右缘（正文 46% + 日期列）为止。 */
+/* 分隔线对齐阅读块右缘：整幅 1px 亮线横穿画面时正好刮在头发边缘上，
+   比正文更容易被眼睛抓到。
+   第二十二轮：原先这里额外减 120px 把线收短，但线是画在盒子边上的，
+   于是这 120px 连带把正文也砍掉了 120px。改成道宽即盒宽，线跟着正文走。 */
 .experience-list {
   border-top: 1px solid var(--line);
-  max-width: calc(var(--lane-w, 100%) - 120px);
+  max-width: var(--lane-w, 100%);
 }
+/* 日期列 160 → 150：实测最长标签「2026.01 — 2026.03」在 12px/字距 1.92px 下
+   自然宽 138.7px，160 只是凭手感给的整数。列间距 40 → 32。
+   这两处共省 18px，配合上面收回的 120px，正文列 202 → 340px。 */
 .experience-item {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  column-gap: 40px;
+  grid-template-columns: 150px 1fr;
+  column-gap: 32px;
   align-items: start;
   padding: 28px 0;
   border-bottom: 1px solid var(--line);
@@ -72,6 +77,26 @@
   line-height: var(--lh-body);
 }
 
+/* 分点：小标题 + 描述，结构照简历。点内 10px 小于 body 的 16px，
+   是为了让三个点读作一组，而不是三条和「公司 / 标签」平级的独立内容。 */
+.experience-points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.experience-point {
+  margin: 0;
+  color: var(--text-base);
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.experience-point b {
+  font-weight: 700;
+  /* 小标题走实心墨，理由同 .tag-list span：α 档墨色在淡出带里不稳 */
+  color: var(--text-bright);
+}
+
 /* 标签列表：方括号微标签，不再是描边小方块 */
 .tag-list {
   display: flex;
@@ -82,7 +107,11 @@
 .tag-list span {
   font: 500 var(--fs-label)/1.5 var(--font-display);
   letter-spacing: 0.04em;
-  color: var(--text-dim);
+  /* 第二十二轮：这档从 --text-dim 抬到实心墨。12px 的 α 档在板上撑不住 ——
+     逐元素实测最坏一帧的底色只有灰 126（α.80 的墨要 ≥145），3.73:1；
+     同一位置换成实心墨是 4.78:1。浅色语言里主次靠字号、字重和方括号，
+     不靠墨色 α（板的底色随影片每帧变，α 是个不稳的通道）。 */
+  color: var(--text-bright);
   transition:
     color 0.3s var(--ease-claude),
     opacity 0.3s var(--ease-claude);
@@ -100,7 +129,9 @@
   opacity: 0.6;
 }
 .experience-item:hover .tag-list span {
-  color: var(--text-bright);
+  /* 静置已经是实心墨，hover 再抬墨等于没动；改成酒红 —— hover 时整行铺
+     --card-void(#fffdfa)，酒红要底 ≥162，253 的白卡上实测 8.9:1。 */
+  color: var(--accent);
 }
 
 /* 校园经历条目：与实习经历统一 timeline，但突出 20,000+ 数据 */
@@ -124,16 +155,20 @@
 }
 .campus-highlight > span {
   font: 500 var(--fs-label)/1.5 var(--font-display);
-  color: var(--text-dim);
+  /* 与 .tag-list span 同因：12px 的 α 档压不进淡出带（实测底灰 151 → 4.80:1），
+     这一行正好横穿 plate-x−8% 之后那一段。改成实心墨，同一帧 6.5:1。 */
+  color: var(--text-bright);
   letter-spacing: 0.04em;
 }
 
-/* 信息道是 48% 再减 120px，两列（160px 固定 + 40px gap）在窄一点的视口上会把正文挤没。
-   正文列实测：1440→306px、1280→230px、1180→182px、1151→168px（一行十一个字，读不成），
-   改前 1024→68px（一行五个字，整节散架）。列宽随视口约 0.48px/px 变化，
-   210px 是「两列还读得下去」的位置，反推视口 ≈1238 → 断点定 1240。
-   1240 以下改成日期在上、正文独占整条道。缩的是内部列，不是让位——主体在画面右侧
-   这件事跟视口宽度无关，信息道保持不动。 */
+/* 信息道 40%，两列（150px 固定 + 32px gap）在窄一点的视口上会把正文挤没。
+   两列档正文列实测：1920→498px、1440→340px、1280→276px、1241→260px。
+   列宽随视口约 0.40px/px 变化，210px 是「两列还读得下去」的位置 —— 按本轮的
+   列宽反推落在视口 ≈1115，但断点仍留在 1240：单列时正文独占整条道（1240→442px），
+   每行字数只会更多不会更少，所以宁可提前让位，不要把 1115–1240 这段从单列退回两列。
+   ⚠️ 这个 210/1240 的组合历史上对不上过：上一版注释是按 --lane-w 还是 48% 时反推的，
+   第二十一轮把道宽收到 40% 却没重算，结果 1440 上正文只剩 202px，跌破自己定的下限。
+   本轮把 120px 的盒宽扣减和过宽的日期列收回给正文，见上面两条注释。 */
 @media (max-width: 1240px) {
   .experience-item {
     grid-template-columns: 1fr;

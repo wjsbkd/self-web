@@ -13,14 +13,17 @@ export const projects = [
   },
   {
     index: '02',
-    title: '抖音小火人世界',
-    subtitle: '创作者生态 / 内容增长',
-    image: '/assets/pptx-media/image3.png',
-    stat: '100W+',
-    label: '单作品平均播放',
-    background: '从零构建虚拟世界创作者生态，提升创作者数量与项目曝光。',
-    responsibility: '每日建联 30–40 名创作者，跟进创作问题与项目进度，协助完成内容落地。',
-    result: '触达创作者 1000+、成功建联 100+；推动 12 组完成内容产出，新增 6 个优质虚拟世界，单世界平均浏览量 100W+。',
+    title: 'WaytoAGI-EDU 少儿 AI 春晚',
+    subtitle: '统筹兼宣发组长',
+    image: '/assets/pptx-media/waytoagi-spring-gala-2026.webp',
+    stat: '420+',
+    label: '海内外媒体报道',
+    background:
+      '打造中国首个少儿 AI 春晚，汇聚全球 40 余城少儿共创 AI 作品，探索 AI 赋能少儿教育的创新模式。',
+    responsibility:
+      '联动共创老师招募参与者，统筹多期 AI 创作直播共学，对接讲师并负责直播后台执行。主导视频号、抖音、B 站等全平台宣发布局，搭建转播志愿者管理体系并开展专项培训，统筹整场直播全流程调度落地。',
+    result:
+      '获 420 余家海内外媒体报道，全网热度破万、交互点赞超 20 万，覆盖全球 43 城、150 余名少年创作者。成功拓展华为品牌赞助，沉淀可复制的 AI 少儿教育运营模式，打造国内首个少儿 AI 春晚 IP。',
   },
   {
     index: '03',

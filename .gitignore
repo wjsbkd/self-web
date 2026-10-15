@@ -35,3 +35,9 @@ npm-debug.log*
 
 # 重构前的手工代码快照，git 历史已覆盖同类内容
 backups/
+
+# 复现探针：档案（HANDOVER 第五十一次）点名保留在本地，但不入库
+# cf/ 是复核依据脚本，probe-af.mjs 是点名保留的复现脚本，probe-shots/ 是 12MB 截图
+cf/
+probe-af.mjs
+probe-shots/

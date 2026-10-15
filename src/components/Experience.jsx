@@ -4,7 +4,7 @@ import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
 
 // 工作经历 —— timeline 风格：左 period 固定列 + 右 body 限宽列
-// body 内 company/role/tags/text 垂直堆叠，避免原三列 grid 在文字短时空旷
+// body 内 company/role/tags/points 垂直堆叠，points 沿用简历的分点结构（小标题 + 描述）
 export default function Experience() {
   return (
     <section className="experience section wrap" id="experience">
@@ -35,7 +35,14 @@ export default function Experience() {
                   <span key={tag}>{tag}</span>
                 ))}
               </div>
-              <p className="experience-text">{item.text}</p>
+              <div className="experience-points">
+                {item.points.map((point) => (
+                  <p className="experience-point" key={`${item.company}-${point.label}`}>
+                    {point.label && <b>{point.label}：</b>}
+                    {point.text}
+                  </p>
+                ))}
+              </div>
             </div>
           </article>
         ))}

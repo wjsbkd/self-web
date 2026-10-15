@@ -1,23 +1,12 @@
-import { useState } from 'react'
 import './Strengths.css'
 import { strengths, tools } from '@/data'
-import { abilityMaterials } from '@/data/abilityMaterials.js'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
-import WorkModal from '@/components/WorkModal.jsx'
 
-// 能力与优势 —— 合并「核心能力 / 能力展示 / 个人优势」为统一板块
-// 文本类能力（核心能力 + 个人优势）进统一网格，带图能力展示单独成行并支持点击展开
+// 能力与优势 —— 合并「核心能力 / 个人优势」为统一文本网格
+// 带图的「能力展示」已挪到 Media（作品展示区），见 Media.jsx
 export default function Strengths() {
-  const [modalOpen, setModalOpen] = useState(false)
-  const [activeMaterial, setActiveMaterial] = useState(null)
-
-  const openMaterial = (mat) => {
-    setActiveMaterial(mat)
-    setModalOpen(true)
-  }
-
   // 核心能力（带编号）+ 个人优势（软技能）合并为同一文本网格
   const capabilities = [
     ...strengths.map(([number, title, text]) => ({
@@ -58,34 +47,6 @@ export default function Strengths() {
           </article>
         ))}
       </Reveal>
-
-      {/* 能力展示：带图，点击展开详情弹窗 */}
-      <Reveal className="tool-gallery" stagger={0.08} once>
-        <h3 className="tool-gallery-heading">能力展示</h3>
-        <div className="tool-gallery-grid">
-          {abilityMaterials.map((mat) => (
-            <figure
-              key={mat.id}
-              className="tool-gallery-item"
-              onClick={() => openMaterial(mat)}
-              role="button"
-              tabIndex={0}
-              aria-label={`查看 ${mat.title}`}
-              onKeyDown={(e) => e.key === 'Enter' && openMaterial(mat)}
-            >
-              <img src={mat.image} alt={mat.title} loading="lazy" />
-              <figcaption>{mat.title}</figcaption>
-            </figure>
-          ))}
-        </div>
-      </Reveal>
-
-      <WorkModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        type="image"
-        item={activeMaterial}
-      />
     </section>
   )
 }

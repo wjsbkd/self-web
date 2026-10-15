@@ -1,6 +1,10 @@
 /* Strengths 组件样式 —— 2026-10-11 第四轮：参考图海报排版语言（token 见 global.css）
    网格里只有三档字：编号（--fs-label 微标签）、条目名（--fs-h3 实心）、说明（--fs-body）。
-   彩色只留给最小那一档的编号与箭头，条目名和说明都是白墨。 */
+   彩色只留给最小那一档：编号与右上角的箭头，条目名和说明都是墨。
+   ⚠️ 箭头钉在格子右上角 = 这一栏最靠右的墨，它必须整只落在板的**实心段**里
+   （实心段到 --plate-x − 8% 为止，再往右 mask 开始收，底色就跟着影片每帧变了）。
+   第二十二轮实测：道宽 48% 时箭头在 x645–665，最坏一帧底灰 78 → 酒红 1.41:1、
+   实心墨也只有 2.31:1；道宽收到 42% 后箭头落到 x561–581，仍在实心段内。 */
 .strength {
   padding-bottom: 180px;
 }
@@ -35,7 +39,7 @@
   position: absolute;
   right: 20px;
   top: 21px;
-  color: var(--accent);
+  color: var(--text-bright);
 }
 .capability-name {
   font-family: var(--font-display);
@@ -49,71 +53,12 @@
   font-family: var(--font-display);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  color: var(--text-dim);
-}
-
-/* 能力展示（由 About 合并而来，点击展开详情弹窗） */
-.tool-gallery {
-  margin-top: 70px;
-  padding-top: 46px;
-  border-top: 1px solid var(--line-soft);
-}
-.tool-gallery-heading {
-  /* 与条目名同一档，但取 800 —— 参考图里同级标题靠字重而不是字号分主次 */
-  font-family: var(--font-display);
-  font-size: var(--fs-h3);
-  font-weight: 800;
-  letter-spacing: var(--track-display);
-  color: var(--text-bright);
-  margin-bottom: 28px;
-}
-.tool-gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  width: var(--lane-w, 100%);
-}
-.tool-gallery-grid figure,
-.tool-gallery-item {
-  margin: 0;
-  overflow: hidden;
-  border-radius: 4px;
-  background: var(--card-void);
-  box-shadow: var(--shadow-card), var(--ring-card);
-  cursor: pointer;
-  transition:
-    transform 0.5s var(--ease-claude),
-    box-shadow 0.5s var(--ease-claude);
-}
-.tool-gallery-grid figure:hover,
-.tool-gallery-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-warm-glow), var(--ring-card);
-}
-.tool-gallery-item:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.tool-gallery-grid img {
-  width: 100%;
-  aspect-ratio: 16/10;
-  object-fit: cover;
-  display: block;
-  /* 暗场压图统一档（全站三处配图同值）：降亮 + 抽饱和 + 补一点对比，
-     让图片留在氛围层里而不跳出背景；hover 用 filter:none 回到原图。 */
-  filter: brightness(0.9) saturate(0.72) contrast(1.06);
-  transition: filter 0.5s var(--ease-claude);
-}
-.tool-gallery-grid figure:hover img {
-  filter: none;
-}
-.tool-gallery-grid figcaption {
-  /* 图下中文标签：--fs-label 档但不用 0.16em 字距（全角词拆散比英文难读），取 0.04em */
-  font: 500 var(--fs-label)/1.5 var(--font-display);
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-  padding: 12px 14px;
-  border-top: 1px solid var(--line-soft);
+  /* dim(.80) → base(.92)：说明是这一栏里最靠右的正文，1100×900 实测落在 x285–438、
+     底灰 160 → 5.26:1。实心段右界 = (plate-x − 8%) × VW = 451，它已经贴着边界，
+     而 mask 收腰之前底色还会随影片往下走（同一片 x 若压到黑帧，底灰地板是 151）。
+     .80 档要 4.5:1 需要底灰 ≥145，只剩 15 级余量；.92 档只需 ≥132，最坏帧仍 5.6。
+     层级不靠墨色分：条目名 700/h3，说明 400/body，字号字重已经拉开。 */
+  color: var(--text-base);
 }
 
 /* 响应式 */
@@ -128,9 +73,6 @@
     /* 8 条在双栏下最后一条横跨整行，补满底部 */
     grid-column: 1 / -1;
   }
-  .tool-gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 @media (max-width: 520px) {
   .capability-grid {
@@ -138,10 +80,5 @@
   }
   .capability-item:last-child {
     grid-column: auto;
-  }
-}
-@media (max-width: 500px) {
-  .tool-gallery-grid {
-    grid-template-columns: 1fr;
   }
 }

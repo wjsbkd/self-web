@@ -51,10 +51,10 @@
 }
 
 /* === 满幅巨型标题 ===
-   参考图：主标题横跨 3.1%–97.1% 视口宽，一行，同一行内 800/300 字重对撞。
-   中文是全角等宽，"满幅"这条能还原，"19vh 高"那条不能（见 global.css 字号阶注释），
-   所以字号直接按内容列宽反推：--fs-display = (100vw − 120px) / 14。
-   两个 .line 中间不能留空白字符（JSX 会吃掉换行，所以写在相邻标签上是安全的）。 */
+   两行各 7 个全角字（2026-10-13 本轮：「让体验被记住。」下移到第二行）。
+   字号公式的分母仍是 14（本轮没动这一档），所以每行只铺到内容列的一半，右半留白 ——
+   这是"保持字号、只改换行"的结果，不是把字缩小；要让两行都铺满得把分母改成 7，那是另一条轴。
+   中文是全角等宽，"满幅"这条能还原，"19vh 高"那条不能（见 global.css 字号阶注释）。 */
 .hero .hero-headline {
   grid-row: 1;
   font-family: var(--font-display);
@@ -67,7 +67,7 @@
   white-space: nowrap;
 }
 .hero .hero-headline .line {
-  display: inline-block;
+  display: block;
   opacity: 0;
   transform: translate3d(0, 40px, 0);
   animation: heroLineReveal 1.1s var(--ease-claude) forwards;
@@ -214,13 +214,11 @@
       linear-gradient(to top, rgba(2, 2, 2, 0.6) 0%, rgba(2, 2, 2, 0.3) 34%, rgba(2, 2, 2, 0) 62%);
   }
   .hero .hero-headline {
-    /* 满幅公式在窄屏会把 14 个字压到 19px，读不出海报感：改成两行，
-       每行 7 个全角字，字号按 (100vw − 40px) / 7 反推 */
+    /* 满幅公式（14 字一档）在窄屏会把字压到 19px，读不出海报感：这里按
+       每行 7 个全角字反推。桌面端本来就是两行了，所以只有字号这一档要换。
+       white-space 放开是给 clamp 下限 30px 兜底：极窄屏宁可折行也不要出血。 */
     font-size: clamp(30px, calc((100vw - 40px) / 7), 54px);
     white-space: normal;
-  }
-  .hero .hero-headline .line {
-    display: block;
   }
   .hero .hero-spec {
     margin-top: 16px;

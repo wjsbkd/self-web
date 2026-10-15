@@ -43,7 +43,9 @@
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(26, 22, 20, 0.1);
-  transition: box-shadow 0.45s var(--ease-claude);
+  transition:
+    box-shadow 0.45s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .brand .brand-mark {
   /* 字体与填色见 global.css 的 .wordmark 族；这里只定尺寸 */
@@ -96,7 +98,8 @@
   opacity: 0.72;
   transition:
     opacity 0.25s var(--ease-claude),
-    color 0.25s var(--ease-claude);
+    color 0.25s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .nav-items a:hover,
 .nav-items a.active {
@@ -104,7 +107,13 @@
   color: var(--text-bright);
 }
 /* active 指示：4 颗点阵（导航尺度自写 5px 周期 / 3px 点径，全站第三轮的 --dot-pitch token 已退役）
-   用 background-image 平铺而不是 4 个子元素，尺寸与间距都只由这两行决定。 */
+   用 background-image 平铺而不是 4 个子元素，尺寸与间距都只由这两行决定。
+   揭示动作取自 BellToggle 的 clip-path 展开（源件 `clip-path: inset(0 var(--bt-clip) 0 0
+   round var(--bt-radius))`，靠 spring 把右端的盖子拉开）：这里改成从中心向两侧拉开，
+   因为我们的下划线是居中的、没有"从左往右读"的方向性。
+   为什么不是原来的 translateY 淡入：滚动时 active 项是 scroll-spy 换的，鼠标不在导航上，
+   淡入只有"一亮"没有"一动"；展开让指示线自己有一次位移读数，且 active 从 A 移到 B 时
+   A 会收回去，两条线一开一合，读得出"标记在走"。 */
 .nav-items a::after {
   content: '';
   position: absolute;
@@ -117,18 +126,19 @@
   background-size: 5px 5px;
   background-repeat: repeat-x;
   opacity: 0;
-  transform: translateY(2px);
+  /* 两端都写 round 才有可插值性：inset() 的圆角参数不一致时浏览器直接跳变 */
+  clip-path: inset(0 50% 0 50% round 999px);
   transition:
     opacity 0.3s var(--ease-claude),
-    transform 0.3s var(--ease-claude);
+    clip-path 0.34s var(--ease-out-soft);
 }
 .nav-items a:hover::after {
   opacity: 0.4;
-  transform: none;
+  clip-path: inset(0 0 0 0 round 999px);
 }
 .nav-items a.active::after {
   opacity: 1;
-  transform: none;
+  clip-path: inset(0 0 0 0 round 999px);
 }
 
 /* 次级药丸：状态文案 + 联系我。比导航药丸再抬一档明度（charcoal），
@@ -173,7 +183,8 @@
   transition:
     background 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
-    box-shadow 0.3s var(--ease-claude);
+    box-shadow 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .nav-contact:hover {
   background: var(--paper-hi);
@@ -199,6 +210,7 @@
     inset 0 1px 0 var(--text-bright-a10);
   cursor: pointer;
   padding: 0;
+  transition: scale var(--press-ms) var(--ease-out-soft);
 }
 .nav-toggle span {
   display: block;

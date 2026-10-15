@@ -1,0 +1,207 @@
+/* AbilityFolder —— 能力展示的两段式交互样式。
+   所有 token 都从 .media 那一档（global.css:540-578）继承，这里不另立一套色板。
+   唯一显式写死的是 z-index 阶梯，因为它必须和全站叠层说话：
+     scrim 40 < 文件夹 45 < 展开层 55 < WorkModal 200（它自己的值，不用动） */
+
+.ability-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 44px;
+}
+
+.ability-fly {
+  flex: none;
+  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1));
+  transition:
+    transform 550ms var(--ease-claude),
+    opacity 260ms linear 300ms; /* 展开时文件夹要退得比卡片起飞更快 */
+  border-radius: 12px;
+}
+
+/* pinned 期间，原位那一个退成纯测量占位节点：保留盒子几何（focus() 靠它
+   量 FLIP 起点），但不绘制、不占版面、不吃事件。看得见的那一个由
+   portal 顶到 body 下，才能盖住同样 portal 出去的 scrim。 */
+.ability-fly--seated {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ability-fly:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+/* ⚠️ 这一条和下面 .ability-fly--sunk .folder-item 必须同时成立，只做一半都会露馅：
+   - 只降整层 opacity：4 张微缩纸片仍在内联 alpha 里在场，就是「两层卡片」；
+   - 只藏纸片：外壳全亮，会压住四张真卡的暗部。
+   2026-10-14 在原型里先只藏了纸片，实测 opacity:1 才补回整层这条。 */
+.ability-fly--sunk {
+  opacity: 0.16;
+}
+
+/* .folder-item 的 opacity 是 Folder.jsx 用内联 style 写的（alpha < 0.995 才写），
+   普通选择器盖不住它，所以这里用 !important 钉死。
+   pointer-events 一并关掉：纸片在 open 时是 role="button"，不关掉会抢真卡的点击。 */
+.ability-fly--sunk .folder-item {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* 纸片淡出必须短于卡片起飞的 CARD_LEAD(300ms)，否则「正在消失」和「正在长出」
+   会在中段叠在一起。用 transition 而不是 animate()：起始态不可预期
+   （组件可能已经写过内联 alpha），transition 从当前值走最稳。 */
+.folder-item {
+  transition: opacity 180ms linear;
+}
+
+/* 玻璃层同理：掀完盖之后它已经用完，留着只会再糊一层 */
+.ability-fly--sunk .folder-glass {
+  opacity: 0;
+}
+
+.ability-index {
+  margin: 6px 0 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+  border-left: 1px solid var(--line);
+  font-size: var(--fs-body);
+  color: var(--text-base);
+}
+
+.ability-index li {
+  margin-bottom: 10px;
+}
+
+.ability-index-hint {
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+  margin-top: 16px;
+}
+
+/* ---------- 遮罩与展开层 ---------- */
+
+.ability-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--ease-claude);
+}
+
+.ability-scrim--on {
+  opacity: 1;
+}
+
+.ability-spread {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 500px));
+  gap: 16px;
+  align-content: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ability-spread .ability-card {
+  pointer-events: auto;
+  will-change: transform, opacity;
+}
+
+/* 卡片数值抄 Media.css 的 .tool-gallery-item 那一档：圆角、阴影、内描边、
+   图的压暗滤镜、hover 还原。全息膜（HoloCard）按他的决定去掉了。 */
+.ability-card {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--card-void);
+  box-shadow: var(--shadow-card), var(--ring-card);
+  cursor: pointer;
+  transition:
+    transform 0.5s var(--ease-claude),
+    box-shadow 0.5s var(--ease-claude);
+}
+
+.ability-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-warm-glow), var(--ring-card);
+}
+
+.ability-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ability-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  filter: brightness(0.9) saturate(0.72) contrast(1.06);
+  transition: filter 0.5s var(--ease-claude);
+}
+
+.ability-card:hover img {
+  filter: none;
+}
+
+.ability-card figcaption {
+  font: 500 var(--fs-label)/1.5 var(--font-display);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  padding: 28px 14px 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* 文件夹里的自制纸片：121×148 那一档 × scale 1.4 ≈ 170×208，超出即裁 */
+.ability-page {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  background: #fff;
+}
+
+.ability-page img {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: cover;
+}
+
+.ability-page span {
+  flex: none;
+  padding: 5px 7px;
+  font: 600 calc(10px * var(--folder-scale, 1))/1.25 var(--font-display);
+  color: rgba(20, 16, 14, 0.86);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 640px) {
+  .ability-row {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .ability-spread {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ability-fly,
+  .ability-scrim,
+  .ability-card,
+  .ability-card img {
+    transition-duration: 1ms;
+  }
+}

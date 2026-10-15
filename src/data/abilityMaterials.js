@@ -28,7 +28,7 @@ export const abilityMaterials = [
   {
     id: 'poster',
     title: '海报与视觉设计',
-    image: '/assets/pptx-media/image5.png',
+    image: '/assets/pptx-media/poster-trio-ai.png',
     description:
       '具备出色的海报设计能力，能依据不同主题和风格要求，通过简洁明了的设计与文案精准传达关键信息，有效吸引目标群体。可直接迁移至宣传海报制作，依据形象和宣传主题打造独具特色的视觉作品。',
     tags: ['海报设计', '视觉设计', '排版', '品牌视觉'],

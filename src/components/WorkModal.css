@@ -25,7 +25,10 @@
   position: relative;
   width: min(1100px, 100%);
   max-height: 85vh;
-  background: var(--card-void);
+  /* 底色交给两列各自铺：左列 --void-7，右列白色磨砂。
+     面板自己不能再垫一层 --card-void —— 那样右侧 backdrop-filter 采到的是这块实心暗底，
+     磨砂就糊不出任何东西。圆角仍由 overflow:hidden 裁切，外阴影与背景透明无关。 */
+  background: transparent;
   border-radius: 8px;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), var(--ring-card);
   overflow: hidden;
@@ -59,7 +62,8 @@
   transition:
     background 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude),
-    border-color 0.3s var(--ease-claude);
+    border-color 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .work-modal-close:hover {
   background: var(--accent);
@@ -158,8 +162,37 @@
   max-width: 280px;
 }
 
-/* 右侧信息区 */
+/* 右侧信息区 —— 透明白磨砂板（2026-10-13）
+   他要的三处「卡片展开后的右侧文字描述」其实是同一个组件：能力展示与视频案例在 Media
+   里各挂一个 WorkModal（type image / video），抖音作品墙在 AccountOperations 里挂第三个，
+   三者都渲染这里的 .work-modal-info，所以只改这一处。
+
+   ⚠️ 底板转白必须整套翻墨，不能只换 background：标题吃 --text-bright、正文吃 --text-base、
+   标签与提取码吃 --text-dim、VISUAL 小标与提取码高亮吃 --accent —— 这些在 .work-modal 那层
+   刚被 global.css 显式还原成深色档（弹窗是盖在全页之上的取景框，不跟板块翻）。
+   所以这里按全站既有约定「翻墨是改变量、不是改组件」（global.css 的板内墨色那一整块）
+   在 .work-modal-info 上再局部换回来，数值一律抄那份浅色档，不另立一套：
+   --accent 必须从 flare #ffc489 降到 wine #6b1e04，理由写在那块注释里（第十七次量到 1.02:1）。
+   --paper/--ink 一起反向 = 「查看完整作品」自动翻成墨药丸白字，与浅色板块里的 .footer-cta 同款。 */
 .work-modal-info {
+  --text-bright: #14100e;
+  --text-base: rgba(20, 16, 14, 0.92);
+  --text-dim: rgba(20, 16, 14, 0.8);
+  --paper: #1a1614;
+  --paper-hi: #14100e;
+  --ink: #fefefe;
+  --accent: #6b1e04;
+  --line-soft: rgba(20, 16, 14, 0.08);
+  --shadow-paper: 0 8px 32px rgba(20, 16, 14, 0.16), 0 0 0 1px rgba(20, 16, 14, 0.1);
+  /* α .62 + blur 48：板底是 --scrim rgba(2,2,2,.5) 压过的后景，板面自己再糊 48px，
+     后景只剩大块明暗（1470 实测板面 sd .0255、8px 分块 blob .0099、逐像素 edge .0026，
+     对比现状 18px 的 .0305/.0072/.0036 —— 轮廓更软、细节更少）。
+     brightness(1.35) 是给板面补光：α 从 .72 降到 .62 后板面会发灰（实测 169），
+     提亮后回到 175，墨字对比 title 8.5:1、最紧那档 kicker 5.2:1，仍在 AA 之上。
+     α 不能再低：.55 那档 kicker 掉到 4.5 以下。 */
+  background: rgba(254, 254, 254, 0.62);
+  backdrop-filter: blur(48px) saturate(1.4) brightness(1.35);
+  -webkit-backdrop-filter: blur(48px) saturate(1.4) brightness(1.35);
   padding: 48px;
   overflow-y: auto;
   display: flex;
@@ -228,7 +261,8 @@
   transition:
     background 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
-    translate 0.3s var(--ease-claude);
+    translate 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .work-modal-link:hover {
   background: var(--paper);
@@ -249,6 +283,44 @@
   font-weight: 500;
   color: var(--accent);
   letter-spacing: 0.06em;
+}
+
+/* ── 桌面端：图像井贴合配图本身（2026-10-13）
+   原来 .work-modal-content 是 1.25fr / 0.75fr 的定比例两列 —— 井宽跟图宽无关，图越竖黑边越厚：
+   抖音墙那 15 张手机截图（800×1709，机身本身就顶到素材四边，素材里没有多余黑）渲染成 294.9×630，
+   在 687.5 的井里左右各垫出 196.3 的纯黑；横图那 4 张只垫 40，正是内衬的厚度。
+   改法：媒体列按内容定宽（图 + 40 内衬），信息列给确定宽度，面板整体 fit-content 收缩。
+   于是竖图弹窗 795 宽、黑边一律 40，横图仍夹在 1100 跟原来一样，黑边只剩那道统一的框。
+   视频必须单独按住：占位封面是 width/height:100%，对 fit-content 的宽度贡献是 0，井会塌成两道内衬；
+   所以 .is-video 直接回到「面板固定 1100 + 媒体列铺开」的旧行为。 */
+@media (min-width: 801px) {
+  .work-modal-panel {
+    width: fit-content;
+    max-width: min(1100px, 100%);
+  }
+  .work-modal-content {
+    display: flex;
+    align-items: stretch;
+  }
+  .work-modal-media {
+    flex: 0 1 auto;
+    /* 井的自动最小尺寸会卡在图的原宽上，窄视口（801–900）就撑出横向滚动 */
+    min-width: 0;
+  }
+  .work-modal-info {
+    /* 420 是 1470 下原来 0.75fr 的读数（文字宽 324）。窄桌面必须跟着缩：
+       定死 420 时 820 视口只剩 360 给井，横图从 407.5 掉到 280，比改之前还小。 */
+    flex: 0 0 clamp(340px, 30vw, 420px);
+  }
+  .work-modal-image-wrap {
+    width: auto;
+  }
+  .work-modal-panel.is-video {
+    width: min(1100px, 100%);
+  }
+  .work-modal-panel.is-video .work-modal-media {
+    flex: 1 1 auto;
+  }
 }
 
 /* 移动端适配 */

@@ -10,15 +10,23 @@
   gap: 18px;
   pointer-events: none;
 }
+/* ⚠️ 命中盒必须只有圆点那么大。上一版标签是**参与布局的 flex 子项**（opacity:0 只是看不见，
+   盒子还在），于是每一行的盒宽 82px、从圆点向左顶到 x≈1315（1440 档），
+   而 Media 轨道的右端控件正好落在内容列右缘：实测 播放开关 30×25 被**整枚**盖住、
+   右箭头被压掉 6×25，1440 / 1100 / 1024 三档全中 —— 轨道滚到视口中部时那个按钮根本点不到，
+   点下去跳的是章节。改成绝对定位挂在圆点左侧，盒宽回到 8px + 左右 6px = 20px。 */
 .section-dot {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
   pointer-events: auto;
   cursor: pointer;
-  padding: 4px 0;
+  /* 左右 4px、上下 6px：命中盒 = 22(活动态胶囊) + 8 = 30×20。
+     宽度这条有硬上限 —— 内容列右缘在 vw−滚动条−60，这列的右缘在 vw−滚动条−28，
+     所以净空 = 60 − 28 − 盒宽 = 32 − 盒宽，与视口宽度无关。取 30 才第一次不压到
+     轨道的播放开关（原来 padding: 4px 0 时盒宽 82、把 30×25 的开关整枚盖掉）。 */
+  padding: 6px 4px;
 }
 /* 圆点：未激活只留一枚缘光描边的空环（暗场与亮天下都靠这条环呼吸，不铺底色） */
 .section-dot-mark {
@@ -41,15 +49,24 @@
   background: var(--rim-ember);
   border-color: var(--rim-ember);
 }
-/* 标签：默认隐藏，hover 或 active 时展开 */
+/* 标签：默认隐藏，hover 或 active 时展开。
+   绝对定位（理由见上面 .section-dot 的注释）；12px 空档 = 圆点左缘再往外 6px。
+   ⚠️ pointer-events 分两档：静置时必须 none，否则它又变回那片吃掉轨道按钮的隐形板；
+      一旦 hover 命中圆点就转成 auto —— 鼠标从圆点挪到字上时 hover 不断（后代算在内），
+      不会出现"手一动标签就消失"的闪。active 档不给 auto：那一行标签是常驻的，
+      常驻就等于常挡，而它指的就是当前章节，没有点击需求。 */
 .section-dot-label {
   /* 标签是中文（关于 / 经历 / 项目…）→ display 族 + 0.04em，不吃拉丁字距 */
   font: 500 var(--fs-label)/1.4 var(--font-display);
   letter-spacing: 0.04em;
   color: var(--text-dim);
   white-space: nowrap;
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 50%;
   opacity: 0;
-  transform: translateX(6px);
+  transform: translateY(-50%) translateX(6px);
+  pointer-events: none;
   transition:
     opacity 0.4s var(--ease-claude),
     transform 0.4s var(--ease-claude);
@@ -57,7 +74,10 @@
 .section-dot:hover .section-dot-label,
 .section-dot.active .section-dot-label {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateY(-50%) translateX(0);
+}
+.section-dot:hover .section-dot-label {
+  pointer-events: auto;
 }
 .section-dot.active .section-dot-label {
   /* 活动态由那枚 ember 胶囊负责，文字回到白墨，只是抬一档亮度 */

@@ -1,105 +1,180 @@
-/* VideoRail —— Apple 风格横向滚动视频轨道 */
+/* VideoRail —— coverflow 式视频轨道（2026-10-13 重做，替掉原来的无缝跑马灯）
+   几何全部由 VideoRail.jsx 按焦点位置 p 算成 inline style（transform / opacity / z-index），
+   这个文件只负责「卡长什么样」和「过渡怎么走」。数值来源见 JSX 里 CF 那段注释。 */
+/* 整块的顶距挂在 wrapper 上：它下面先是名称条，再是轨道 —— 轨道自己不再带 margin-top，
+   否则标题→名称条之间会凭空多出一段。 */
+.video-rail-block {
+  margin-top: 50px;
+}
 .video-rail {
   position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 50px;
 }
 
+/* 名称条（2026-10-13 他发了一张参考视频截图：顶上那一排「01 车载 02 / 02 运营 BANNER 05 …」，
+   选中项描一圈药丸）。这里放的是每条视频的 title，序号是它在数组里的位次 —— 数据里没有的
+   字一个都不编。
+   ⚠️ 选中态只换 border 和颜色，不换字号也不换 padding：自动翻动每 2.6s 换一次选中项，
+   只要药丸把格子撑宽，整条就会重新排版、上下抖。所以 border 常驻、透明的。 */
+.video-rail-tabs-wrap {
+  position: relative;
+  margin-bottom: 26px;
+}
+/* 单行、超出裁掉、放得下才居中 —— 他 10-13 的原话：「可将边缘处的文字挤出隐藏，
+   随左右按钮的移动而显现」。原先 1470 折两行、全屏折成 10+1，改成永远一行，
+   选中项由 JSX 里那段 effect 滚到中间，两头的字被切走。
+   ⚠️ 居中不能用 justify-content:center：nowrap 一溢出，居中会把左半条推到负 x，
+      而 LTR 滚动容器负方向根本滚不过去（375 实测前四格停在 -577..-140、scrollLeft 恒 0，
+      选中项永远进不了视野）。改成「首格 margin-left:auto + 末格 margin-right:auto」：
+      有余量时两边均分＝居中，溢出时余量为负、auto 归零＝从左边起排。
+   ⚠️ flex 子项默认可收缩，nowrap 之下会被挤扁然后文字折行 —— 格子必须 flex:0 0 auto。
+   ⚠️ 两端是硬切，没有加 mask 淡出：2537 那一档整条离容器边只剩 26px 余量，
+      淡出带一旦超过这个数，01 和 11 明明没被切也会跟着发虚。
+   padding-block 6px 是给 :focus-visible 那圈 outline（2px + offset 2px）留的位：
+   overflow-y 被 overflow-x:auto 算成 hidden，不留位焦点环上下会被切平。 */
+.video-rail-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  padding-block: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.video-rail-tabs::-webkit-scrollbar {
+  display: none;
+}
+.video-rail-tab {
+  flex: 0 0 auto;
+  font: 500 var(--fs-label)/1.4 var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--text-dim); /* 板内 α.80 是这套小字的对比度下限（见 global.css 翻墨那段），不再往下压 */
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  /* 药丸按他截图上那一圈量的：环 151×35.6 CSS px、里面那格字 117.4 宽 ——
+     横向空气 ≈17px/边、纵向 ≈12.8px。这里给 1.25em/0.62em = 15/7.4，加 1.5px 边框
+     后实测 34.6 高，落在他圈的尺寸上。 */
+  padding: 0.62em 1.25em;
+  cursor: pointer;
+  transition:
+    color 0.3s var(--ease-claude),
+    border-color 0.3s var(--ease-claude);
+}
+.video-rail-tab:first-child {
+  margin-left: auto;
+}
+.video-rail-tab:last-child {
+  margin-right: auto;
+}
+.video-rail-tab span {
+  /* 序号靠字号和字距退到次级，不用 opacity —— 叠在 --text-dim 上会掉到 2:1 以下 */
+  font-size: 0.82em;
+  letter-spacing: var(--track-label);
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.5em;
+}
+.video-rail-tab:hover {
+  color: var(--text-bright);
+}
+.video-rail-tab.is-this {
+  color: var(--text-bright);
+  /* 他指的那圈是酒红的（取样 rgb(109,31,4)，和板内翻出来的 --accent #6b1e04 同一个色），
+     不是原来那道 α.22 的灰边 —— 灰边在浅纱上几乎读不出来，他自己说「没有效果」。 */
+  border-color: var(--accent);
+}
+.video-rail-tab.is-this span {
+  color: var(--text-base);
+}
+.video-rail-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 名称条底衬（10-13 深夜，量出来的）：这条居中文名条宽 1335，而白板（global.css 的
+   .media::before）的实心段只到 plate-x−8% = 1470 视口上的 559px。逐格取底图像素算对比度：
+   11 格里 8 格掉到 4.5:1 以下 —— 04 3.77 / 05 1.12 / 06 1.07 / 07 1.60 / 08 2.35 /
+   09 2.33 / 10 2.67 / 11 1.23，05、06 两格是整条糊进照片暗部。
+   补的这层垫用窄屏浅纱同款的数（global.css:516 那条写明 α.86 下最黑帧仍有灰 217，
+   base/dim 两档都在 4.5 之上），四边靠 blur 化开，不留矩形硬边 —— 白板在右侧本来就该
+   是渐隐的，垫子若有一根硬上缘就成了"照片上贴了张纸"。
+   ⚠️ 只在 >900px 装：900 以下白板整幅换成均匀浅纱、没有暗侧要避让（375 那档只报完全落在
+   窗内的格：普通格 8.42 / 8.46，选中格墨更深 14.41 —— 早先那批 1.1、2.43 是探针在负 x 处
+   采样采出来的，不是真对比度），在这儿再垫一层只会把照片糊成一团。
+   装上后逐档复量（第十二轮）：1470 最低 8.19、1280 7.82、1100 7.90、950 7.99、901 8.37；
+   900 / 801 两档（垫子不生效处）7.94 / 7.83 —— 断点两侧连续，没有跳档。
+   ⚠️ 这层垫挂在 .video-rail-tabs-wrap 上、不挂在 nav 上：nav 现在是横向滚动容器，
+   overflow-x:auto 会把 overflow-y 也算成 hidden，垫子的 inset:-30px 上下那两条 blur 带
+   会被 nav 自己的盒子裁平 —— 垫在滚动容器里等于垫在剪刀里面。 */
+@media (min-width: 901px) {
+  .video-rail-tabs-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -30px -40px;
+    z-index: 0;
+    pointer-events: none;
+    background: rgba(252, 248, 245, 0.92);
+    filter: blur(26px);
+  }
+  .video-rail-tab {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* 轨道容器。overflow:hidden 是必须的：|offset| 超过 visible 的卡只是不透明度归零、
+   仍然占布局，不裁就给整页加一条横向滚动条（样品页实测 docScrollW 2541 / innerW 1440）。
+   ⚠️ 原来那条「裁切线靠 --rail-edge 淡出坡化开」的机制已经按他的要求撤了（侧卡不要透明），
+   所以裁切线现在是硬切。桌面这档它切不到东西：贴合排位 + 60px 间隙下第 2 张卡的投影远缘
+   实测在轨道半宽以内（1440 上 450 / 572）。窄屏才会切到侧卡 —— 那是「只露一条边」的边被切断，
+   正是要的效果（看得出后面还有卡）。
+   touch-action:pan-y 让竖滑交还页面、横滑归我们；user-select 关掉是为了拖拽时不选中文字。 */
 .video-rail-frame {
   flex: 1;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
 }
-/* 两侧胶片边缘：卡片滑入后隐入背景，齿孔透出滚动画面，呼应"胶卷回收" */
-.video-rail-frame::before,
-.video-rail-frame::after {
-  content: '';
+/* perspective 挂在容器而不是卡上：卡各自有 transform，透视要共享同一个灭点才退得成「一排」。
+   数值由 JSX 的 CF.persp 写进来 —— 排位链在 JS 里解每张卡的投影，两边必须是同一个数。 */
+.video-rail-cards {
   position: absolute;
-  top: 0;
-  /* 整列到底，不能只压封面带：轨道 overflow:hidden 会在 frame 边缘硬切卡片，
-     scrim 负责把这条切口化开。改成只盖封面后实测（shotv14media）字幕行
-     在边缘被拦腰切断，比原来"淡出"更难看，所以回退。 */
-  bottom: 0;
-  width: 68px;
-  z-index: 2;
-  pointer-events: none;
-  /* 胶片齿孔：竖向一列圆孔，露出后方滚动的卡片 */
-  -webkit-mask-image: radial-gradient(
-    circle 4px at 50% 15px,
-    transparent 0 4px,
-    #000 4px
-  );
-  -webkit-mask-size: 100% 30px;
-  -webkit-mask-repeat: repeat;
-  mask-image: radial-gradient(
-    circle 4px at 50% 15px,
-    transparent 0 4px,
-    #000 4px
-  );
-  mask-size: 100% 30px;
-  mask-repeat: repeat;
-}
-.video-rail-frame::before {
-  left: 0;
-  /* 两侧遮罩必须与所在板块同档（.media = --void-5），差一档就是一道可见的接缝 */
-  background: linear-gradient(90deg, var(--void-5) 0%, var(--void-5) 62%, transparent 100%);
-}
-.video-rail-frame::after {
-  right: 0;
-  background: linear-gradient(-90deg, var(--void-5) 0%, var(--void-5) 62%, transparent 100%);
-}
-
-.video-rail-track {
-  display: flex;
-  gap: 18px;
-  overflow-x: auto;
-  padding: 10px 4px 30px;
-  /* 隐藏滚动条但保留滑动 */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.video-rail-track::-webkit-scrollbar {
-  display: none;
+  inset: var(--rail-pad, 0) 0;
+  perspective: var(--rail-persp, 700px);
 }
 
 .video-rail-card {
-  flex: 0 0 auto;
-  width: clamp(300px, 30vw, 400px);
-  cursor: pointer;
+  position: absolute;
+  left: 50%;
+  top: 0;
   border-radius: 6px;
   overflow: hidden;
   background: var(--card-void);
   box-shadow: var(--shadow-card), var(--ring-card);
+  cursor: pointer;
+  will-change: transform;
+  /* 侧卡不透明：--rail-edge 只有 0/1（超出 visible 窗口才收），它仍走 CSS 而不是
+     inline opacity —— inline 会盖住入场前 `.video-rail:not(.is-in) .video-rail-card{opacity:0}`
+     那条规则，轨道就永远不会「先隐形再交错进场」。 */
+  opacity: var(--rail-edge, 1);
   transition:
-    transform 0.5s var(--ease-claude),
+    transform var(--rail-ms) var(--ease-claude),
+    opacity var(--rail-ms) var(--ease-claude),
     box-shadow 0.5s var(--ease-claude);
 }
-/* 入场交错：原先这段动画直接写在卡片上、挂载即播，而轨道位于首屏之下 6000px+，
-   用户滚到时 22 张卡的动画早已播完，交错等于没生效。
-   改为由 JS 在轨道首次进入视口时给 .video-rail 加 .is-in，再统一触发。 */
-.video-rail:not(.is-in) .video-rail-card {
-  opacity: 0;
-}
-.video-rail.is-in .video-rail-card {
-  animation: rail-card-in 0.8s var(--ease-claude) both;
-  animation-delay: var(--rail-delay, 0s);
-}
-@keyframes rail-card-in {
-  /* 位移走 translate 而不是 transform：这条动画用 both 填充，终值会一直压在
-     transform 上，写 translateY(0) 的话卡片 hover 的 -6px 位移就永久失效了。 */
-  from {
-    opacity: 0;
-    translate: 0 20px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
+/* 拖拽时逐帧跟随，不能带过渡：否则卡永远落在手指后面半个档位 */
+.video-rail-frame.is-dragging .video-rail-card {
+  transition: none;
 }
 .video-rail-card:hover {
-  transform: translateY(-6px);
+  /* 原来这里还有 transform: translateY(-6px) —— 在 coverflow 下必删：
+     transform 是 inline style，CSS 规则的优先级压不过它，留着只是死代码。
+     后退的侧卡也不该「浮起来」，它本来就在往后退。 */
   box-shadow: var(--shadow-warm-glow), var(--ring-card);
 }
 .video-rail-card:focus-visible {
@@ -113,84 +188,108 @@
   overflow: hidden;
 }
 .video-rail-poster img {
+  display: block; /* 内联图会在卡底留出一条基线间隙，卡高就不等于图高了 */
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 暗场压图统一档，见 Strengths.css */
+  /* 暗场压图统一档，另两处同值：AbilityFolder.css:145 / Projects.css:135 */
   filter: brightness(0.9) saturate(0.72) contrast(1.06);
+  -webkit-user-drag: none;
+  user-select: none;
   transform: scale(1);
   transition:
     transform 0.7s var(--ease-claude),
     filter 0.7s var(--ease-claude);
 }
-.video-rail-card:hover .video-rail-poster img {
+/* 只在焦点卡上放大：外卡已经带着 rotateY + scale，再让它 hover 涨一层看不懂的形变没意义 */
+.video-rail-card.is-focus:hover .video-rail-poster img {
   transform: scale(1.06);
   filter: none;
 }
 
-/* 播放按钮 */
-.video-rail-play {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  transition: background 0.4s var(--ease-claude);
-}
-.video-rail-card:hover .video-rail-play {
-  background: rgba(0, 0, 0, 0.16);
-}
-.video-rail-play svg {
-  width: 52px;
-  height: 52px;
-  padding: 15px;
-  border-radius: 50%;
-  background: var(--paper-a92);
-  color: var(--ink);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition:
-    transform 0.4s var(--ease-claude),
-    background 0.4s var(--ease-claude);
-}
-.video-rail-card:hover .video-rail-play svg {
-  transform: scale(1.1);
-  background: var(--paper-hi);
-}
-
-/* 视频信息 */
+/* 字幕层：压在封面图下缘，只有焦点卡亮着 —— 录屏里侧卡就是纯图，
+   斜压的图上叠一层糊字很难看。整块绝对定位，卡高因此等于图高（16:9）。
+   ⚠️ 这里的三个色是写死的白：.media 板块把整套墨色翻过来了（--paper-hi 变成 #14100e、
+   --text-dim 变成墨），字幕坐在近黑的渐变纱上，吃任何 var() 都会翻成「黑字压黑纱」。 */
 .video-rail-info {
-  padding: 18px 20px 22px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 34px 18px 14px;
+  background: linear-gradient(transparent, rgba(20, 16, 14, 0.78));
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 2px 12px;
+  opacity: 0;
+  transition: opacity var(--rail-ms) var(--ease-claude);
+}
+.video-rail-card.is-focus .video-rail-info {
+  opacity: 1;
 }
 .video-rail-info span {
-  /* 拉丁微标签（VIDEO / 01）：参考图的角标语言 —— 大写 + 0.16em 字距，
-     全站唯一允许的火光色文字之一就是这一档 */
+  /* 拉丁微标签（VIDEO / 01）：参考图的角标语言 —— 大写 + 0.16em 字距 */
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: end;
   font: 500 var(--fs-label)/1.4 var(--font-display);
   letter-spacing: var(--track-label);
   text-transform: uppercase;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.6);
 }
 .video-rail-info h4 {
+  grid-column: 1;
   font-family: var(--font-display);
-  font-size: var(--fs-h3);
+  /* 不用 --fs-h3（1440 上是 21.6px）：字幕坐在图里，那一档是给条目标题的，
+     压到封面上会盖掉小半个画面。17px 是样品页量着定的。 */
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: var(--track-display);
-  margin: 8px 0 6px;
-  color: var(--text-bright);
+  margin: 0;
+  color: #ffffff;
 }
 .video-rail-info p {
-  /* 中文说明行属于正文，不并入上方那档火光色拉丁微标签（全站只允许 ≤--fs-label
-     的拉丁/数字件带颜色）。这里保持 --text-dim 是为了和 h4 标题拉开一档。 */
+  grid-column: 1;
   font-family: var(--font-display);
   font-size: var(--fs-label);
   line-height: 1.5;
   letter-spacing: 0.04em;
-  color: var(--text-dim);
   margin: 0;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-/* 左右滚动按钮 */
+/* 入场交错：由 JS 在轨道首次进入视口时给 .video-rail 加 .is-in 再统一触发。
+   原先这段动画直接挂在卡上、挂载即播，而轨道在首屏之下 6000px+，用户滚到时
+   11 张卡的动画早已播完，交错等于没生效。 */
+.video-rail:not(.is-in) .video-rail-card {
+  opacity: 0;
+}
+.video-rail.is-in .video-rail-card {
+  /* fill-mode 用 backwards 而不是原来的 both：both 会把终值 opacity:1 永久钉在动画上，
+     超出 visible 窗口那几张（--rail-edge:0）就再也压不动了 —— 它们会留在画面上，
+     overflow:hidden 那条裁切线外面也就多出东西。backwards 同样能在 delay 期间保持 from 态
+     （卡不会先闪一下），播完即释放。 */
+  animation: rail-card-in 0.8s var(--ease-claude) backwards;
+  animation-delay: var(--rail-delay, 0s);
+}
+@keyframes rail-card-in {
+  /* 位移走 translate 而不是 transform：这条动画的终值会一直压在 transform 上，
+     写 translate:0 的话卡的 inline coverflow 变换就废了。 */
+  /* 终值取 var(--rail-edge) 而不是 1：写死 1 的话动画一播完，窗口外那几张会先全不透明闪一下
+     再靠过渡收回去。 */
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+  to {
+    opacity: var(--rail-edge, 1);
+    translate: 0 0;
+  }
+}
+
+/* 左右换焦点按钮 */
 .video-rail-btn {
   flex: 0 0 auto;
   width: 44px;
@@ -208,10 +307,10 @@
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
     transform 0.3s var(--ease-claude),
-    opacity 0.3s var(--ease-claude);
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .video-rail-btn:hover:not(:disabled) {
-  /* 命令级反转：暗面件一按就翻成纸白，与导航的联系按钮同族 */
+  /* 命令级反转：暗面件一按就翻成墨药丸，与导航的联系按钮同族 */
   background: var(--paper);
   border-color: var(--paper);
   color: var(--ink);
@@ -221,7 +320,7 @@
   order: -1;
 }
 
-/* 自动滚动开关：与左右箭头同族的圆形小按钮 */
+/* 自动翻动开关：与左右按钮同族的圆形小按钮 */
 .video-rail-play-toggle {
   flex: 0 0 auto;
   width: 30px;
@@ -236,7 +335,25 @@
   transition:
     background 0.3s var(--ease-claude),
     border-color 0.3s var(--ease-claude),
-    color 0.3s var(--ease-claude);
+    color 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
+}
+/* 换面淡入：靠 opacity + blur(2px) 交叉淡入。
+   必须走 animation 而不是 transition：条件渲染换上的新面没有可过渡的旧值。
+   ⚠️ 前提是 JSX 里那两枚 svg 各带 key（play/pause）。同类型同位置的三元分支不加 key，
+   React 会复用同一个 DOM 节点只改 path，元素不重挂载 → animation 一辈子只在首屏跑一次。 */
+.video-rail-play-toggle svg {
+  animation: rail-face-in var(--fade-ms) ease;
+}
+@keyframes rail-face-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
 }
 .video-rail-play-toggle:hover {
   background: var(--accent);
@@ -248,39 +365,66 @@
   outline-offset: 2px;
 }
 
-/* 移动端：隐藏按钮，依赖手势滑动 */
+/* 移动端：按钮隐藏（44×2 + 间距要在 375 上吃掉轨道 1/3），靠拖拽和自动翻动。
+   开关必须留着 —— WCAG 2.2.2「会动的内容可暂停」，窄屏本来就是唯一没有按钮的档位。
+   margin-inline 负值把轨道借进 .media 的 60px 内边距：轨道只有 255px 时中卡的下限
+   比轨道还宽、卡边会被 overflow:hidden 裁掉，全幅借到 335px 才站得住。
+   配套的窄屏让位系数（JSX 里 stageW×0.62）也从 0.86 收到这里：贴合排位下侧卡内缘在
+   cw/2+gap 之外，卡占到 86% 时轨道里连一条侧卡的边都放不下。 */
 @media (max-width: 800px) {
+  /* 名称条在窄屏和桌面是同一套单行裁切（基线规则已经给了 nowrap + overflow-x:auto），
+     这里只把整条借到和轨道同一个全幅：轨道 frame 实测 left 20 → 首个 chip 也落在 20。
+     （原先这档另写过一份 nowrap/overflow/scrollbar 的副本，基线统一后删掉了 ——
+      两份规则只差一个数就是下次翻车的来源。） */
+  .video-rail-tabs-wrap {
+    margin-inline: -40px;
+    padding-inline: 20px;
+  }
   .video-rail {
-    gap: 0;
+    gap: 8px;
+    margin-inline: -40px;
   }
   .video-rail-btn {
     display: none;
   }
-  .video-rail-play-toggle {
-    display: none;
+  /* 字幕跟着卡缩：卡从原来窄屏那档 242px 掉到 175px 之后，桌面那套 34/18/14 的内边距
+     加 17px 标题会把整张卡面糊住（实测三行说明顶到标题）。只降字号，不删任何一行内容。 */
+  .video-rail-info {
+    padding: 20px 10px 8px;
+    gap: 1px 8px;
   }
-  .video-rail-frame::before,
-  .video-rail-frame::after {
-    width: 46px;
-    -webkit-mask-size: 100% 24px;
-    mask-size: 100% 24px;
+  .video-rail-info h4 {
+    font-size: 13px;
   }
-  .video-rail-card {
-    width: 82vw;
-    scroll-snap-align: center;
+  .video-rail-info p {
+    font-size: 10.5px;
+    line-height: 1.35;
   }
-  .video-rail-track {
-    padding: 10px 20px 30px;
+  .video-rail-info span {
+    font-size: 9px;
   }
 }
 
+/* 强制动效（他参数里的最后一项）。global.css:906 那条 `*,*::before,*::after{…!important}`
+   会把全站所有过渡/动画压成 0.001ms，而本机 Windows 的「动画效果」是关的 → Chrome 报
+   reduce → 这条轨道在他电脑上原本一帧都不走（这正是他在样品页专门勾这个开关的原因）。
+   两边都是 !important 时比特异度，类选择器压得过通配符，所以在这里逐条把时长还回来，
+   不去动全局那条（其他组件仍然该守系统的减少动效）。
+   ⚠️ 拖拽那一档要跟着还回 0s：否则卡会落在手指后面 800ms。 */
 @media (prefers-reduced-motion: reduce) {
   .video-rail-card {
-    transition: none;
+    /* 三个值对应 .video-rail-card 那三条 transition：transform / opacity / box-shadow */
+    transition-duration: var(--rail-ms), var(--rail-ms), 0.5s !important;
+    animation-duration: 0.8s !important;
+    animation-delay: var(--rail-delay, 0s) !important;
   }
-  /* 入场动画同样要关：.is-in 一旦加上，:not(.is-in) 的 opacity:0 规则就不再命中，
-     所以 animation: none 会让卡片直接落在默认不透明态，不会留在隐形状态。 */
-  .video-rail.is-in .video-rail-card {
-    animation: none;
+  .video-rail-frame.is-dragging .video-rail-card {
+    transition-duration: 0s !important;
+  }
+  .video-rail-info {
+    transition-duration: var(--rail-ms) !important;
+  }
+  .video-rail-poster img {
+    transition-duration: 0.7s, 0.7s !important;
   }
 }

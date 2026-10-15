@@ -10,8 +10,10 @@
   overflow: hidden;
 }
 /* 收尾一镜（t≈15s）孩子端着咖啡站在画面中段偏右。
-   本轮把这条约束改成参考图的分工：巨型标题出车道、横压整幅内容列（可读性由
-   global.css 给 .footer 加的 --title-band-h 顶部暗板承担），正文/按钮/底栏仍留在道内。
+   第二十一轮（y5）：大标题不再出车道横压整幅，而是收进 global.css 的 --head-k
+   （0.53），字号按「标题栏宽 ÷ 最长一行 8 字」反推 —— 深墨大字始终站在板的浅区里。
+   可读性的底由 global.css 给 .footer::before 那块横向渐变白板承担（旧的 --title-band-h
+   顶部暗板已随黑底板一起退役）。
    ⚠️ 暗板与 .footer-rim 都是 .footer 的伪元素/绝对定位件，不要在这个 flex 容器上
    给它们加 justify/align，会打散 flex 轴。
    ⚠️ 限宽不能写在 .footer-inner 上：它带 .wrap 的 margin:auto，
@@ -33,16 +35,23 @@
   max-width: var(--lane-w, 100%);
 }
 .footer h2 {
-  /* 与 .heading-row h2 同一档：满幅内容列，字号由 --fs-h2 的 clamp 按 10 个全角字反推。
+  /* 与 .heading-row h2 同一套：栏宽由 --head-k 收、字号由 global.css 那条
+     `.heading-row h2, .footer h2` 按「栏宽 ÷ 最长行字数」反推 —— 这里**不能再写 font-size**，
+     Footer.css 在打包顺序里更靠后，同特异度会把那条规则整条吃掉。
+     ⚠️ 宽度不能写 `--head-k * 100%`：父级是 Reveal 那个 div，而 .footer-inner 是
+     `align-items: flex-start` 的 flex 列 —— flex 项的交叉轴尺寸默认 shrink-to-fit，
+     于是 100% 基准已经不是内容列而是"被 0.53 收过一次的收缩宽"，0.53 等于乘了两遍。
+     实测 1440 下 h2 只有 365px（应为 692），「下一个故事，」被压成 4 + 2 两行。
+     改成直接锚 --col-w（真实内容列，与字号公式同一个基准）。
      「下一个故事，」「从一次对话开始。」两行各自成行（<br/> 是写死的），
-     1440 下 132px × 8 字 = 1056px < 内容列 1320px，实测不折行。 */
+     最长行 8 字 = 栏宽 ÷ head-max，负字距再留约 1.4% 余量。 */
   font-family: var(--font-display);
-  font-size: var(--fs-h2);
   font-weight: 800;
   letter-spacing: var(--track-display);
   line-height: var(--lh-display);
   color: var(--text-bright);
   margin: 0;
+  width: calc(var(--col-w) * var(--head-k, 1));
 }
 .footer-email-wrap {
   margin-top: 60px;
@@ -66,7 +75,8 @@
   transition:
     background 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
-    translate 0.3s var(--ease-claude);
+    translate 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .footer-cta .arrow {
   font-size: 1.1em;
@@ -101,7 +111,8 @@
     border-color 0.3s var(--ease-claude),
     color 0.3s var(--ease-claude),
     background 0.3s var(--ease-claude),
-    transform 0.3s var(--ease-claude);
+    transform 0.3s var(--ease-claude),
+    scale var(--press-ms) var(--ease-out-soft);
 }
 .social-btn svg {
   width: 20px;
