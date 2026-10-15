@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import './WorkModal.css'
 
 /**
@@ -77,7 +78,10 @@ export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
   const isVideo = type === 'video'
   const hasVideo = isVideo && item.videoSrc
 
-  return (
+  // portal 到 body：global.css:741-744 的 `.section-rim ~ *` 给缘光之后每个兄弟都造了一个
+  // z-index:1 的层叠上下文，弹窗若留在调用方的 section 里，z-index:200 只在那个上下文内有效。
+  // 三处挂载（Media / AccountOperations / AbilityFolder）因此一处收口；CSS 一行不用改。
+  return createPortal(
     <div className="work-modal" onClick={handleClose} role="dialog" aria-modal="true" aria-label={item.title}>
       <div className="work-modal-backdrop" />
       <div className={'work-modal-panel' + (isVideo ? ' is-video' : '')} ref={panelRef} onClick={(e) => e.stopPropagation()}>
@@ -137,6 +141,7 @@ export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

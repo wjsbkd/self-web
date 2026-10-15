@@ -369,16 +369,17 @@ export default function AbilityFolder() {
               </div>
             )}
 
-            {/* 详情也必须走同一个 portal。它原来留在 .tool-gallery 里，而
-                global.css:740 的 `.section-rim ~ *` 把 .tool-gallery 设成
-                relative + z-index:1 —— 那是一个 stacking context，弹窗的
-                z-index:200 只在它自己那一层里说话，出不了这个 1。
-                展开层(55)和文件夹(45)已经 portal 到 body，回到根层叠上下文，
-                于是 55/45 > 1：弹窗挂上了、也铺满视口，却被糊面和四张卡压在底下。
-                实测（1470×900，点第一张卡之后）：.work-modal 存在、1470×900 @0,0，
-                但面板中心 (735,450) 上 elementFromPoint 拿到的是 .folder-back-fill。
-                他看到的就是「点卡片没反应」，而那三下空白其实是在
-                先关掉一个看不见的弹窗、再点两下才轮到收起。 */}
+            {/* 历史（第五十二/五十三次实测，已于 2026-10-15 由 WorkModal 自 portal 收口）：
+                详情弹窗原来留在 .tool-gallery 里面，而 global.css:741 的 `.section-rim ~ *`
+                把 .tool-gallery 设成 relative + z-index:1 —— 那是一个 stacking context，
+                弹窗的 z-index:200 只在这一层里说话，出不了那个 1。展开层(55)和文件夹(45)
+                已经 portal 到 body，于是 55/45 > 1：弹窗挂上了、也铺满视口，却被糊面和四张卡
+                压在底下。当时在 1470×900 点第一张卡量到：.work-modal 存在、1470×900 @0,0，
+                但面板中心 (735,450) 的 elementFromPoint 拿到的是 .folder-back-fill ——
+                他看到的「点卡片没反应」其实是先关掉一个看不见的弹窗、再点两下才轮到收起。
+                现在 WorkModal.jsx 内部自己 portal 到 body，这一处变成嵌套 portal，DOM 父节点
+                仍是 body（改前实测 parent=body、层叠祖先为空，所以这一处从头到尾没变过）。
+                ⚠️ 上面那层 createPortal 不能跟着删：scrim/展开层/飞行文件夹三件仍必须在 body 层。 */}
             <WorkModal
               isOpen={Boolean(active)}
               onClose={() => setActive(null)}
