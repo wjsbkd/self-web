@@ -94,7 +94,8 @@
 /* 响应式 —— 800px 断点（原来同档还有 .account-content / .account-stats 两条，
    随上面的死规则一起删了） */
 @media (max-width: 800px) {
-  .media {
+  /* (0,2,0) 才能压过 responsive.css 的 `.section` 短写，见 global.css:419 */
+  .media.section {
     padding-bottom: 90px;
   }
   .portfolio-bar {
