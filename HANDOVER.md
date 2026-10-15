@@ -5528,7 +5528,8 @@ experience→work 33.85、work→media 24.35 这些大数是影片里那张脸�
 ## 第六十次：Q03 落地（走②「只砍 Noto」）+ 我自己两处归因更正（2026-10-15 下午，未推送）
 
 他一句「按推荐来」定的是候选 **②**：`@import` 里只删 Noto Sans SC，Archivo + DM Mono 留着。
-已改、已建、已提交 **`1f9189b`**（**只 commit，没有 push**；`master` 现领先 `origin/master` **16** 个提交）。
+代码那笔是 **`1f9189b`**（**只 commit，没有 push**；领先 origin 几个提交这种数会随每一笔文档提交变，
+现算：`git --git-dir=... rev-list --count refs/remotes/origin/master..refs/heads/master`，10-15 收尾时是 17）。
 
 ### 一、代码只动一处
 
