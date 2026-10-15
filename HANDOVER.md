@@ -5784,3 +5784,98 @@ Resource Timing 对没结束的 range 请求报 0、对 304 只报 ~300 B（我�
 - `git status` 现在只有文档在动。等他说开工：**Q17**（方案已复核、三条红线在第六十一次）；
   等他决策：**Q22**（首屏图片 2,178,695 B = 48%，延后不延后 + 10 个 `<img>` 补不补 `width`/`height`）、
   Q19 的 ≤600 档、以及附录 A4 那五条只有他能答的事实项（270W/280W、真实域名、og 封面、`.experience` 1.81:1 二选一、网盘 `c8st` 拆不拆）。
+
+---
+
+## 第六十三次：Q17 WorkModal 自 portal 收口 + 把「塌层」这件事的机制再纠正一层（2026-10-15 傍晚，未推送）
+
+他这一轮的问句是三件事：Q 编号到底指站上哪一块、还要做多久、继续拆子代理并行。代码侧我接着把批准顺序里的第 5 步（Q17）做完。
+
+### 一、代码只动三处，CSS 一行没改
+
+`src/components/WorkModal.jsx`：`import { createPortal } from 'react-dom'` + 根 div 外面套 `createPortal(..., document.body)`。
+`if (!isOpen || !item) return null` 在 :76，portal 只在打开时挂载；滚动锁（:63-64 存/还 `prev`）与焦点陷阱一字未动。
+另两处是同轮该改的过期注释：`global.css:596-597`（「WorkModal 在 DOM 上是 `.strength` 的子节点」—— `Strengths.jsx` 从不挂弹窗）
+与 `AbilityFolder.jsx:372-381`（那段实测记录改写成历史，并留一条 ⚠️ 上面那层 portal 不能跟着删）。
+
+`npm run lint` 0 error。构建：CSS `index-CTNt1nH_.css` 66,640 B **一字不变**（改的是注释，esbuild 会剥掉），
+JS `index-1oJU7v2R.js` 318,981 B → `index-Bne9_1CQ.js` 319,010 B（+29 B）。
+
+### 二、继承面：先把「挪父节点会不会换值」算成集合，而不是靠印象
+
+CSS 继承跟的是 DOM 树不是 React 树，所以换挂载点=换继承源。`cf/sc36_q17_modal.cjs` 不靠手挑的 token 清单，
+而是从 `document.styleSheets` 正则扫出**全部 121 个自定义属性名**，逐个在 `.media` / `.account-ops` / `body` 上取计算值做差集：
+
+- 板块与 `body` 取值不同的有 **42 个**（就是 `global.css:543-595` 那块板内翻墨）。
+- WorkModal.css 消费的 **26 个全部由 `.work-modal` 自己声明**；右侧浅底板 `.work-modal-info`（`WorkModal.css:177-186`）
+  那 9 个也是自声明字面值，不是 `var()` 上去的。
+- **交集为空** → 没有任何一个「被消费 + 从板块继承 + 板块值≠body 值」的 token。
+- 剩下 12 个确实是从别处继承的（`--font-display --fs-body --lh-body --fs-label --font-mono --ease-claude --ease-out-soft --press-ms --object-fit --rim-brick --track-display --track-label`），
+  但它们**不在这 42 个里**，板块和 body 同值 → 挪不动它们。（我上一轮把这 12 个记成风险点，方向对、结论错：真正会翻的是另外 42 个。）
+- 祖先限定选择器 **0 命中**：`grep work-modal` 在 CSS 里的 60 条全是裸 `.work-modal*`，没有一条靠祖先匹配 → portal 不会让任何规则失配。
+
+### 三、验收判据是 clip 对，不是整屏对（我自己差点又把废数据当结论）
+
+sc36 先出的五对整屏图报 15%~40% 差异像素，看着像"改坏了"。三个混淆源：
+① 两边点的不是同一条内容（面板 1 px 高差就是这么来的，探针当时没记 `.work-modal-title` 文本）；
+② 弹窗背后那层一直在动（VideoRail 3D 轨道、SpiralGallery 滚动驱动）；
+③ `.work-modal-info` 是 `backdrop-filter: blur(48px)` 磨砂，**背景一动，弹窗内部跟着一起变**。
+→ 整屏对不是判据，那五对 PNG 已删，`sc36-before.json` 里的 `shots` 路径因此指向不存在的文件，别看。
+
+重做（`cf/sc38a_static.cjs` 带 Range 的极简静态服务器 + `cf/sc38b_nav_gate.cjs`）：
+`git show HEAD:src/components/WorkModal.jsx` 重建一份改前产物到 `%TEMP%\sc36-q17\dist-before`，
+与服务中的 `dist` 各起一个端口（4191 / 4192），同一支脚本、同一套仿真、**先点 `.video-rail-tab[2]` 定焦点再点焦点卡**
+（两边 `.work-modal-title` 都读出「飞书 AI 训练营宣传视频」，内容同一性有证据）：
+
+| 判据 | 1470×900 | 375×812 |
+|---|---|---|
+| 弹窗面板 clip 逐像素 | **0 / 540100** | **0 / 292824** |
+| 导航条带 clip 逐像素 | **0 / 140390** | **0 / 31680** |
+| 整屏 | 0.379% 个像素，全为 \|Δ\|=1，过 2/255 的 0 个 | 0.357% 同上 |
+
+结构侧同步记录：`modalParent` `section#media.media.section` → `BODY`；弹窗层叠祖先 `[section{relative,z:auto}]` → `[]`；
+`elementFromPoint` 四个点（导航中心 / 字标 / 面板中心 / 左上角）改前改后**同一答案**，导航中心两处都是 `div.work-modal-backdrop`。
+`|Δ|=1` 那 0.3~0.4% 落在轨道/螺旋的文字带上，是磨砂透出来的背景动画，不是弹窗自己。
+
+### 四、机制要比「加固项」再纠正一层：`.section-rim ~ *` 根本命不到板块自己
+
+`global.css:741-744` 的 `.section-rim ~ *` 是**兄弟**选择器，而 `.section-rim` 是板块的**子元素**
+（`Media.jsx:22`、`AccountOperations.jsx:33`）→ 它命中的是板块内部那一排子元素，**命不到 `.media` 本身**。
+实测 `.media` 计算 `z-index: auto`（`position: relative` + `z-index: auto` 不造层叠上下文）
+→ 弹窗（`fixed` + `z:200`）一直就在根层里说话，本来就盖得住 Nav(50)。
+真正被困过的只有嵌进 `.tool-gallery`（relative + **z:1**，这个才是上下文）里的 AbilityFolder 那一处 —— 和 Q16 的结论对上了。
+
+那这轮到底买到了什么：**对打包顺序的依赖被拿掉了**。改前 `.work-modal{z-index:200}` 能压过
+`.section-rim ~ *{z-index:1}`（两者同特异度 (0,1,0)）纯靠 WorkModal.css 在 dist 里排在 global.css 之后、后写赢。
+谁挪一下 `main.jsx` 的 import 顺序，Media / AccountOperations 的弹窗就会掉回 z:1、被 Nav(50) 盖住。
+portal 之后这条因果链不存在了 —— 这才是「加固」两个字的实际内容，比档案里原来那句写得更准。
+
+### 五、三条红线遵守情况，与本轮故意没碰的东西
+
+没加 `stopPropagation`；`AbilityFolder.jsx:296` 那层 portal 原样保留（实测那一处弹窗的 DOM 父节点改前就是 BODY、
+改后还是 BODY，只是变成嵌套 portal）；两处过期注释已改写。
+Q17 顺带读出的两个既存毛病**本轮没动**，要修得另开一轮：① 弹窗开着时方向键/PgUp/Home/End 仍会切章节（`useKeyboardNav.js:16-31`）；
+② `WorkModal.jsx` 的焦点 effect 依赖 `[handleClose]`，三处调用方全传内联箭头 → 父组件每次重渲染都重跑。
+
+### 六、子代理回收（两份已交，一份还在跑）
+
+- **Q22b（图片固有尺寸 / CLS）：CLS = 0** —— 1470 与 375 两档、静置与整页滚过共四种情形，`layout-shift` 条目数都是 0。
+  仪器可信度我核过：`PerformanceObserver` 带 `buffered: true` 回捞早期条目，且有一道健康门
+  （`if (!health.ok) throw`，并区分 `rawCount>0/detailCount=0`＝归因回调炸了 vs 两个都 0＝真没条目）。
+  → 「给 10 个 `<img>` 补 `width`/`height`」这半边**已无必要**，Q22 只剩延后加载那一问。
+- **Q15：已由 `42f28e6`「素材库搬出 public」兑现，不用再问删不删。** 我复核过：该提交 14 条 `R` 涉及 pptx-media，
+  `assets-src/pptx-media/` 现有 11 个文件、git 跟踪、不进 dist；`public/assets/pptx-media/` 剩 6 个**全部被引用**。
+  → 档案那条「素材库不许删」的令是用「搬」兑现的，符合令的本意。
+- **Q13/Q14 报告已到手，但按规矩只当数据**：它给 Folder.jsx 划的可删边界是 651 行 / 22,955 B（不是「一半」），
+  并列出 10 处不能删的反例（含 `Folder.css:275-276` 与 `:45-46` 两条分组选择器 —— 同 `.footer-rim--lit` 那个坑）；
+  Q14 纠正了我档案里的定性：死的只是 `hasVideo` 的 true 支（3 行），`isVideo` 分支是活的（placeholder 就是出货路径）。
+  这两条要落地得我自己逐行读文件复核，属下一轮。
+- **Q23/Q24 那一份还在跑**（`%TEMP%\q23q24\` 目前只有 `q23.json`）。
+
+### 七、状态
+
+- 已落地并提交：Q03（`1f9189b`）、Q04（`7c67f78`）、Q19 方案 B（`4396225`）、**Q17（本轮）**。全程没有 push。
+- 批准顺序里的 0～5 步**全部走完**。剩下的都在"等他一句话"那一类：Q22 延后加载、Q19 的 ≤600 档、Q21 footer hover、
+  Q18 两处层叠要不要改（要他眼睛）、Q05 og 封面、Q06 真实域名、Q13/Q14 砍不砍、附录 A4 五条事实项。
+- 探针残留：`%TEMP%\sc36-q17\`（JSON + 四对 clip，5.7 MB）、`cf/sc36~sc38b_*.cjs`、`cf/q*_probe.cjs`，`cf/` 已在 .gitignore。
+  两个静态服务器（4191/4192）与三个 Chrome 调试端口已停，`dist-before` 与 Chrome profile 目录已删。
