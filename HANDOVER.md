@@ -5613,15 +5613,122 @@ experience→work 33.85、work→media 24.35 这些大数是影片里那张脸�
 - **`cf/sc20_font_diff.cjs` 的 `TEMP` 要传「父目录」**：它自己再 `join(TEMP,'sc19-font-ab')`，
   我把已经含 `sc19-font-ab` 的路径传进去 → `ENOENT ...sc19-font-ab\sc19-font-ab\_blank.html`，直接崩。
 
-### 七、还剩什么
+### 七、Q03 已关闭（他 2026-10-15 在图上说「没问题，继续」）
 
-- **等他在这张图上说话**：访客那一态的中文（雅黑）他认不认 —— 桌面与 375 两档都已量过并写进页面，
-  375 那档更明显（5.4% vs 3.2%）。认 → Q03 关闭；
-  不认 → 唯一还剩下的路子是给标题做**中文子集自托管**（候选 ④，只烘第一屏那几个字，不是整套 1 MB）。
-  **我不自己宣布这条完成。**
+- 访客那一态的中文换成微软雅黑 —— **他认**。桌面 3.2% / 手机 5.4% 两档差异像素都摆在页面上，他看完才点的头。
+  所以候选 ④ 的缩水版（只给首屏标题烘一份中文子集）**不做**，别再挂着。
 - 计划里剩下的：**Q04** `main.mp4` 延后挂载 + 补 poster（⚠️ `outro-poster.jpg` 是 main.mp4 第 361 帧，
   不能拿来当 intro 层的 poster；intro 要新取 t=9.583 的正面帧并在 1470 上目测）；**Q19** 窄屏 padding 双测；
   **Q17** WorkModal portal 收口。
 - 待他答的仍是附录 A4 那五条（270W/280W、真实域名、og 封面重做与否、`.experience` 1.81:1 二选一、网盘 `c8st` 拆不拆）。
+
+---
+
+## 第六十一次：Q04 落地（不补 poster）+ Q19 双档实测 + Q17 复核（2026-10-15 傍晚，未推送）
+
+代码那一笔是 **`7c67f78`**（**只 commit，没有 push**）。
+
+### 一、Q04：主视频层 `preload="auto"` → `"metadata"`，poster 那半边判死
+
+`src/components/FilmStage.jsx:542`。首屏过线字节由**服务器自己记账**（`cf/sc26_wire_server.cjs`，
+带 Range/206/304 与服务器侧限速 1,250,000 B/s）—— CDP 侧两种口径都不能用：
+`Network.dataReceived` 把媒体重复投递（7,810,527 B 的片报成 11,131,967 B，且 `reqs:1`），
+Resource Timing 对没结束的 range 请求报 0、对 304 只报 ~300 B（我因此一度以为 metadata 只要 300 B）。
+
+| 档 | main.mp4 过线 | 请求 | 结局 | 交棒第一帧 |
+|---|---|---|---|---|
+| auto（改前） | **7,810,527 B**（整片） | 1 条 `bytes=0-` 206 | `aborted=false`，两次采样 8.37 s / 10.24 s 收完，用户一次滚动都没有 | +174 ms |
+| metadata（改后） | **1,277,952 / 1,441,792 B**（两次独立采样） | 同一条 | **`aborted=true`**，Chrome 缓冲够就掐掉 | +177 ms |
+
+**省 6,368,735–6,532,575 B = −81.5%～−83.6%。⚠️ 取消点随网速/时序浮动，这是个区间不是常量。**
+亮度六个采样点 74.72–75.52、近黑像素 0%，与 auto 同档；`+120 ms` 时 `readyState` 已是 4。
+
+- **补 poster 不必做**：moov 在第 32 字节（`cf/sc28_mp4_atom_order.cjs` 扫的，intro 同样 faststart），
+  duration 照样拿得到；交棒那一刻第 0 帧已在缓冲里，poster 根本不会被画 → 白付 54 KB。
+  所以 Q04 原问题的第二半（`outro-poster.jpg` 是不是第 361 帧、intro 要不要新抽 FRONT 帧）**整条作废**，不用再议。
+- **none 判死**：`duration=null` → `tick` 里「`stage==='main' && duration>0`」那道 seek 门永久不开，
+  第二段片子彻底不动，画面掉到平均亮度 **13.78 / 78.7% 近黑**。这是这条上唯一真踩到的雷。
+- intro 层保持 `auto`（首屏正看着的一层、也是涟漪的纹理源）。顺带量到：intro 真正需要的只有
+  **330,361 B**（moov + 定在 t=9.583 那一帧附近的尾部 range），其余是白拉。
+
+### 二、Q19：窄屏「各板块自己的 padding」到底是谁在生效（375 与 760 两档反事实实测）
+
+仪器 `cf/sc29_q19_padding.cjs`（= `cf/sc27_narrow_padding.cjs` 的独立副本，原因见「五」）。
+方法：只读 CSSOM，**在内存里**删掉 `responsive.css` 那两条 `padding` 短写再重量一遍，不碰文件。
+
+| 板块 | 1470 | 375 实际 | 760 实际 | 它自己写的窄屏值 | 若让它生效（375） |
+|---|---|---|---|---|---|
+| hero | 96/0 | 110/0 | 110/0 | `Hero.css:228-231` pt110 | **本来就在生效**（`.hero` 不带 `.section`）Δ0 |
+| about | 130/60 | 60/60 | 80/80 | `About.css:236-238` 100/40 | +40 / −20（净 +20） |
+| strength | 170/180 | 60/60 | 80/80 | 无（只有 base `padding-bottom:180`） | +110 / +120（净 +230） |
+| experience | 170/120 | 60/60 | 80/80 | 无（base pb120） | +110 / +60（净 +170） |
+| work | 170/170 | 60/60 | 80/80 | 无 → 吃 `.section` 的 170 | +110 / +110（净 +220） |
+| media | 170/170 | 60/60 | 80/80 | `Media.css:97-98` pb90 | +110 / +30（净 +140） |
+| account-ops | 170/170 | 60/60 | 80/80 | `AccountOperations.css:149-150` 90/90 | +30 / +30（净 +60） |
+| footer | 0/0 | 0/0 | 0/0 | `.footer-inner` 是子元素 | 无关 Δ0 |
+
+- **页高：375 档 11,614 → 12,454 = +840 px（+7.2%）**；760 档 10,503 → 11,103 = **+600 px（+5.7%）**。
+  两条都和逐板块 Δh 求和逐一对上（20+230+170+220+140+60=840），**且 `dContent` 全 = 0** →
+  变化是纯 padding，**没有一次内容回流**。
+- **`mobile:false` 与 `mobile:true` 逐字节相同**（后者 `innerWidth` 报 389 但 MQ 仍命中）。
+- 375 下相邻 rect 间隙全是 0（板块无 margin），肉眼留白 = 上块 pb + 下块 pt。
+- ⚠️ **上一版清单把这条说过头了**：它写「`AccountOperations/Strengths/Experience/Media` 同判」。
+  实测只有 **3 条**作者值真被吃掉（about 100/40、media pb90、account-ops 90/90）；
+  Strengths/Experience 写的 180/120 是 **base（不在任何媒体查询里）**，Work 压根没写 →
+  删掉 blanket 覆盖只是**把桌面的 170 暴露到手机上**，其中 640 px 来自这四个板块的 `padding-top` 回落。
+  这是**推断**，不等于「窄屏想要 170」。
+- 80 px 只在 **601–800** 生效；**375 命中的是 ≤600 那档的 60 px**（两条都中，靠后的赢）。
+- git 考古（`log -S`，两侧都带 `--git-dir`/`--work-tree`）：blanket 规则与 about 的 100/40 **同在 2026-07-24 基线 `5d20ab2`**、
+  media 的 pb90 来自 2026-07-18 `e029c1e` → 这两条**从入库第一天就没生效过**，不是哪次改坏的；
+  而 account-ops 的 90/90 是 **2026-09-26 `7b97339` 写进一个必输的位置**（那时 blanket 早就在）。
+- **待他定（只有三个选项，我把推荐排第一）**：
+  A 认了（现状即设计）→ 把那 3 条吃不到的声明当死代码删掉，**像素零变化**；
+  B 精准修 → 沿用 `global.css:419-421` 已确立的 `(0,2,0)` 写法（`.about.section` / `.media.section` / `.account-ops.section`），
+    代价：375 上 about 100/40、account-ops 90/90、media 60/90，**页高 +110 px（+0.9%）**；
+    ⚠️ 抬特异度会让 ≤800 的作者值**连 ≤600 那档也一起赢** → 手机上得到的是 90 不是 60，要真想分两档得补写 ≤600 值；
+  C 整删 blanket 规则 → +840 px 纯滚动，**不推荐**。
+
+### 三、Q17：WorkModal 自 portal —— 定性仍是「加固」，但方案这轮才终于可信
+
+- **第一个 Q17 子代理的报告已作废**（它编了行号、还建议删掉 `AbilityFolder.jsx` 那层必须留的 portal）；
+  第二个（Plan 代理）的结论我逐条 grep 复核过：三处挂载点确为 `Media.jsx:58`、`AccountOperations.jsx:75`、
+  `AbilityFolder.jsx:382`；`.section-rim ~ *` 在 `global.css:741-744`；`.work-modal{position:fixed;z-index:200}`
+  在 `WorkModal.css:2-5`。dist 顺序（blanket 9205 < work-modal 34971，同特异度后写赢）与 Q16 一致 →
+  **今天不塌层，这一条不是 bugfix**。
+- 做法：在 `WorkModal.jsx:80` 用 `createPortal(..., document.body)` 包住现有根 div（一处治三处），
+  **不要**动 `AbilityFolder.jsx:297` 那层 portal（里面 scrim/fly/spread 三件必须留在 body 层），
+  能顺手做的是把 `<WorkModal>` 从那个片段里移出。CSS 一行不改。
+- 同轮必须改的两处过期注释：`global.css:597`「WorkModal 在 DOM 上是 `.strength` 的子节点」——
+  `Strengths.jsx` 从不挂 WorkModal（grep `<WorkModal` 只有上面三处）；以及 `AbilityFolder.jsx:372-381` 那段实测记录要改写成历史。
+- 它顺带读出两个**既存毛病，与 portal 无关，别混进这轮验收**：① 弹窗开着时方向键/PgUp/Home/End 仍会切章节
+  （`useKeyboardNav.js:16-31` 只放过 input，且 `preventDefault` 把滚动也吞了）；
+  ② `WorkModal.jsx:26` 的 effect 依赖 `[onClose]`，三处调用方全传内联箭头 → 父组件每次重渲染都重跑，
+  把 `lastFocused` 记成弹窗内元素、抢焦点回关闭按钮。
+
+### 四、新冒出来的两条审计项（还没进清单，先记在这）
+
+- `/assets/pptx-media/poster-trio-ai.png`（**467,756 B**）在**首屏无滚动**就被拉 —— 与 Q04 同一条路子上，待议 `loading`/延后。
+- 每次 build 都会挪动 dist 里的字节偏移（本轮 CSS 66,616 B：`.section,.work` 在 66155/66365，
+  而清单里引用的是上一版的 68215）→ **别把偏移当常量抄进文档**，要引用就写「本次构建的偏移」。
+
+### 五、本轮踩到的两条，都要带走
+
+- **并发写同一个探针文件**：Q19 子代理还在跑的时候我读了 `cf/sc27_narrow_padding.cjs` 并动手改，
+  结果它也在改同一个文件（我发现 `const doc` 从 `document.documentElement` 变成了 `document`、
+  而我按旧认知写了注释）。两边各跑了一次，第一次那份数据是混的。
+  → 规矩：**探针脚本也是共享写入面**。接手一个别人正在用的探针前，先确认端口释放 / 输出目录 mtime 停了；
+    不确定就**另起一个文件名 + 自己的端口 + 自己的输出目录**（这轮的 `sc29` 就是这么来的），
+    副本之间数字对得上才算数（这次两档 +840/+600 独立复现一致）。
+- **`NaN` 在 JSON 里是 `null`**：探针里 `doc` 一旦指错，`Math.max(undefined, n)` → NaN → 序列化成 `null`，
+  看着像「这条没测到」而不是「测崩了」；`styleSheets` 挂在 `document` 上不在元素上，
+  `Array.from(undefined)` 直接崩。写探针时**DOM 入口只用 `document` / `documentElement` 全名，别再起名 `doc`**。
+
+### 六、状态
+
+- 已落地并提交：Q03（`1f9189b`）、**Q04（`7c67f78`）**；已实测、**等他定**：Q19（A/B/C）；已复核、**等他说开工**：Q17。
+- `npm run lint` 0 error；`npm run build` 通过，产物 **CSS 66.61 kB / JS 318.98 kB**，
+  哈希与 Q04 那一次一致（`index-DiwYaiP_.css` / `index-BsGmUE-Y.js`）→ 本轮改的注释一个字没进 bundle，
+  「六、状态」里说的复验对的就是要发出去的那份产物。
+- 全程没有 push。待他答的仍是附录 A4 那五条（270W/280W、真实域名、og 封面重做与否、`.experience` 1.81:1 二选一、网盘 `c8st` 拆不拆）。
 
 
