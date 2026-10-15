@@ -72,14 +72,14 @@ export const videos = [
     tags: ['直播切片', 'AI 直播', '短视频'],
   },
   {
-    title: '直播切片合集',
-    note: '多平台直播内容',
-    cover: '/assets/video-covers/live-cut.jpg',
-    link: 'https://pan.baidu.com/s/1Y2GuXraC54ibVII3gNGVlA?pwd=d3wg',
-    pwd: 'd3wg',
+    title: '阿里万相商务切片',
+    note: '猫咪自动日记站',
+    cover: '/assets/video-covers/wanxiang-cat.jpg',
+    link: 'https://pan.baidu.com/s/1BkrOMYPkqhU5oyEn-1phig?pwd=tue7',
+    pwd: 'tue7',
     description:
-      '汇总多场直播的精彩切片，统一包装风格后分发至抖音、视频号等平台，累计产出切片 50+ 条。',
-    tags: ['直播切片', '多平台', '内容分发'],
+      '用 OpenClaw + 万相做的全自动猫咪日记站切片：二师兄（应用智能体搭建专家）演示智能体自动记录猫咪日常，出差也能云吸猫。',
+    tags: ['智能体搭建', 'OpenClaw', '万相'],
   },
   {
     title: '视频剪辑加调色',

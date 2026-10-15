@@ -6056,3 +6056,58 @@ deck slide3 那行印刷的是 `…1hHiJn78qtUY4rNuKnw2Rsw?pwd=rniu`，同一段
   **Q32（新导出的 PDF 中文图层与可点击链接两处退化，只能他从 Google Slides/Canva 导一份好的给我）**、
   Q21 的 footer/modal hover 换色、Q22a、Q24、Q13 / Q14 / Q18 / Q20 / Q28、Q19 的「≤600 要不要另写值」。
 - 本轮又动了 `src/data/`（A1 判给 GLM）与两个二进制，A3 上一轮那条跨归属说明继续适用；**给 GLM 的基线换成 `index-ARXad01w.js`**。
+
+---
+
+## 第六十七次：他给卡 08 换了内容，顺手把上一轮那张「两张卡同一条网盘」的账结掉了（2026-10-15 深夜第三轮，未推送）
+
+他这句是配两张图说的：「把网站里面的**第二张图片改为第一张图片**，百度网盘的链接为『阿里万相商务切片 猫咪自动日记站
+`https://pan.baidu.com/s/1BkrOMYPkqhU5oyEn-1phig?pwd=tue7` 提取码: tue7』」。
+第 2 张是他自己站点卡 08 打开后的截图（`VIDEO / 08`「直播切片合集」），第 1 张是竖版海报
+（1099×1427 RGBA：`用 OpenClaw + 万相做了个全自动猫咪日记站！出差也能云吸猫 / 二师兄 应用智能体搭建专家`）。
+→ 指代清楚：**「第二张图片」= 卡 08，「改为第一张图片」= 换它的封面**。
+
+### 一、改了什么（`videos.js:74-83`，只这一处）
+
+| 字段 | 原 | 现 |
+|---|---|---|
+| title | 直播切片合集 | **阿里万相商务切片**（他的原话） |
+| note | 多平台直播内容 | **猫咪自动日记站**（他的原话） |
+| cover | `/assets/video-covers/live-cut.jpg` | `/assets/video-covers/wanxiang-cat.jpg` |
+| link / pwd | `…1Y2GuXra…?pwd=d3wg` | `…1BkrOMYPkqhU5oyEn-1phig?pwd=tue7` / `tue7` |
+| description | 「…累计产出切片 **50+ 条**」 | 只用海报上印着的字重写 |
+| tags | 直播切片 / 多平台 / 内容分发 | 智能体搭建 / OpenClaw / 万相 |
+
+- **旧描述是删掉的、不是改短的**：「50+ 条」是上一任卡 08 的话，跟这支片子没关系，留着就是编。
+- 新封面 `public/assets/video-covers/wanxiang-cat.jpg`（**103,859 B**，1280×720）按房内既有规矩生成：
+  竖版海报**按高铺满居中**（前景宽 555 px），底是同一张图 `GaussianBlur(28)` 填充 —— 与 `live-cut.jpg` 量出来的 ≈500 px 前景带同量级。
+  生成脚本 `%TEMP%\sc43-pptx\cover.py`，图我自己读过一遍确认字没糊。
+- **`live-cut.jpg` 搬家不删** → `git mv` 到 `assets-src/video-covers/`（79,916 B 字节未变）。它和 `ai-workflow.jpg` 是同一支片子的两帧（Q31 记过）。
+
+### 二、这一改把上一轮的副作用结掉了
+
+上一轮我按 deck 印刷值把卡 11 改成 `d3wg`，结果卡 8 本来就是 `d3wg` → 两张卡同指一条网盘，我当时写「删哪张是内容决定，我没替他选」。
+他这轮没删卡，而是给卡 08 一条**新内容 + 新链接**。**实测**：`videos.js` 里 `d3wg` 只剩 **1** 次（卡 11）、`tue7` **1** 次（卡 8）、`live-cut` **0** 次；打包产物里 `pwd=tue7` 1 次、`pwd=d3wg` 1 次。
+⚠️ 但**「替换后的最后一个视频」那一半仍然挂着**：他说的那份新 deck 还是没到我手上（Q31 的哈希结论没被推翻）。
+另两点归他：**这支「猫咪日记站」在 deck 里没有对应视频**；标题里的「**商务**」是他给的字，海报上印的是「直播切片」，没有「商务」二字 —— 我照他的原话写了。
+
+### 三、验收（1470×900 他的视口，端口 9378、输出 `%TEMP%\sc43b-card8\`，没碰共享的 `cf/`）
+
+`npm run lint` 0 error；`npm run build` → `index-BT1pSA1R.css` 66.77 kB / **`index-Dfpbl0Qn.js` 319.06 kB（gzip 109.35）**。
+逐条读回，不是「页面能打开」那种糊弄：
+- 焦点卡 `data-i=7`：`label="VIDEO / 08"`、title/note 新文案、`aria="预览 阿里万相商务切片"`；
+- 封面 `src=/assets/video-covers/wanxiang-cat.jpg`、`complete:true`、`naturalWidth×Height=1280×720`（**解码成功，不是 alt 文字兜底**）；
+- 中心点 `elementFromPoint` 命中 `data-i=7` → **真鼠标**点开 → 弹窗 `aria`/标题/描述/三个标签/`href=…tue7`/提取码 `tue7` 全对、`stale50:false`；
+- 卡 11 仍是「AI 工作流分享视频」，没被我顺手改坏；
+- 封面字节：`fetch` 实测 200 / `image/jpeg` / **103,859 B**；旧 `live-cut.jpg` 两条链路都退化成 `text/html`（= 文件真不在了）。
+- 截图 `rail.png`（轨道：08 选中态 + 新海报）与 `modal.png`（弹窗）我**逐张看过**。
+  > 踩坑记一条：`card08.png` 用 `Page.captureScreenshot` 的 `clip` 截出来是**全黑**的 —— 这个多画布页面 clip 路径取不到像素，整页截图正常。**别拿黑图当证据。**
+  > 另一条：headless 首帧要抢 `fonts.googleapis.cn`，**定死 6 s 会测到空 `#root`**（我前两次就是这么误判成「站点挂了」的）；必须轮询到 root 有内容再测。
+- 服务链路：他的 vite dev **5173** 与 preview **4173** 各拉一次封面，都是 103,859 B。
+
+### 四、还挂着的
+
+**Q31 的一半**（那份真换了视频内容的 deck）、**Q32**（PDF 中文图层与可点击链接两处退化，只能他从 Google Slides/Canva 导）、
+Q21 的 footer/modal hover 换色、Q22a、Q24、Q13 / Q14 / Q18 / Q20 / Q28、Q19 的「≤600 要不要另写值」，
+外加 `%TEMP%\pptx-export\作品集-fixed.pptx`（237 MB 改好的 deck 副本）**要不要搬出 `%TEMP%`** —— 重启就没了。
+本轮登记：Q35 新增、Q31 更新、A3 补第三条跨 `src/data/` 说明；**给 GLM 的基线换成 `index-Dfpbl0Qn.js`**。
