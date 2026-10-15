@@ -105,8 +105,8 @@ export const videos = [
     title: 'AI 工作流分享视频',
     note: '海辛 & 阿文 AI 创作经验',
     cover: '/assets/video-covers/ai-workflow.jpg',
-    link: 'https://pan.baidu.com/s/1rnzd1Vm0GD_xrV9fuz-Uyw?pwd=mwcy',
-    pwd: 'mwcy',
+    link: 'https://pan.baidu.com/s/1Y2GuXraC54ibVII3gNGVlA?pwd=d3wg',
+    pwd: 'd3wg',
     description:
       '整理海辛 & 阿文的 AI 工作流分享内容，将长直播精华剪辑为结构化短视频，便于社群传播与复习。',
     tags: ['AI 工作流', '直播精华', '知识剪辑'],
