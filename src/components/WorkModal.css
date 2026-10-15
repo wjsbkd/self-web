@@ -12,8 +12,10 @@
   position: absolute;
   inset: 0;
   background: var(--scrim);
-  backdrop-filter: blur(12px);
+  /* ⚠️ 前缀版在前、标准版在后：顺序反过来 minifier 只留 -webkit- 那条，Chrome 实测不认（computed=none）
+     → 这一层与下面 :196 那层的磨砂在桌面端从来没画出来过。全站同类写法共 4 处，一起改。 */
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   animation: modal-fade-in 0.35s var(--ease-claude);
 }
 @keyframes modal-fade-in {
@@ -191,8 +193,8 @@
      提亮后回到 175，墨字对比 title 8.5:1、最紧那档 kicker 5.2:1，仍在 AA 之上。
      α 不能再低：.55 那档 kicker 掉到 4.5 以下。 */
   background: rgba(254, 254, 254, 0.62);
-  backdrop-filter: blur(48px) saturate(1.4) brightness(1.35);
   -webkit-backdrop-filter: blur(48px) saturate(1.4) brightness(1.35);
+  backdrop-filter: blur(48px) saturate(1.4) brightness(1.35);
   padding: 48px;
   overflow-y: auto;
   display: flex;

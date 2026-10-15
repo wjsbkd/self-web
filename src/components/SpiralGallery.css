@@ -149,8 +149,9 @@
   border-radius: 100px;
   /* 提示条浮在滚动的卡片流之上，必须留半透：卡片经过时能透出来一点 */
   background: var(--glass-void);
-  backdrop-filter: blur(8px);
+  /* ⚠️ 前缀版在前、标准版在后：顺序反过来 minifier 只留 -webkit- 那条，Chrome 实测不认（computed=none）→ 磨砂静默失效 */
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--line);
   opacity: 0.85;
   animation: hintPulse 3s ease-in-out infinite;
