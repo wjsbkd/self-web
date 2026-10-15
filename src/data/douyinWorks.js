@@ -176,7 +176,7 @@ export const accountIdentity = {
   name: '我将势不可挡',
   url: 'https://v.douyin.com/k8afilJ0GOk/',
   stats: [
-    { value: '270W+', label: '单条最高播放' },
+    { value: '280W+', label: '单条最高播放' },
     { value: '1000W+', label: '累计播放' },
     { value: '50+', label: '直播切片产出' },
   ],

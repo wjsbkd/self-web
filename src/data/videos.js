@@ -45,8 +45,8 @@ export const videos = [
     title: '百度秒哒直播切片',
     note: '平台直播内容分发',
     cover: '/assets/video-covers/miaoda-cut.jpg',
-    link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
-    pwd: 'c8st',
+    link: 'https://pan.baidu.com/s/1pSomFvhmYRR75HT-JBcJpA?pwd=na2u',
+    pwd: 'na2u',
     description:
       '从百度秒哒直播活动中截取精彩片段，进行二次剪辑与字幕包装，适配多平台分发节奏。',
     tags: ['直播切片', '短视频', '平台分发'],
@@ -85,8 +85,8 @@ export const videos = [
     title: '视频剪辑加调色',
     note: 'DaVinci Resolve 后期制作',
     cover: '/assets/video-covers/edit-grade.jpg',
-    link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
-    pwd: 'c8st',
+    link: 'https://pan.baidu.com/s/1IjIL2PL1wLatWsYy48RpBw?pwd=k2cd',
+    pwd: 'k2cd',
     description:
       '使用 DaVinci Resolve Studio 完成的剪辑与调色案例，通过节点工作流统一影调，提升画面质感。',
     tags: ['达芬奇', '调色', '后期制作'],
@@ -95,8 +95,8 @@ export const videos = [
     title: '动漫混剪',
     note: '创意剪辑作品',
     cover: '/assets/video-covers/anime-mix.jpg',
-    link: 'https://pan.baidu.com/s/1lP5zO8VlOLsSLGnOIia8Qg?pwd=c8st',
-    pwd: 'c8st',
+    link: 'https://pan.baidu.com/s/1xLXE3a9q9sRHIWBceJpe3w?pwd=41eq',
+    pwd: '41eq',
     description:
       '个人创意混剪作品，通过节奏把控、转场设计与情绪曲线，练习叙事性剪辑与视听语言。',
     tags: ['混剪', '创意剪辑', '个人作品'],

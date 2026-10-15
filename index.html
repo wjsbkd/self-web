@@ -33,11 +33,11 @@
       property="og:description"
       content="专注内容、运营与现场执行的交界处，让创意转化为可见的影响力。"
     />
-    <!-- 分享封面：部署后替换为一张 1200×630 的本站品牌图，例如 /assets/og-cover.jpg -->
-    <meta
-      property="og:image"
-      content="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80"
-    />
+    <!-- 分享封面：`public/assets/og-cover.jpg`（1200×630，与首屏同一套白板语言）。
+         写成根相对是故意的 —— 正式域名还没有，绝对 URL 只能先假造一个；
+         微信 / QQ / 微博 的爬虫会拿页面 origin 去补全，静态站上线后不用改。
+         ⚠️ 但 canonical / og:url 两行仍是 example.com 占位，域名定了必须一并换掉。 -->
+    <meta property="og:image" content="/assets/og-cover.jpg" />
     <meta property="og:url" content="https://lizongheng.example.com/" />
 
     <!-- Twitter Card -->
@@ -47,10 +47,7 @@
       name="twitter:description"
       content="专注内容、运营与现场执行的交界处，让创意转化为可见的影响力。"
     />
-    <meta
-      name="twitter:image"
-      content="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80"
-    />
+    <meta name="twitter:image" content="/assets/og-cover.jpg" />
 
     <!-- favicon（本地 SVG，避免外链失效） -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
