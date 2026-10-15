@@ -523,12 +523,26 @@ export default function FilmStage() {
       />
       {/* 指针涟漪层：夹在两张片之间 —— 交棒时它跟着首屏一起淡出，交叉溶解的形状和原来一模一样 */}
       <canvas className="film-ripple" ref={rippleRef} />
+      {/* 主视频层 preload="metadata"（2026-10-15 Q04，服务器侧限速实测，cf/sc26_wire_server.cjs）：
+          auto 会在用户一次滚动都没有的情况下把整份 7,810,527 B 拉完（一条 bytes=0-，aborted=false，
+          两次采样分别在起播 1.12s/2.70s、收完 8.37s/10.24s）；降到 metadata 后 Chrome 缓冲够了
+          就把同一条请求掐掉（aborted=true），过线 1,277,952 B 与 1,441,792 B 两档 ——
+          省 6.37–6.53 MB = −81.5%～−83.6%。⚠️ 取消点随网速/时序浮动，别把这个数当常量。
+          代价为零：moov 在第 32 字节（faststart，5,216 B），duration 照样拿得到 → tick 里
+          「stage==='main' && duration>0」那道 seek 门照开。交棒与 auto 实测一致：+120ms 时
+          main.readyState 已是 4，第一帧 177ms vs auto 的 174ms，之后 6 个采样点
+          画面平均亮度 74.72–75.52、近黑像素 0%，与 auto 同档。
+          ⚠️ 别顺手改成 none：none 拿不到 duration → 那道门永久不开 → 第二段片子彻底不动，
+          画面掉到平均亮度 13.78 / 78.7% 近黑。也无需补 poster：metadata 档交棒时第 0 帧已在
+          缓冲里，poster 根本不会被画，白付 54 KB。
+          intro 那层保持 auto：它是首屏正看着的一层、也是涟漪的纹理源，降级只会让每次眼神 seek
+          都重新发一次 range 请求。 */}
       <video
         className="film-layer film-layer--main"
         ref={mainRef}
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         src="/assets/scrolly/main.mp4"
       />
       <div className="film-scrim" />
