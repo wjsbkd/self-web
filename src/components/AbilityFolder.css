@@ -1,7 +1,13 @@
 /* AbilityFolder —— 能力展示的两段式交互样式。
    所有 token 都从 .media 那一档（global.css:540-578）继承，这里不另立一套色板。
    唯一显式写死的是 z-index 阶梯，因为它必须和全站叠层说话：
-     scrim 40 < 文件夹 45 < 展开层 55 < WorkModal 200（它自己的值，不用动） */
+     Nav 50 / nav-progress 60 < scrim 70 < 文件夹 75 < 展开层 80 < WorkModal 200（它自己的值，不用动）
+   ⚠️ 这三个数原来写的是 40/45/55，**整条聚焦链卡在 Nav(50) 底下**。实测（1470×900，同一次加载内用 !important
+   把旧值注回去对取，探针 `%TEMP%\q18-mine\`；导航要先等它自己滚回静止位 —— Nav.jsx:32 是「向下滚就藏」的，
+   不控住这一步，两次取数根本不同态）：聚焦态导航那条带（x40–1430 / y24–77）改前亮度均值 57.7、标准差 62.0
+   —— 药丸和字**全亮**，浮在一片糊掉的页面之上；抬到 70/75/80 后 32.3 / 17.7，与 WorkModal 打开时的同一条带
+   （16.7 / 8.6）同构。同一个「聚焦一张卡」的手势以前给两套层叠结果，而展开层(旧 55)本来就压在导航之上
+   → 不一致的是 40/45 那两个数，不是 55。 */
 
 .ability-row {
   display: flex;
@@ -83,7 +89,7 @@
 .ability-scrim {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 70;
   background: var(--scrim);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -99,7 +105,7 @@
 .ability-spread {
   position: fixed;
   inset: 0;
-  z-index: 55;
+  z-index: 80;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 500px));
   gap: 16px;

@@ -188,7 +188,7 @@ export default function AbilityFolder() {
   const sc = stage === 0 ? 1 : stage === 1 ? 1.9 : 1.75
 
   /* pinned 时文件夹改成 fixed：left/top 用原位量到的几何，位移用 --tx/--ty。
-     z-index 45 高于 scrim(40)、低于展开层(55)：
+     z-index 75 高于 scrim(70)、低于展开层(80)（阶梯与它的来历写在 AbilityFolder.css:3）：
      聚焦时它盖在糊掉的页面上，展开时四张卡又盖住它。 */
   const flyStyle = pinned
     ? {
@@ -196,7 +196,7 @@ export default function AbilityFolder() {
         left: home.left,
         top: home.top,
         width: home.width,
-        zIndex: 45,
+        zIndex: 75,
         '--tx': `${offset.x}px`,
         '--ty': `${offset.y}px`,
         '--sc': String(sc),
@@ -215,9 +215,9 @@ export default function AbilityFolder() {
             pinned 时它加 .ability-fly--seated 退成一个只负责量几何的占位节点，
             看得见的那一个由下面的 portal 顶到 body 下去盖 scrim。
             为什么不直接给这一个设高 z-index：.tool-gallery 被
-            global.css:665 的 .section-rim ~ * 设成 relative + z-index:1，
-            它自己是一个 stacking context，后代的 45 被关在里面，
-            比不过 portal 出去的 scrim(40) —— 文件夹就会落在糊面底下被
+            global.css:762 的 .section-rim ~ * 设成 relative + z-index:1，
+            它自己是一个 stacking context，后代的 75 被关在里面，
+            比不过 portal 出去的 scrim(70) —— 文件夹就会落在糊面底下被
             backdrop-filter 一起糊掉（他 10-14 23:58 反馈的"文件夹也模糊"）。 */}
         <div
           className={`ability-fly${pinned ? ' ability-fly--seated' : ''}`}
@@ -282,12 +282,12 @@ export default function AbilityFolder() {
 
       {/* scrim、聚焦态文件夹、展开层，三者都挂到 document.body。
           为什么必须都搬：.tool-gallery 被 .section-rim ~ * 设成
-          position:relative + z-index:1（global.css:665），它自己是一个
+          position:relative + z-index:1（global.css:762），它自己是一个
           stacking context —— 留在这里的 fixed 后代，z-index 再高也被关在里面：
-            · 展开层(55) 比不过后继兄弟 .video-gallery(1) → 卡片被视频轨道盖住；
-            · 文件夹(45) 比不过 portal 出去的 scrim(40) → 文件夹落在糊面底下，
+            · 展开层(80) 比不过后继兄弟 .video-gallery(1) → 卡片被视频轨道盖住；
+            · 文件夹(75) 比不过 portal 出去的 scrim(70) → 文件夹落在糊面底下，
               被 backdrop-filter 一起糊掉（他 10-14 23:58 反馈的现象）。
-          portal 到 body 之后它们回到根 stacking context，45/55 才真正大过 40/1。
+          portal 到 body 之后它们回到根 stacking context，75/80 才真正大过 70/1。
           ⚠️ 用 portal 而不是把 .tool-gallery 的 z-index 调高：那个数是全站板块
           共用的，动它会连带改掉别的板块与缘光的相对关系（global.css:664 的注释
           专门写了这件事）。
@@ -372,7 +372,7 @@ export default function AbilityFolder() {
             {/* 历史（第五十二/五十三次实测，已于 2026-10-15 由 WorkModal 自 portal 收口）：
                 详情弹窗原来留在 .tool-gallery 里面，而 global.css:741 的 `.section-rim ~ *`
                 把 .tool-gallery 设成 relative + z-index:1 —— 那是一个 stacking context，
-                弹窗的 z-index:200 只在这一层里说话，出不了那个 1。展开层(55)和文件夹(45)
+                弹窗的 z-index:200 只在这一层里说话，出不了那个 1。展开层(80)和文件夹(75)
                 已经 portal 到 body，于是 55/45 > 1：弹窗挂上了、也铺满视口，却被糊面和四张卡
                 压在底下。当时在 1470×900 点第一张卡量到：.work-modal 存在、1470×900 @0,0，
                 但面板中心 (735,450) 的 elementFromPoint 拿到的是 .folder-back-fill ——
