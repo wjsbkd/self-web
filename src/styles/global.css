@@ -594,7 +594,10 @@ footer[id] {
   color: var(--text-base);
 }
 /* 板外的浮层 HUD（弹窗）保持深色件：它是盖在全页之上的取景框，不跟着板块翻。
-   WorkModal 在 DOM 上是 .strength 的子节点，所以会吃到上面那组变量，必须显式还原。 */
+   2026-10-15 起 WorkModal.jsx 自己 portal 到 document.body，不再是上面那七个板块的子节点，
+   板内墨色落不到它身上 —— 但这一块不能删：实测挂在 body 下时，弹窗自己声明的 26 个 token 里
+   仍有 2 个和 :root 不同且真的在用（--void-5 #080505 ≠ body 的 #050404、--scrim .5 ≠ body 的 .72），
+   其余是对 :root 的显式重申，留着防以后有人把弹窗嵌回板内。 */
 .work-modal {
   --text-bright: #ffffff;
   --text-base: rgba(255, 255, 255, 0.88);
