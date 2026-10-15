@@ -78,7 +78,7 @@ export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
   const isVideo = type === 'video'
   const hasVideo = isVideo && item.videoSrc
 
-  // portal 到 body：改前 `.work-modal` 的 z-index:200 能压过 global.css:741-744 `.section-rim ~ *` 的
+  // portal 到 body：改前 `.work-modal` 的 z-index:200 能压过 global.css:762 起 `.section-rim ~ *` 的
   // z-index:1，纯靠 WorkModal.css 在打包结果里排在 global.css 之后（同特异度后写赢）—— 谁挪一下 import
   // 顺序，弹窗就掉回 z:1 被 Nav(50) 盖住。挂到 body 后这条因果链不存在。
   // 三处挂载（Media / AccountOperations / AbilityFolder）因此一处收口；CSS 一行不用改。
