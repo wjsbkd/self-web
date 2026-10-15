@@ -6021,3 +6021,38 @@ deck 给这支片子印刷的是 `…/s/1Y2GuXraC54ibVII3gNGVlA?pwd=d3wg`。→ 
 - 还挂着的：Q21 的 footer / modal hover 换色、Q22a、Q24、Q13 / Q14 / Q18 / Q20 / Q28、Q19 的「≤600 要不要另写值」。
 - 临时产物：`%TEMP%\pptx-export\`（导出脚本 + 两版 PDF + 六页渲染图）、`%TEMP%\pptx-forensics\`（子代理：20 个哈希、20 张海报、
   `vid/` 8 个 mp4、`frames/` 抽帧）、`%TEMP%\sc43-pptx\`（我自己的形状映射与 PDF 复核）。都不在项目里。
+
+## 第六十六次：他回了真链接和播放量口径，顺手把 deck 里那处错链接连根拔掉（2026-10-15 深夜，未推送）
+
+上一轮报给他的 Q33 / Q34 两条冲突，他一次答完：「阿里万象直播切片的链接是 `https://pan.baidu.com/s/1hP3YlKJ0-4wTgnWtDgUTCg?pwd=8das`
+提取码 8das」＋「『280』改为 270」。
+
+### 一、`8das` 这条把**两条旧链接同时判死**
+
+deck slide3 那行印刷的是 `…1hHiJn78qtUY4rNuKnw2Rsw?pwd=rniu`，同一段文字挂的隐藏超链接是 `…17voPe8lfoRdwyw33lxjwfA?pwd=rskg`
+—— **两个都不是真的**。三处一起改：
+1. 站点 `videos.js:68-69`（卡 7）→ `8das`。打包产物里新 URL 出现 1 次，实测确认。
+2. **deck 我另存了副本，没动他桌面原件**：`%TEMP%\pptx-export\作品集-fixed.pptx`。
+   只替换两个 part —— `ppt/slides/slide3.xml`（印刷文字那一个 run + `hlinkClick` 的 `tooltip`）与
+   `ppt/slides/_rels/slide3.xml.rels`（`rId13` 的 `Target`）。替换前先数命中：print 1 / 剩余 `rniu` 1 / hidden 1 / rels 1，
+   替换后全为 0；**逐条 CRC 比对 81 个条目，只有这 2 个变了，20 个 mp4 一个字节没动**。
+   > ⚠️ 副本在 `%TEMP%`，**重启就没了**；他桌面那份仍印 `rniu`。他下次自己导出 PDF 前要先在 deck 里改那一行，否则错链接会被带回来。
+3. PDF 从改好的副本重新导出（PowerPoint COM，`export2.ps1`，1,441,454 B）→ 已装 `public/assets/作品集.pdf`（md5 `5e26f4df…`）。
+   抽文本实测：`8das` 2 处、`rniu` 0、`rskg` 0；渲染 `FIXED-p3.png` 肉眼看过，那行已是新链接（蓝色下划线那条就是它）。
+
+### 二、270W：改两处、**故意留一处**
+
+- 改：`douyinWorks.js:179` → `270W+`、`abilityMaterials.js:8` → 「最高单条播放量超 270W」。现在与 deck 第 1 页印刷值一致。
+- **没改**：`experiences.js:69`（虎扑体育实习「内容创作」那条）仍是 280W+。理由两条都硬：
+  它讲的是**另一件事**（虎扑站外内容，不是抖音「付航/黑神话」系列），而且**他刚给我的新简历 PDF 原文就是「单条作品播放量突破280W+」**。
+  他这句「280 改为 270」是对着我 Q34 报的那条冲突说的，覆盖不到这里。**要全站一律 270 得他再说一声，一行就改。**
+  —— 这正是 GLM 当初「270W/280W 不许静默合并」那条令的用处：口径统一 ≠ 把两个事实并成一个。
+
+### 三、验收与状态
+
+- `npm run lint` 0 error；`npm run build` 通过 → `index-BT1pSA1R.css` 66.77 kB / **`index-ARXad01w.js` 319.01 kB**。
+- 作品集 PDF 从**他的** 5173（vite dev）与 4173（preview）各拉一次，两条响应都是 1,441,454 B / md5 `5e26f4df…`，与 `public/` 一致。
+- Q33 / Q34 关闭；A4 补第 6、7 条。还挂着的没变：**Q31（他说的那支「替换后的最后一个视频」不在这份 deck 里 + 卡 8/11 现在同一条 `d3wg`）**、
+  **Q32（新导出的 PDF 中文图层与可点击链接两处退化，只能他从 Google Slides/Canva 导一份好的给我）**、
+  Q21 的 footer/modal hover 换色、Q22a、Q24、Q13 / Q14 / Q18 / Q20 / Q28、Q19 的「≤600 要不要另写值」。
+- 本轮又动了 `src/data/`（A1 判给 GLM）与两个二进制，A3 上一轮那条跨归属说明继续适用；**给 GLM 的基线换成 `index-ARXad01w.js`**。

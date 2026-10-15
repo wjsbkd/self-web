@@ -65,8 +65,8 @@ export const videos = [
     title: '阿里万相直播切片',
     note: 'AI 直播精彩片段',
     cover: '/assets/video-covers/wanxiang-cut.jpg',
-    link: 'https://pan.baidu.com/s/1hHiJn78qtUY4rNuKnw2Rsw?pwd=rniu',
-    pwd: 'rniu',
+    link: 'https://pan.baidu.com/s/1hP3YlKJ0-4wTgnWtDgUTCg?pwd=8das',
+    pwd: '8das',
     description:
       '阿里万相直播切片合集，提炼直播中高能瞬间与关键讲解，用于后续短视频传播。',
     tags: ['直播切片', 'AI 直播', '短视频'],
