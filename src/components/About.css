@@ -233,7 +233,9 @@
   .metrics b {
     font-size: 34px;
   }
-  .about {
+  /* ⚠️ (0,2,0) 不是笔误：responsive.css ≤800/≤600 有 `.section, .work { padding: … }` 短写，
+     同特异度会被打包顺序（它排最后）静默盖掉。规矩见 global.css:419。 */
+  .about.section {
     padding-top: 100px;
     padding-bottom: 40px;
   }
