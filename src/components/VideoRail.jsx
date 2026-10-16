@@ -191,7 +191,17 @@ export default function VideoRail({ items, onSelect }) {
   useEffect(() => {
     const nav = tabsRef.current
     if (!nav) return
+    /* 两端的淡出要跟着滚动位置走：只有那个方向真的还有格子没露出来，才淡那一边。
+       纯 CSS 判不出「还能不能往这边走」，所以这里只写两个 data-* 给 VideoRail.css 的 mask。
+       ⚠️ 阈值 4px：smooth 滚动收尾时 scrollLeft 会停在 max 差零点几像素上，不留容差就会
+       在最后一格上一直挂着一个淡边。 */
+    const edges = () => {
+      const max = nav.scrollWidth - nav.clientWidth
+      nav.dataset.moreLeft = nav.scrollLeft > 4 ? '1' : '0'
+      nav.dataset.moreRight = nav.scrollLeft < max - 4 ? '1' : '0'
+    }
     const center = (smooth) => {
+      edges()
       if (nav.scrollWidth <= nav.clientWidth) return
       const el = nav.querySelector('.is-this')
       if (!el) return
@@ -213,8 +223,10 @@ export default function VideoRail({ items, onSelect }) {
       t = setTimeout(() => center(false), 160)
     }
     window.addEventListener('resize', onResize)
+    nav.addEventListener('scroll', edges, { passive: true })
     return () => {
       window.removeEventListener('resize', onResize)
+      nav.removeEventListener('scroll', edges)
       clearTimeout(t)
     }
   }, [focusIndex])
