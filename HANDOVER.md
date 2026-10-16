@@ -6645,3 +6645,28 @@ B 另加键盘 ← → / Home / End（原生 overflow 容器不认方向键，�
 仪表与证据全在 `%TEMP%\selfweb-mob\`（**这个目录另一个会话也在用**，本轮只新增 `sc60/`~`sc64/` 与 `export/`）：`sc58_final_states.cjs`(9398 副本) / `sc60_live_project.cjs`(9400) / `sc61_live_invariance.cjs`(9401) / `sc62_real_window_narrow.cjs`(9402) / `sc64_stall_diag.cjs`(9406) / `check_served_all_8.cjs` / `reverify.sh`（全程只读，能对真实树重跑）。交付文档 `export\移动端-命中区与字档-交付.md`。
 隔离副本 `%TEMP%\selfweb-mob\site`（vite **5174**，我的进程，仍在跑）留着的唯一理由：旋钮页 `?floor=30` 与后续撤法的复验都要在它上面做。**除第一节那 8 个已确认落地的文件以外，我没有再往项目树里写过任何字节**（第二、三、四节所有 5173 的读数都是只读探测）。
 `cf/` 本轮没新增文件；`待决问题-20261015.md` 我没碰（归他）。
+
+## 第七十七次：上线核对 + 版本备份落地（2026-10-17 凌晨，提交 `06ca049` + `dc9ccaf`，已推送）
+
+**站点已部署上线**：`https://lizongheng-ktftxw0cmi4.qoder.zone/`（Qoder Sites 托管）。
+
+### 实测结论（线上）
+
+- 全站 200、首屏渲染正常、控制台零错误；视频 Range 请求支持（206）→ FilmStage 的 `preload=metadata` 在线上成立。
+- 中文文件名 PDF URL 编码后正常下载；robots.txt / sitemap.xml 已指向真实域名。
+- 平台注入「Made with Qoder」水印徽章（HTML 尾部注入脚本）；全站响应头 `cache-control: no-cache`（含哈希命名的 JS/CSS）；sitemap 以 `application/octet-stream` 返回 —— 三条都是平台侧行为，本地改不了，**迁移平台时可一并解决**。
+- 线上构建 = `index-DcvoUcfg.js` / `index-DdGdrWQi.css`，与本地第七十六次落地的改动同内容（发布时 dist/ 还是旧版，勿以 dist/ 判断部署状态）。
+
+### 本次落地
+
+- **两笔提交收掉全部在途改动**：`06ca049`（首屏冷启动修复 + 命中区补丁 + 域名元信息，15 文件）、`dc9ccaf`（HANDOVER 六十八至七十六次记录）。
+- **推送 45 个本地提交到 GitHub**（`2b1348b..dc9ccaf`），本地与远端已同步 —— 线上版本从此有异地备份。
+- `.gitignore` 新增 `*.qoder.site`（Qoder 平台部署元数据隐藏文件，含 base64 的 index.html，不入库）。
+- lint 0 error。临时文件已清理（/tmp 探针对照页）。
+
+### 检查报告里挂着的（下一个会话别重做已判定的）
+
+- **og:image / twitter:image 改绝对 URL**（index.html:49/:59）：现在域名有了，Twitter/Slack 等爬虫抓不到根相对的分享图。一行改动，等站主点头。
+- **水印 / 缓存 / sitemap MIME**：归平台，迁移时一并解决。
+- **Q22 图片延后**：`SpiralGallery.jsx` 的 `index < 6 ? 'eager'` 条件让 6 张图全不 lazy（首屏多拉 ~1MB）；若 Q40 轮播落地则顺手改，否则单独一行 `i < 3`。
+- 首屏多拉的能力档案 4 张图（1.15MB）仍按 Q22 原判挂起（等站主对「图晚出现」的取舍）。
