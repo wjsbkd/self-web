@@ -17,6 +17,12 @@
 
 .ability-fly {
   flex: none;
+  /* 收起态这一簇的「墨迹」比它的盒子宽：375 实测盒 [60, 373.6]，最右那张纸片探到 389 ——
+     整页因此横向溢出 17px（documentElement.scrollWidth 392）。手机上这一 17px 是能往右拖出来的，
+     一拖，视频轨道右边那颗暂停键就跟着被拖到屏幕外面。这里按屏宽把整簇往左挪到「墨迹居中」：
+     330 = 实测墨迹宽（盒 313.6 + 纸片探出 15.4），60 = .media 的 padding-inline。
+     ≥450 时算式是正数、被 min() 收成 0 → 宽屏和 640 那一档一行都不动。 */
+  margin-inline-start: min(0px, calc((100vw - 330px) / 2 - 60px));
   transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--sc, 1));
   transition:
     transform 550ms var(--ease-claude),
@@ -30,6 +36,13 @@
 .ability-fly--seated {
   visibility: hidden;
   pointer-events: none;
+}
+
+/* ⚠️ 上面那条负 margin 只能给收起态：pinned 这一件是 position:fixed + left=量到的 home.left，
+   那个数里已经含过一次 margin，再吃一遍就整体往左多跑 37.5px（实测聚焦盒 x=−4.8，
+   本该居中在 32.9）—— 居中是 focus() 用矩形算出来的，CSS 不该在它之后再挪盒子。 */
+.ability-fly--pinned {
+  margin-inline-start: 0;
 }
 
 .ability-fly:focus-visible {
@@ -198,8 +211,14 @@
     gap: 28px;
   }
 
+  /* 展开层在窄屏不许切成一列。一列 = 四张 375 宽的卡竖着排满 812 高，而这一层是
+     position:fixed + 容器 pointer-events:none → 摸不到滚动条，超出屏底的那一截永远到不了。
+     两列才是这里的正解：桌面本来就是 repeat(2, …)，窄屏跟着走两列，四张卡和四条题注
+     全部落在屏内（数见本轮 375 底账）。 */
   .ability-spread {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding-inline: 20px;
   }
 }
 

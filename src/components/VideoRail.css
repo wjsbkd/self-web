@@ -30,8 +30,8 @@
       选中项永远进不了视野）。改成「首格 margin-left:auto + 末格 margin-right:auto」：
       有余量时两边均分＝居中，溢出时余量为负、auto 归零＝从左边起排。
    ⚠️ flex 子项默认可收缩，nowrap 之下会被挤扁然后文字折行 —— 格子必须 flex:0 0 auto。
-   ⚠️ 两端是硬切，没有加 mask 淡出：2537 那一档整条离容器边只剩 26px 余量，
-      淡出带一旦超过这个数，01 和 11 明明没被切也会跟着发虚。
+   ⚠️ 宽屏两端是硬切、不淡出：2537 那一档整条离容器边只剩 26px 余量，淡出带一超过这个数，
+      01 和 11 明明没被切也会跟着发虚。（≤800 那档反过来，淡出挂在下面的窄屏块里。）
    padding-block 6px 是给 :focus-visible 那圈 outline（2px + offset 2px）留的位：
    overflow-y 被 overflow-x:auto 算成 hidden，不留位焦点环上下会被切平。 */
 .video-rail-tabs {
@@ -386,7 +386,40 @@
       两份规则只差一个数就是下次翻车的来源。） */
   .video-rail-tabs-wrap {
     margin-inline: -40px;
+  }
+  /* 窄屏这档整条永远溢出（375 实测 scrollWidth 1672 / 可用 335），所以两端要给提示。
+     ① padding 从 wrap 挪到 nav 上：挂在 wrap 上时滚动容器自己的盒子只有 295 宽，格子在离
+        屏右缘还有 40px 的地方就被剪断了 —— 手机上看着像「一共只有两个标签」。挪进 nav 之后
+        padding 属于可滚动区域，剪断线走到离屏右缘 20px 处，多露出小半格。
+     ② mask 只淡「那个方向真的还有格子没露出来」的一边，开关由 VideoRail.jsx 的 edges() 写
+        data-more-left / data-more-right。两个默认 0px 时渐变的停止点重合＝不淡出，所以不溢出
+        的档位上这一条是空操作。
+     ⚠️ 前缀版在前、标准版在后：和 Nav.css 那条 backdrop-filter 同一个坑（顺序反了 minifier
+        只留 -webkit-，Chrome 实测不认）。 */
+  .video-rail-tabs {
     padding-inline: 20px;
+    --fade-l: 0px;
+    --fade-r: 0px;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--fade-l),
+      #000 calc(100% - var(--fade-r)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 var(--fade-l),
+      #000 calc(100% - var(--fade-r)),
+      transparent 100%
+    );
+  }
+  .video-rail-tabs[data-more-left='1'] {
+    --fade-l: 26px;
+  }
+  .video-rail-tabs[data-more-right='1'] {
+    --fade-r: 26px;
   }
   .video-rail {
     gap: 8px;

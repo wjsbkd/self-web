@@ -184,8 +184,15 @@ export default function AbilityFolder() {
 
   /* 聚焦时把文件夹放大：1.4 档本体只有 314×274，在 1470×900 中间会小到读不出
      「四张卡是从它身上出来的」。放大走 transform scale（原点默认在中心，所以
-     不用重算位移），组件自己那层 size 不动，纸片是原图，放大 1.9 倍仍在源分辨率以下。 */
-  const sc = stage === 0 ? 1 : stage === 1 ? 1.9 : 1.75
+     不用重算位移），组件自己那层 size 不动，纸片是原图，放大 1.9 倍仍在源分辨率以下。
+     ⚠️ 但 1.9 这个数只在宽屏成立：375 上它把 313.6 宽的盒撑到 595.8，实测 x=−110.1 /
+     right=485.7 —— 左右各出屏 110px，屏幕上只剩一块糊住的橙色封面，四张卡比收起态更看不见。
+     所以按屏宽封顶，分母 +18 是纸片扇形探出盒外的墨迹（375 实测最右那张 slip 比盒子多 15.4）。
+     封顶后窄屏这一档基本等于「不放大、只飞到中间 + 压暗页面」，这是屏宽给的物理上限。 */
+  const vw = typeof document !== 'undefined' ? document.documentElement.clientWidth : 0
+  const fitCap = home.width > 0 ? (vw - 48) / (home.width + 18) : 1
+  const raw = stage === 0 ? 1 : stage === 1 ? 1.9 : 1.75
+  const sc = stage === 0 ? 1 : Math.min(raw, fitCap)
 
   /* pinned 时文件夹改成 fixed：left/top 用原位量到的几何，位移用 --tx/--ty。
      z-index 75 高于 scrim(70)、低于展开层(80)（阶梯与它的来历写在 AbilityFolder.css:3）：
@@ -300,7 +307,7 @@ export default function AbilityFolder() {
 
             {pinned && (
               <div
-                className={`ability-fly${sunk ? ' ability-fly--sunk' : ''}`}
+                className={`ability-fly ability-fly--pinned${sunk ? ' ability-fly--sunk' : ''}`}
                 style={flyStyle}
                 role="button"
                 tabIndex={0}
