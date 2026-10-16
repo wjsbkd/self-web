@@ -464,7 +464,16 @@ export default function FilmStage() {
 
     main.addEventListener('seeked', onSeeked)
     intro.addEventListener('seeked', onIntroSeeked)
-    intro.addEventListener('loadedmetadata', measure)
+    const onIntroMeta = () => {
+      measure()
+      /* 冷启动时 metadata 比第一次 holdIntro() 晚到 3–10s（实测 8s 仍 readyState 1），那一枪
+         currentTime 会被拒。而「没有可跟的指针 + 开了减少动效」这一档 looping() 与 gazeLive()
+         两道门同时关死，之后没有任何人再发 seek 或 play（手动 play 也会被 onIntroPlay 钉回
+         pause，实测 AbortError + 两次 Media ERR_ABORTED）→ 首屏永远没有画面。所以 metadata
+         一到位就补钉一次。 */
+      if (!looping()) holdIntro()
+    }
+    intro.addEventListener('loadedmetadata', onIntroMeta)
     const onMainMeta = () => {
       duration = main.duration
       main.pause()
@@ -499,7 +508,7 @@ export default function FilmStage() {
       cancelAnimationFrame(raf)
       main.removeEventListener('seeked', onSeeked)
       intro.removeEventListener('seeked', onIntroSeeked)
-      intro.removeEventListener('loadedmetadata', measure)
+      intro.removeEventListener('loadedmetadata', onIntroMeta)
       main.removeEventListener('loadedmetadata', onMainMeta)
       intro.removeEventListener('play', onIntroPlay)
       document.removeEventListener('visibilitychange', onVisibility)
@@ -519,6 +528,7 @@ export default function FilmStage() {
         loop
         playsInline
         preload="auto"
+        poster="/assets/scrolly/intro-front.jpg"
         src="/assets/scrolly/intro.mp4"
       />
       {/* 指针涟漪层：夹在两张片之间 —— 交棒时它跟着首屏一起淡出，交叉溶解的形状和原来一模一样 */}
@@ -533,8 +543,11 @@ export default function FilmStage() {
           main.readyState 已是 4，第一帧 177ms vs auto 的 174ms，之后 6 个采样点
           画面平均亮度 74.72–75.52、近黑像素 0%，与 auto 同档。
           ⚠️ 别顺手改成 none：none 拿不到 duration → 那道门永久不开 → 第二段片子彻底不动，
-          画面掉到平均亮度 13.78 / 78.7% 近黑。也无需补 poster：metadata 档交棒时第 0 帧已在
-          缓冲里，poster 根本不会被画，白付 54 KB。
+          画面掉到平均亮度 13.78 / 78.7% 近黑。这一层不补 poster：交棒时第 0 帧已在缓冲里，
+          画不到它 —— 但**首屏那一层必须有**（2026-10-16 线上实测：冷启动 3s 时视口中央
+          100% 近黑；触屏 + 系统「减少动态效果」那一档 readyState 长期停在 1、paused 恒为 true，
+          影片层与涟漪层一个像素都不出，原样 vs 两层全隐逐像素差 0.000%）。poster 是唯一能在
+          「一帧都还没有」的时候画出画面的那一层，54 KB 的旧判断是只按交棒那一刻算的。
           intro 那层保持 auto：它是首屏正看着的一层、也是涟漪的纹理源，降级只会让每次眼神 seek
           都重新发一次 range 请求。 */}
       <video

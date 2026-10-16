@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lizongheng.example.com/sitemap.xml
+Sitemap: https://lizongheng-ktftxw0cmi4.qoder.zone/sitemap.xml

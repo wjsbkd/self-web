@@ -159,6 +159,23 @@
   }
 }
 
+/* 「我将势不可挡↗」实测 171.48×35px，差 44 缺 9px（44 = WCAG 2.5.5 AAA / iOS HIG，
+   WCAG 2.5.8 AA 的下限是 24×24 —— 两个数别混着引）。
+   手法同 About / Footer / Media：position:relative + 透明 ::after 上下各扩 5px → 45px，
+   字号 clamp(24,2vw,34) / 字重 / letter-spacing / 行高与卡片内 gap 全部不动。
+   上下余量实测：≤1024 时 .identity-header 是竖排、上面那行「抖音」标签与自己隔 12px，
+   下面 .identity-stats 隔 22px，各扩 5px 都碰不到；左右不扩（宽度 171px 本来就够）。 */
+@media (max-width: 800px) {
+  .identity-name {
+    position: relative;
+  }
+  .identity-name::after {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
+  }
+}
+
 @media (max-width: 520px) {
   /* 手机上改竖排。横排在这一档装不下：三个数字都不可断行，
      min-content 实测 86.1 + 98.2 + 54.8 + 2 个 gap = 247px，

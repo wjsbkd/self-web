@@ -386,3 +386,64 @@
     padding: 11px 18px;
   }
 }
+
+/* ── 点按命中区补到 44×44（44 取自 WCAG 2.5.5 AAA 与 iOS HIG；
+   WCAG 2.2 SC 2.5.8 那条 AA 的下限其实是 24×24，两个数别混着引）──
+   手法与 About / Footer 同一条：position:relative + 透明 ::after / ::before 绝对定位外扩。
+   伪元素不画东西、不占布局，所以字标、汉堡、抽屉条目里的字，改前改后逐像素一致；
+   元素自己的 getBoundingClientRect() 也不会变（变的是命中区，只能靠 elementFromPoint 量）。
+
+   两处要注意的：
+   1) .nav-items a 的 ::after 已经被 active 点阵下划线占了（见上面那条），
+      所以抽屉条目用 ::before 做命中区，两者互不干扰；规则只写在 ≤800 里，桌面档一行不动。
+   2) 抽屉里 6 条导航是 gap:0 的纵列，每条自己的盒子实测 41px 高、上下紧贴。
+      紧贴的纵列里总命中面积是守恒的：中间那几条向外扩 3px，就是把邻居自己的 3px 吃掉
+      （后画的兄弟元素在重叠处必胜，实测邻居的归属高度会正好从 41 掉到 38）。
+      所以这里只给**首条向上**（上方是抽屉自己的 16px 内边距，没有可点件）和
+      **末条向下**（下方到「联系我」还有 22px 空白），中间四条保持 41px 不硬扩 ——
+      这是 0 行距 + 41px 行高决定的上限，要真做到 44 得改 padding 或 gap，那会动版式，
+      留给站主决定。宽度方向无所谓：条目文字只有 33px 宽，左右各 5.5px 全是抽屉空白，
+      不与任何可点件相邻。 */
+@media (max-width: 800px) {
+  .brand {
+    position: relative;
+  }
+  /* 86×37 → 上下各 3.5px：上方到视口顶还有 16px，下方距抽屉（top:70px）还有 17px */
+  .brand::after {
+    content: '';
+    position: absolute;
+    inset: -3.5px 0;
+  }
+  .nav-toggle {
+    position: relative;
+  }
+  /* 42×42 → 四边各 1px：左右分别距字标 222px、距视口边 20px */
+  .nav-toggle::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+  }
+  .nav-items a::before {
+    content: '';
+    position: absolute;
+    inset: 0 -5.5px;
+  }
+  .nav-items a:first-child::before {
+    top: -3px;
+  }
+  .nav-items a:last-child::before {
+    bottom: -3px;
+  }
+  .nav-contact {
+    position: relative;
+  }
+  /* 106×43 → 向下扩到 44px。这里的数比「44-43=1」大：这颗药丸自己带 border:1px，
+     而绝对定位伪元素的包含块是 padding box（= 41px 高），
+     实测 inset:0 0 -1px 0 只扩出 0px（伪元素下缘刚好还在 border 里）。
+     top 写 -1 是为了把上缘拉回 border box 顶，bottom 写 -2 = 越过 1px 下边框再扩 1px。 */
+  .nav-contact::after {
+    content: '';
+    position: absolute;
+    inset: -1px 0 -2px 0;
+  }
+}
