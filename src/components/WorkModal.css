@@ -67,6 +67,23 @@
     border-color 0.3s var(--ease-claude),
     scale var(--press-ms) var(--ease-out-soft);
 }
+/* 触屏命中区补到 44×44（44 出自 WCAG 2.5.5 AAA 与 iOS HIG；WCAG 2.2 SC 2.5.8 那条 AA
+   的下限其实是 24×24，两个数别混着引）：视觉仍是 38×38，只加一层外扩伪元素。
+   ⚠️ 三条实测才看得到的坑：inset 的基准是 padding box（36×36，被 1px 边框吃掉一圈），
+   −3px 只有 42×42；伪元素别写 border-radius:50%，否则四角丢掉就不成 44×44 方；
+   最后一像素落在边界上会半像素抖动，所以取 −5px 让 22px 处四向都稳。
+   ⚠️ 必须包在 @media (pointer: coarse) 里（1470×900 鼠标档逐点实测）：写成顶层规则时
+   × 外圈那 4px 在桌面上也会归这个按钮 —— 改前那圈归 div.work-modal-info（面板的 onClick
+   会 stopPropagation，点它什么都不做），改后变成「指针变手型 + 点一下就关弹窗」，
+   那是桌面现有行为，不该被移动端适配顺手改掉。项目里按输入方式分支有先例：global.css:1148
+   的 @media (hover: none)（它关掉 .cursor-glow）。仿真下 390/320 报 pointer:coarse=true。 */
+@media (pointer: coarse) {
+  .work-modal-close::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+  }
+}
 .work-modal-close:hover {
   background: var(--accent);
   border-color: var(--accent);

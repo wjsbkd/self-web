@@ -111,3 +111,19 @@
     margin-top: 6px;
   }
 }
+
+/* 两枚纸白药丸实测高 34.78px（padding 0.95em 撑出来的），差 44 还缺 9.22px。
+   透明 ::after 上下各 5px → 44.78px，药丸本身的高度、圆角、字的位置一律不动。
+   余量是量过的：同一条 .portfolio-bar 里上方那组 label 与自己隔 16px 行距（非可点），
+   两条 bar 之间 118px、上方最近的另一个可点件 141px，扩 10px 不碰任何人。
+   标准出处同 About：44 = WCAG 2.5.5 AAA / iOS HIG（2.5.8 AA 的下限是 24）。 */
+@media (max-width: 800px) {
+  .portfolio-bar > a {
+    position: relative;
+  }
+  .portfolio-bar > a::after {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
+  }
+}

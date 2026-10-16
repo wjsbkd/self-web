@@ -247,3 +247,41 @@
    影片最黑的一帧下底色也有灰 217，深墨直接站得住；这块暗板反而把方向做反了 ——
    800×900 实测导语两段 1.51/1.54:1，暗板自己就是那两条黑横杠。
    窄屏要局部补底的时候请补**浅**的，别再往回走。 */
+
+/* ── 点按命中区补到 44×44（外部标准：WCAG 2.5.5 AAA 与 iOS HIG 的最小触控目标；
+   WCAG 2.2 SC 2.5.8 这条 AA 的下限其实是 24×24，别把两个数混着引）──
+   三条链接实测高 21px（13px 等宽 + padding-bottom:3px）。
+   ⚠️ 不能用「加 padding」的写法：padding 会把 21px 的行撑高，.about-links 是 gap:12px 的
+      flex 纵列，整块会往下顶，下面的导语与正文全部位移 = 视觉变了。
+   改法：position:relative + 透明 ::after 绝对定位外扩，伪元素不占布局、不上色，
+   文字位置/字号/行高/四周间距逐像素不动（实测对账见 agentA/compare-base-after.json）。
+   为什么上下不对称：三条各要 +23 才够 44，而它们之间只有两条 12px 的行缝（合计 24px），
+   缺的 45px 只能由「首条向上」和「末条向下」承担 —— 算出来两端各至少要 22px，
+   这是缝隙宽度决定的，不是随手取的。中间那条的 23px 全部来自两条行缝，不碰任何文字。
+   代价如实写在这里：首条向上 23px、末条向下 23px 会盖住相邻的**非可点**内容
+   （上面是 SectionHeading 一带、下面是「微信（同号）…」那行），点那些地方会误触链接；
+   若不能接受，末条的 bottom 改回 0，实测命中区停在 33px（12px 行缝就这么多）。 */
+@media (max-width: 800px) {
+  .about-links a {
+    position: relative;
+  }
+  .about-links a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .about-links a:nth-of-type(1)::after {
+    top: -23px;
+  }
+  /* ⚠️ 向下那两个数各多写 1px：绝对定位伪元素的包含块是 padding box，
+     而这条规则本身带 border-bottom:1px（就是那条下划线），
+     按 border box 算会少 1px —— 实测 bottom:-12 只扩出 11.5、-23 只扩出 21.5，
+     正好差在命中区 43 而不是 44。 */
+  .about-links a:nth-of-type(2)::after {
+    top: -12px;
+    bottom: -13px;
+  }
+  .about-links a:nth-of-type(3)::after {
+    bottom: -25px;
+  }
+}

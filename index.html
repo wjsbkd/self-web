@@ -14,6 +14,12 @@
       }
     </style>
 
+    <!-- 首屏那张定妆照必须在这里就挂上：poster 是 React 挂载之后才写进 <video> 的，
+         实测冷启动时它的请求要到 5.3s 才发出（页面 0.7–5s 才 FCP，取决于 CDN 那一枪多快），
+         也就是「黑」的时长 ≈ 文档延迟 + poster 自己的 3.1s。preload 把它提到解析器扫到
+         就发（≈0.26s），和 JS 并行，画面才可能赶在用户还没往下滚之前出现。 -->
+    <link rel="preload" as="image" href="/assets/scrolly/intro-front.jpg" fetchpriority="high" />
+
     <!-- 基础 SEO -->
     <title>李纵横 · 个人作品集 | AI 内容运营与视觉创作者</title>
     <meta
@@ -22,7 +28,7 @@
     />
     <meta name="author" content="李纵横" />
     <meta name="keywords" content="李纵横,作品集,内容运营,AI内容,视觉创作,短视频,活动策划,个人主页" />
-    <link rel="canonical" href="https://lizongheng.example.com/" />
+    <link rel="canonical" href="https://lizongheng-ktftxw0cmi4.qoder.zone/" />
 
     <!-- Open Graph（微信 / 朋友圈 / 社交媒体分享卡片） -->
     <meta property="og:type" content="website" />
@@ -34,11 +40,14 @@
       content="专注内容、运营与现场执行的交界处，让创意转化为可见的影响力。"
     />
     <!-- 分享封面：`public/assets/og-cover.jpg`（1200×630，与首屏同一套白板语言）。
-         写成根相对是故意的 —— 正式域名还没有，绝对 URL 只能先假造一个；
-         微信 / QQ / 微博 的爬虫会拿页面 origin 去补全，静态站上线后不用改。
-         ⚠️ 但 canonical / og:url 两行仍是 example.com 占位，域名定了必须一并换掉。 -->
+         写成根相对是故意的 —— 微信 / QQ / 微博 的爬虫会拿页面 origin 去补全，
+         所以换域名时这一行不用动。
+         canonical / og:url 两行则是绝对地址，指向 Qoder Sites 的发布域名；
+         迁移到别的平台时，这两行要和 public/robots.txt 的 Sitemap 行、
+         public/sitemap.xml 的 <loc> 一起换成新域名，四处不同步会被搜索引擎
+         当成两个站点。 -->
     <meta property="og:image" content="/assets/og-cover.jpg" />
-    <meta property="og:url" content="https://lizongheng.example.com/" />
+    <meta property="og:url" content="https://lizongheng-ktftxw0cmi4.qoder.zone/" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />

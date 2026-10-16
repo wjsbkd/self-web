@@ -187,3 +187,23 @@
     margin-top: 40px;
   }
 }
+
+/* 「BACK TO TOP ↑」实测 99.17×14px，全站最小的一条，而且这条一点 padding 都没有。
+   14px 高连 WCAG 2.5.8 的 24px 下限都够不着（44 是 WCAG 2.5.5 AAA / iOS HIG 那一档）。
+   同 About 的做法：透明 ::after 绝对定位外扩，元素自己的盒子、文字位置、行间距一个像素都不动
+   （加 padding 会把这条撑高，flex 纵列上下全跟着走）。
+   上下不对称是有原因的：它上面 12px 就是「长春 / 中国」那行（.footer-bottom 在 ≤800 是
+   flex-direction:column + gap:12px），实测 ±15 会压到那行字 3.5px；改成上 11 / 下 19
+   后命中区仍是 45px，而那行字一点没被盖住。下方有地方可扩：到 .footer 自己的内边距
+   还有 100px 以上（.footer 是 overflow:hidden，伪元素超出那道边会被裁掉，这个余量是量过的）；
+   上方最近的另一个可点件（三枚 social-btn）隔 163–219px。 */
+@media (max-width: 800px) {
+  .footer-bottom a {
+    position: relative;
+  }
+  .footer-bottom a::after {
+    content: '';
+    position: absolute;
+    inset: -11px 0 -19px 0;
+  }
+}
