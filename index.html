@@ -40,13 +40,11 @@
       content="专注内容、运营与现场执行的交界处，让创意转化为可见的影响力。"
     />
     <!-- 分享封面：`public/assets/og-cover.jpg`（1200×630，与首屏同一套白板语言）。
-         写成根相对是故意的 —— 微信 / QQ / 微博 的爬虫会拿页面 origin 去补全，
-         所以换域名时这一行不用动。
-         canonical / og:url 两行则是绝对地址，指向 Qoder Sites 的发布域名；
-         迁移到别的平台时，这两行要和 public/robots.txt 的 Sitemap 行、
-         public/sitemap.xml 的 <loc> 一起换成新域名，四处不同步会被搜索引擎
-         当成两个站点。 -->
-    <meta property="og:image" content="/assets/og-cover.jpg" />
+         写成绝对 URL：微信/QQ/微博的爬虫会拿页面 origin 补全根相对路径，
+         但 Twitter / Slack / LinkedIn 的爬虫要求绝对 URL，根相对的抓不到图。
+         换域名时，这一行和 canonical / og:url、public/robots.txt 的 Sitemap 行、
+         public/sitemap.xml 的 <loc> 一起换（共六处），不同步会被搜索引擎当成两个站点。 -->
+    <meta property="og:image" content="https://lizongheng-ktftxw0cmi4.qoder.zone/assets/og-cover.jpg" />
     <meta property="og:url" content="https://lizongheng-ktftxw0cmi4.qoder.zone/" />
 
     <!-- Twitter Card -->
@@ -56,7 +54,7 @@
       name="twitter:description"
       content="专注内容、运营与现场执行的交界处，让创意转化为可见的影响力。"
     />
-    <meta name="twitter:image" content="/assets/og-cover.jpg" />
+    <meta name="twitter:image" content="https://lizongheng-ktftxw0cmi4.qoder.zone/assets/og-cover.jpg" />
 
     <!-- favicon（本地 SVG，避免外链失效） -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

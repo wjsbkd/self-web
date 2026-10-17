@@ -296,7 +296,7 @@ function InfiniteSpiral({
             <img
               src={item.src}
               alt={item.alt}
-              loading={index < 6 ? 'eager' : 'lazy'}
+              loading={index < 2 ? 'eager' : 'lazy'}
               draggable={false}
               style={{
                 width: cardWidth,
