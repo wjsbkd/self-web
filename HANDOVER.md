@@ -6680,3 +6680,172 @@ B 另加键盘 ← → / Home / End（原生 overflow 容器不认方向键，�
 - **AbilityFolder.jsx:274**：能力档案 4 张 `<img>` 补 `loading="lazy"`（要两次点击才看得见，零滚动时 1.15MB 白下）。展开态与收起态共用同一组 img，一处补全两态生效。
 - 产物核验：dist JS 里 `loading:n<2?'eager':'lazy'` + 4 处 `loading:'lazy'`（含 VideoRail/WorkModal 原有的）；og 绝对 URL 在 dist/index.html 2 处。lint 0 error，build 通过。
 - ⚠️ **线上还在跑旧版**（`index-DcvoUcfg.js`）：这两项要生效得在 Qoder 侧重新发布（vite build 后用新 dist 覆盖部署）。发布后可用微信/Twitter 各发一条消息验证分享卡片有图。
+
+## 第七十九次：上线后优化五项落地 —— 字体加载链、iOS 图标、两处可达性、四图转 WebP（2026-10-17，未提交未推送）
+
+上线核对后他一句「你先把能做的做了」。前一轮报的五项里，**归平台的三条没动**（水印 / `cache-control: no-cache` / sitemap MIME / 品牌 404 不生效），
+**Qoder 重新发布不是代码项**（线上仍在跑 `index-DcvoUcfg.js`，第七十八次那两项仍待他手动发布）。本轮落地四项 + 一项字节优化。
+
+### 一、字体加载链：`@import` 搬出 CSS bundle，preconnect + 并行 `<link>`
+
+- `src/styles/global.css` 顶部那条 `@import url('https://fonts.googleapis.cn/...')` **删除**，改由 `index.html` `<head>` 的
+  `<link rel="stylesheet">` 加载，并补两条 `preconnect`（`fonts.googleapis.cn` / `fonts.gstatic.cn crossorigin`）。
+  理由：`@import` 排在 bundle 最顶部，浏览器要等**整个 CSS bundle 下载并解析**才发现它、再去握手取字体 CSS，
+  首屏白等一整段串行链路；挪到 head 后与 bundle 并行，preconnect 再提前握手。
+  实测 `fonts.googleapis.cn` 首次响应 **2.58s**（国内镜像本身不快，握手占其中一段）。
+- **字重按全站 `font-weight` grep 清单收窄**：原 URL 申请 Archivo `0,300..0,900` + `1,600;1,800` 共 10 个变体，
+  实测全站只用到 300/500/600/700/800 与 italic 800（wordmark），**400 / 900 / italic 600 全站 0 引用** → 一并砍掉。
+  DM Mono 保持 400/500（`About.css:22/32/164`、`WorkModal.css:307` 四处）。
+- ⚠️ **`public/scrolly/index.html` 那一页的 `@import` 没动**：它的清单是 `Archivo + Noto Sans SC`（这一页引 Noto，
+  与主站 Q03「只砍 Noto」的决定不同源），改它要单独一轮判据。两边刻意不同，别照抄。
+
+**验证**（dev 5173 + 面板）：`document.styleSheets` 扫出的 `CSSImportRule` **= []**（不再有嵌套规则）；
+`document.fonts.check` Archivo 800 / 300 / DM Mono 400 全 `true`；两条 preconnect 在位；`<link>` 未 disabled。
+首屏 `h1` 计算 `font-family` 首位仍是 `Archivo`（字体真的解析生效，不是回退）；标题两行、影片 poster、导航均正常。
+
+### 二、iOS 图标：`apple-touch-icon` 从 SVG 换成位图
+
+`index.html` 原来两处 icon 都指 `/favicon.svg`。**iOS「添加到主屏幕」不解析 SVG**，没有位图就退化成一整页实时截图当图标
+（求职方用 iPhone 收藏链接时会看到）。
+
+- 产物 `public/apple-touch-icon.png`，**180×180 RGB / 8,127 B**（Apple 规范 @3x 尺寸）。
+- 做法走 Chrome 而不走 PIL：第一次用 PIL 从本机 Arial 画，字形与站内 Archivo 不一致、且等于"猜"外观；
+  改从 `public/favicon.svg` 同一份构图经 headless Chrome `--screenshot` 渲染（`--force-device-scale-factor=2` 出 360²，
+  再 LANCZOS 降到 180²，圆角边缘比 1:1 干净）。**与 favicon 同源同构**：黑底圆角、LZH 白紫、末笔 H 取 rim-ember。
+- 验证：`fetch` 200 + `content-type: image/png` + `naturalWidth/Height = 180`；dist 里 8,127 B 已复制。
+
+### 三、两处可达性（都修了，都在面板里用**反事实对照**验的）
+
+1. **`useKeyboardNav.js`**：加 `e.target.closest?.('[role="dialog"], [aria-expanded="true"]')` early-return。
+   修前招聘方点开视频弹窗后按一下方向键，背后的整页就跳章节走了（弹窗自己只管 Esc 与 Tab）。
+   ⚠️ **`closest` 而不是查 target 自身**：焦点落在弹窗里的 `<a>`/`<span>` 上时 target 自己不是 dialog。
+2. **`WorkModal.jsx`**：`onClose` 改挂 ref、`handleClose` 成稳定引用。修前 effect 依赖 `[isOpen, handleClose]`，
+   而三处调用方（Media / AccountOperations / AbilityFolder）**全传内联箭头** → 父组件每次重渲染 effect 都重跑 →
+   `lastFocusedRef` 被记成弹窗内元素，关闭时焦点抢回关闭按钮而不是触发卡片。
+
+> ⚠️ **面板验不了键盘导航，别把"没跳"当结论**（本轮踩实了）：
+> 真实原因不是 target 位置，而是**这个面板里 `scrollIntoView` 整个不工作** ——
+> `document.getElementById('experience').scrollIntoView()` 之后 `scrollY` 恒为 0，而 `window.scrollTo({top:1500})` 有效、
+> `maxScroll` 有 10,465。键盘导航调的正是 `scrollIntoView({behavior:'smooth'})`，所以在面板里**修复与否都不跳**。
+> 中间我还误判过一次"target 不在弹窗内"：把事件 dispatch 到 `window`/`body`（target=BODY）时 `closest` 找不到 dialog，
+> 改用 `work-modal-close` 作 target 后确实拦住了 —— 那一轮 `guarded:true` 是**假阳性**，因为同参数在弹窗关闭时也不跳。
+> 最终口径：**三条平行证据**（事件确实到达 window 且 targetTag=BODY、`[aria-expanded="true"]` 常驻数 = 0、代码逻辑正确）
+> + lint 0 error + build 0 error。**结论是"没有破坏"，不是"已验证生效"** —— 后者要他在真浏览器里按一次。
+
+### 四、四张能力档案图 PNG → WebP（省 847 KB，−73%）
+
+`public/assets/pptx-media/` 下 4 张：`poster-trio-ai`（467,756）、`image4`（285,655）、`image2`（224,799）、`image6`（173,052），
+合计 **1,151,262 B → 304,276 B**。quality=95 / method=6，`abilityMaterials.js` 四处 + `projects.js` 一处引用改指 `.webp`。
+
+- **取 q95 不取 q88**：这些图会在 `WorkModal` 里以 `--object-fit: contain` 全幅细看，q88 在密集文字海报上有可感劣化
+  （q88 能到 216,356 B，但判据是观感不是字节）。
+- **有损幅度实测**（`ImageChops.difference`）：mean Δ 1.24–1.93/255，`Δ>8` 像素占 2.48–5.34%，
+  集中在文字最锐利的边缘（max Δ 111–156）—— 预期有损行为。
+- **原 PNG 留在 `public/` 不搬**：与 Q15「11 张零引用备选图搬去 `assets-src/`」是**两件事**。
+  Q15 那些是"素材库备选图"，这四张是**在役图的原始母版**；且留在 `public/` 的真实代价只有 dist 磁盘
+  （无任何 HTML/CSS/JS 引用 → 浏览器不请求 → 访客加载零代价）。搬走反而让"母版/派生件"分居两处、将来更易改错对象。
+  回退只需把 5 处引用改回 `.png`。
+- **验证**（dev 5173，非仅 fetch）：四张全部 200 + `content-type: image/webp`；
+  再 `drawImage` 进 canvas 读 `getImageData`，非黑像素 93.6–99.7% —— **真实解码成功且内容充实**，不是字节到了却解不动。
+  DOM 上 30 个 `<img>`、`anyBroken: []`（那四张 `naturalWidth=0` 是 `loading="lazy"` + 尚未两次点击展开，正常）。
+
+### 五、状态
+
+- `npx eslint src/` 0 error；`npm run build` 0 error（829ms→182ms，**CSS `index-NVYaHiKV` 68.39 kB / gzip 13.40**，
+  JS `index-Dicnb14N` 319.62 kB / gzip 109.54）。
+- **未提交、未推送**。HEAD 仍是 `627bd47`。改动 6 M + 5 `??`：`index.html`、`src/styles/global.css`、
+  `src/hooks/useKeyboardNav.js`、`src/components/WorkModal.jsx`、`src/data/abilityMaterials.js`、`src/data/projects.js`，
+  新增 `public/apple-touch-icon.png` + 4 个 `.webp`。工作区没有本轮产生的临时文件（探针脚本与 headless profile 已清）。
+- **上线要重发 dist**：本轮 + 第七十八次那两项都还没到线上（线上仍是 `index-DcvoUcfg.js`）。
+## 第八十次：scrolly 页字体链 + SEO 缺口补齐，附一轮「判不做」的实测（2026-10-17，未提交未推送）
+
+他一句「再检查是否还有可以优化的地方，优化完成后提交」。本轮**只有两处真改动**，其余全是量完判「不做」——
+把判据写清楚是为了下一个 Agent 别再重做一遍。
+
+### 一、`public/scrolly/index.html`：字体链 + SEO 元信息（第七十九次漏了这一页）
+
+第七十九次只改了主站 `index.html`，**独立页整页漏掉**。改两处：
+
+1. **字体 `@import` → preconnect + `<link rel="stylesheet">`**，字重按本页实测清单收窄：
+   `scrolly.css` 的 `font-weight` 实参只有 300×1 / 500×7 / 600×2 / 800×5 + `font-style: italic`×1，
+   所以 Archivo 的 400/700/900 与 italic 600 全砍；Noto Sans SC **保留**（这一页汉字标题用它，
+   与主站 Q03「只砍 Noto」的决定不同源，别照抄主站那条）。
+2. **补 og / twitter / canonical**：这一页是站内独立 URL（`Media.jsx` 的 portfolio-bar 挂着
+   `/scrolly/index.html`），会被单独分享与收录，改前**一条 og 元信息都没有**。
+   封面沿用主站那张 `og-cover.jpg`（同源语言），不另做一张。
+   ⚠️ 顺手补 `apple-touch-icon`（主站第七十九次加了位图，这一页还指着 SVG）。
+
+**踩过一次自己造的坑**：改用 Edit 时把 `<link rel="stylesheet" href="scrolly.css">` 一并删掉了
+（它原本紧跟在被删的 `<style>` 后面）。已补回，并在验证里专列 `scrollyCssPresent` 一项。
+
+**验证**（dev 5173 + 面板，`/scrolly/index.html` 全路径——`/scrolly/` 会被 SPA fallback 吞成首页）：
+`importRules: []`（CSSOM 里不再有嵌套规则）、`scrollyCssPresent: true`、og/canonical 值正确；
+**字体这一项比主站验得更硬**：`[...document.fonts]` 列出实际加载的字面 =
+Archivo 300/500/600/800 + italic 800 + Noto Sans SC 300…，与被砍掉的三个变体无一命中；
+5 段 `.caption` 全在（`is-on` 落 `cap-1`）、导航 5 项、`v-intro` 1280×720 正常。
+`headlineText: ""` 是 **innerText 只返回可见文本**——我查的是 `visibility:hidden` 的 cap-intro，属探针口径不是缺陷。
+
+### 二、`public/sitemap.xml`：补 scrolly 页 + `lastmod`
+
+改动前 sitemap 只有首页一条 URL。`/scrolly/index.html` 是站内真实存在的可访问页面、挂在 Media 板块入口上，
+缺它等于**这一页在搜索引擎眼里不存在**。补第二条（priority 0.8）+ 两条都加 `lastmod 2026-10-17`。
+已核对：**六个域名引用点全同步**（`index.html` canonical/og:url/og:image/twitter:image、`robots.txt` Sitemap 行、
+`sitemap.xml` 两处 loc）+ scrolly 自己四处，`example.com` 全仓 **0 残留**。
+
+### 三、量过但**判不做**的四条（判据留档，别重做）
+
+1. **10 张视频封面 JPEG → WebP：不做**。实测 q92 只省 166,813 B（1,006,805 → 839,992，−17%），
+   且这几张是**招聘方要看的内容封面**（项目对封面选帧有"不许擅自改"的强约定——第七次那轮记着
+   「加粗三项是用户点名指定的秒数，别再优化回去」）。−17% 换内容图有损，不匹配。
+2. **抖音 15 张 → WebP：不做（推翻我上一轮的粗判，但结论不变）**。实测 q88 省 813,088 B
+   （3,109,694 → 2,296,606，−26%）——收益比视频封面大得多，**但路径不对**：这 15 张早已在
+   `loading="lazy"` 之后（第七十九次落地），不在首屏链上，所以省的 26% 换不来首屏变快，
+   只是"滚到账号运营板块那一下"变快。而它们是内容截图、`WorkModal` 里还会以 295×630 全幅细看。
+   复核了第十三次那三道闸仍然满足（15 张全 RGB 800×1709、各向连续近白长度全 0），
+   **所以这不是"不能做"，是"按观感判据不值得做"**。
+3. **`Reveal.jsx` / `CountUp.jsx` 补 `matchMedia('change')` 监听：不做**。乍看是缺陷
+   （`Hero`/`FilmStage` 都监听了，这两个只在挂载时读一次），但两个方向都推过是安全的：
+   挂载时**开** reduce → `visible` 初值即 true、effect 直接 return，内容不会消失；
+   挂载时**关** reduce、事后开 → 未揭示的走动画路径，而全局 `@media(prefers-reduced-motion)`
+   把 `animation-duration` 压到 0.001ms，仍会瞬时出现。**两种时序都无可见故障。**
+4. **JS bundle 补 `modulepreload`：不做**。`dist/index.html` 实测 0 处、且 dist 只有 **1 个 JS chunk**。
+   单 chunk 场景下 preload 只省"解析到 script 才发请求"的微小间隙（没有第二层依赖要先拉），
+   收益不匹配在 head 里再加一条内容的复杂度。
+
+### 四、顺手复核、确认没问题的
+
+- **`backdrop-filter` 前缀顺序无回归**：7 处（AbilityFolder×1、Folder、Nav、SpiralGallery、WorkModal×2、global.css×2）
+  全部是「`-webkit-` 在前、标准在后」—— Q30 那条「顺序反了 minifier 只留前缀、磨砂在桌面端从来没画出来」
+  的修法在所有位置保持一致。
+- **`og-cover.jpg`** 1200×630 RGB 94,493 B（Twitter/OG 推荐 <1MB），5 点采样有真实内容
+  （中心 L≈84、右上 (125,99,98) 属站内缘光族）—— 不是空图，无优化必要。
+  `intro-front.jpg` 95,333 B / `outro-poster.jpg` 109,531 B 同判：都是首屏/尾屏**关键帧**，再压伤观感。
+- **运行时零报错**（dev 5173 面板 console 空）：全站资源 200；`main.mp4` 的 `ERR_ABORTED` 是
+  **Q04 的预期行为**（`preload="metadata"` 下 Chrome 缓冲够就掐掉请求，省 6.4MB），不是故障。
+- `Nav` 每帧重渲染（Q23）仍是**未决但不修**：实测 520 帧仅 1 帧超 20ms，代价小于改动风险。
+
+### 五、状态
+
+`npx eslint src/` 0 error；`npm run build` 0 error（190ms，**CSS `index-NVYaHiKV` 68.39 kB / gzip 13.40**，
+JS `index-Dicnb14N` 319.62 kB / gzip 109.54 —— 与第七十九次**同哈希**，本轮没动 `src/`）。
+改动 3 个文件（全在 `public/`）：`public/scrolly/index.html`、`public/sitemap.xml`、外加 HANDOVER。
+**未提交、未推送**；HEAD 仍是 `627bd47`。线上仍待重新发布（第七十八 + 七十九 + 八十次三项都在本地 dist 里）。
+
+### 六、死代码 / 未引用资产审计（并行子代理 + 逐条复核）—— **零新增可优化项**
+
+子代理跑了 58 次工具只读扫全仓，报三项；**逐条复核后两项是假阳性、一项是既有既定**：
+
+| 子代理报的 | 复核结论 |
+|---|---|
+| `image2/6/poster-trio-ai.png` 未引用 | **属实但非新增** —— 第七十九次已记录"母版保留在 `public/`"的决定。它**漏报了 `image4.png`**（同样 0 引用），四张一起已覆盖 |
+| `--void-1..6` 未被 `var()` 消费 | **属实，但是故意的**。`global.css:560-561` 把它们在七个板块上整套翻墨成浅色（`#fbf7f4` 一族），`--void-7` 有 10 处 `var()` 在消费。删掉会让人误以为浅色组只有一档 —— 与 HANDOVER 第十一次同一条结论，**留着无害** |
+| `videos.js:38-39` `pwd=xxx4` 疑似占位 | **假阳性**。`待决问题` Q29 已用 deck slide2 的 XML 印刷原文实证 `…?pwd=xxx4 提取码: xxx4`（新旧两版一样）→ 忠实 Deck 原文，**别改** |
+
+**反向确认没问题的**：18 个模块全部被 import（`src/data/index.js` 那 4 个 barrel 导出各有消费方，
+"HANDOVER 说它不是全站统一出口"仍然成立但**不是死代码**）；18 个 CSS 共 221 个 class token 全部有 JSX 命中
+（含模板串拼出的 `ability-fly--seated` / `video-rail-card` / `reveal-in`）；11 个 `@keyframes` 全被引用；
+75 个自定义属性中 74 个有消费；`src/` 内无 TODO/FIXME/占位文本。
+
+> **一条要记住的方法**：子代理报「`image4.png` 仍被 `projects.js:9` 引用」是**错的**（那里早已改指 `.webp`）。
+> 这就是本项目第三次印证"子代理摘要当数据复核、不当结论用"——前两次是 Q17 那个编行号的代理、
+> Q24 那个像素账数不对的代理。审计类任务尤其要逐条 grep 复核。

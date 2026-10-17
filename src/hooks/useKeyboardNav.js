@@ -18,6 +18,14 @@ export default function useKeyboardNav(ids, onEsc) {
       const tag = (e.target.tagName || '').toLowerCase()
       if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return
 
+      // 弹窗/抽屉开着时不拦截：WorkModal 是 role="dialog" aria-modal="true"，
+      // AbilityFolder 展开态是 role="button" + aria-expanded="true" 的浮层。
+      // 不拦的话，招聘方点开视频弹窗后按一下方向键，背后的整页就跳章节走了
+      // （弹窗自己只管 Esc 与 Tab，Nav 的抽屉也只 Esc）。
+      // 用 closest 而不是只查 target：焦点落在弹窗里的 <a>/<span> 上时 target 自己不是 dialog。
+      const open = e.target.closest?.('[role="dialog"], [aria-expanded="true"]')
+      if (open) return
+
       // Esc：关闭菜单
       if (e.key === 'Escape') {
         if (onEsc) onEsc()

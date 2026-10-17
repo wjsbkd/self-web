@@ -1,4 +1,6 @@
 // 精选项目数据
+// 2026-10-17：弥勒春晚封面 image4.png → image4.webp（285,655 → 88,834 B，−69%）。
+// 原 PNG 保留在 public/assets/pptx-media/（pptx 逐字节导出件，见 abilityMaterials.js 头部说明）。
 export const projects = [
   {
     index: '01',
@@ -29,7 +31,7 @@ export const projects = [
     index: '03',
     title: '弥勒市春节联欢晚会',
     subtitle: '视觉设计 / 现场执行',
-    image: '/assets/pptx-media/image4.png',
+    image: '/assets/pptx-media/image4.webp',
     stat: '500W+',
     label: '全网总曝光',
     background: '融合地域文化与乡村振兴理念，开展市级大型春晚的全流程筹备与线下落地。',

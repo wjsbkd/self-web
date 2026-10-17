@@ -7,15 +7,40 @@
 <meta name="description" content="一条 15 秒的短片，从发呆到收工。向下滚动，你就是这条片子的进度条。">
 <meta name="theme-color" content="#020202">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" as="image" href="/assets/scrolly/outro-poster.jpg">
 <link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>
-<style>
-/* 字体清单与主站 src/styles/global.css 同源：Archivo（拉丁显示体）+ Noto Sans SC。
-   Silkscreen / Fusion Pixel 随第三轮的像素点阵语言一起退役，DM Mono 这一页已无引用，
-   本轮也不再加载。走 .cn 镜像，Google Fonts 在本机网络下会超时。 */
-@import url('https://fonts.googleapis.cn/css2?family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
-</style>
-<link rel="stylesheet" href="scrolly.css">
+<!-- 字体：与主站同一条理由（主站注释在 src/styles/global.css 顶部）—— @import 排在
+     <style> 里，浏览器解析到它才会去取字体 CSS，首屏白等一段串行链路；改 preconnect +
+     <link rel="stylesheet"> 并行。字重按本页 scrolly.css 的 font-weight 实测清单收窄：
+     Archivo 只用 300/500/600/800 与 italic 800（400/700/900 与 italic 600 本页 0 引用）。
+     这一页与主站不同：它**引 Noto Sans SC**（本页汉字标题使用），不要照搬主站那条「只砍 Noto」。 -->
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.cn/css2?family=Archivo:ital,wght@0,300;0,500;0,600;0,800;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap"
+/>
+<!-- 分享卡 / 规范链接：这一页是站内独立 URL（Media.jsx:71 挂着入口），
+     会被单独分享与收录，缺 og 时微信/微博拿不到封面、Twitter/LinkedIn 要求绝对 URL。
+     封面沿用主站那张 og-cover（同源语言），不另做一张。 -->
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:site_name" content="李纵横 · 个人作品集" />
+<meta property="og:title" content="滚动看一条片子 · 李纵横作品集" />
+<meta property="og:description" content="一条 15 秒的短片，从发呆到收工。向下滚动，你就是这条片子的进度条。" />
+<meta
+  property="og:image"
+  content="https://lizongheng-ktftxw0cmi4.qoder.zone/assets/og-cover.jpg"
+/>
+<meta property="og:url" content="https://lizongheng-ktftxw0cmi4.qoder.zone/scrolly/index.html" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta
+  name="twitter:image"
+  content="https://lizongheng-ktftxw0cmi4.qoder.zone/assets/og-cover.jpg"
+/>
+<link rel="canonical" href="https://lizongheng-ktftxw0cmi4.qoder.zone/scrolly/index.html" />
+<link rel="stylesheet" href="scrolly.css" />
 </head>
 <body>
 
