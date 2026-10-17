@@ -20,6 +20,20 @@
          就发（≈0.26s），和 JS 并行，画面才可能赶在用户还没往下滚之前出现。 -->
     <link rel="preload" as="image" href="/assets/scrolly/intro-front.jpg" fetchpriority="high" />
 
+    <!-- 字体：preconnect 提前握手（fonts.googleapis.cn 首次响应实测 2.58s，握手占其中一段），
+         再用 <link rel="stylesheet"> 并行加载，不再走 global.css 里的 @import ——
+         @import 排在 CSS bundle 顶部，浏览器要等整个 bundle 下载并解析后才发现它，
+         再去取字体 CSS，首屏白等一整段串行链路。
+         字重按全站 font-weight 实测清单收窄（Archivo 的 400/900 与 italic 600 全站 0 引用，
+         DM Mono 只用 400/500 两档）。⚠️ 改字体族或字重时改这一行，别在 global.css 里加回 @import
+         （那边有同主题注释）；public/scrolly/index.html 是另一份清单，别照抄主站这条。 -->
+    <link rel="preconnect" href="https://fonts.googleapis.cn" />
+    <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,500;0,600;0,700;0,800;1,800&display=swap"
+    />
+
     <!-- 基础 SEO -->
     <title>李纵横 · 个人作品集 | AI 内容运营与视觉创作者</title>
     <meta
@@ -58,7 +72,11 @@
 
     <!-- favicon（本地 SVG，避免外链失效） -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!-- apple-touch-icon 必须位图：iOS「添加到主屏幕」不解析 SVG，
+         没有它就是整页实时截图当图标（求职方用 iPhone 收藏链接时会看到）。
+         由 public/favicon.svg 同一份构图渲染而来（值抄 global.css 的 void-1 /
+         text-bright / rim-ember），改字标时两边同步。 -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>
     <div id="root"></div>

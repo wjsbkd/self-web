@@ -17,10 +17,18 @@ import './WorkModal.css'
 export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
   const panelRef = useRef(null)
   const lastFocusedRef = useRef(null)
+  // onClose 进 ref 而不进 effect 依赖：三处调用方（Media / AccountOperations / AbilityFolder）
+  // 全传内联箭头函数，父组件每次重渲染 onClose 都是新引用 → effect 重跑 →
+  // lastFocusedRef 被记成弹窗内的元素、关闭时焦点抢回关闭按钮而不是触发卡片。
+  // 挂 ref 在 effect 之前的独立 effect 里，保证 isOpen 翻开前它已就位。
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   const handleClose = useCallback(() => {
-    if (onClose) onClose()
-  }, [onClose])
+    onCloseRef.current?.()
+  }, [])
 
   // 焦点管理：打开时记录触发元素、聚焦面板；关闭时还原焦点
   // Esc 关闭、Tab/Shift+Tab 在面板内循环（焦点陷阱）
@@ -71,6 +79,9 @@ export default function WorkModal({ isOpen, onClose, type = 'image', item }) {
         lastFocusedRef.current.focus()
       }
     }
+    // 只依赖 isOpen（handleClose 已是稳定引用，见上面的 ref）：
+    // 弹窗开着时父组件重渲染不能重跑本 effect，否则焦点会被抢回关闭按钮。
+    // item 换内容（同弹窗内切视频/图片）也不重跑 —— 焦点该留在原处。
   }, [isOpen, handleClose])
 
   if (!isOpen || !item) return null

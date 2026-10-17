@@ -1,5 +1,9 @@
 /* 全局样式：字体导入、reset、Design Token、跨组件共享类 */
-/* 使用国内镜像 fonts.googleapis.cn，避免 Google Fonts 在天朝网络下超时导致首屏白屏 */
+/* 字体加载（2026-10-17 起）：@import 已从本文件删除，字体 CSS 改为 index.html <head> 里的
+   <link rel="stylesheet"> —— @import 排在 bundle 顶部，浏览器要等整个 CSS bundle 下载并
+   解析后才发现它、再去握手取字体 CSS，首屏白等一整段串行链路；挪到 head 后与 bundle 并行。
+   字重清单里的 0,900 与 1,600 已实测全站 0 引用（font-weight grep），一并从 URL 砍掉。
+   ⚠️ 改字体族或字重时改 index.html 那一行，别在这里加回 @import。 */
 /* 视觉语言（2026-10-11 第四轮：参考图「黑场 + 火光 + 白墨」海报排版迁移）：
    1. 无衬线实心大字（D1'）：参考图主标题是 neo-grotesque，同一行内 800/300 字重对撞，
       横跨 3.1%–97.1% 视口宽。像素点阵标题（第三轮的 D3）与它直接冲突，本轮退役。
@@ -15,7 +19,6 @@
    本地字面已经把画面顶住了 —— 花 1 MB 买一份没人看得见的观感，不划算。
    栈里仍把 'Noto Sans SC' 排在中文位：装了它的机器照用，没装的落系统中文，两种都不额外下载。
    代价：没装 Noto 的访客中文换成微软雅黑（实测残差 29.5，字形真的不同），记在 HANDOVER 第六十次。 */
-@import url('https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,800&display=swap');
 
 /* 中文像素显示字（Fusion Pixel）随第三轮点阵标题一起退役；
    public/fonts/ 那两个 woff 已于 2026-10-15 删除，需要回退时走 git 历史。 */
