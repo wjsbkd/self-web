@@ -10,15 +10,23 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" as="image" href="/assets/scrolly/outro-poster.jpg">
 <link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>
-<!-- 字体：与主站同一条理由（主站注释在 src/styles/global.css 顶部）—— @import 排在
-     <style> 里，浏览器解析到它才会去取字体 CSS，首屏白等一段串行链路；改 preconnect +
-     <link rel="stylesheet"> 并行。字重按本页 scrolly.css 的 font-weight 实测清单收窄：
+<!-- 字体：与主站同一条理由（主站注释在 index.html 里，2026-10-17 起改成非阻塞加载）——
+     外链样式表是渲染阻塞的，直接 <link rel="stylesheet"> 会让首屏等 fonts.googleapis.cn；
+     这里改成 preload + media="print" onload 换回 all，首屏不等它，字体到了再换字（display=swap）。
+     字重按本页 scrolly.css 的 font-weight 实测清单收窄：
      Archivo 只用 300/500/600/800 与 italic 800（400/700/900 与 italic 600 本页 0 引用）。
      这一页与主站不同：它**引 Noto Sans SC**（本页汉字标题使用），不要照搬主站那条「只砍 Noto」。 -->
 <link rel="preconnect" href="https://fonts.googleapis.cn" />
 <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
 <link
+  rel="preload"
+  as="style"
+  href="https://fonts.googleapis.cn/css2?family=Archivo:ital,wght@0,300;0,500;0,600;0,800;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap"
+/>
+<link
   rel="stylesheet"
+  media="print"
+  onload="this.media='all'"
   href="https://fonts.googleapis.cn/css2?family=Archivo:ital,wght@0,300;0,500;0,600;0,800;1,800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap"
 />
 <!-- 分享卡 / 规范链接：这一页是站内独立 URL（Media.jsx:71 挂着入口），

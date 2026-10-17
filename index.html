@@ -20,17 +20,43 @@
          就发（≈0.26s），和 JS 并行，画面才可能赶在用户还没往下滚之前出现。 -->
     <link rel="preload" as="image" href="/assets/scrolly/intro-front.jpg" fetchpriority="high" />
 
-    <!-- 字体：preconnect 提前握手（fonts.googleapis.cn 首次响应实测 2.58s，握手占其中一段），
-         再用 <link rel="stylesheet"> 并行加载，不再走 global.css 里的 @import ——
-         @import 排在 CSS bundle 顶部，浏览器要等整个 bundle 下载并解析后才发现它，
-         再去取字体 CSS，首屏白等一整段串行链路。
-         字重按全站 font-weight 实测清单收窄（Archivo 的 400/900 与 italic 600 全站 0 引用，
-         DM Mono 只用 400/500 两档）。⚠️ 改字体族或字重时改这一行，别在 global.css 里加回 @import
-         （那边有同主题注释）；public/scrolly/index.html 是另一份清单，别照抄主站这条。 -->
+    <!-- 字体：preconnect 提前握手 + 非阻塞加载这张字体 CSS。
+         为什么不能直接 <link rel="stylesheet">：外链样式表是渲染阻塞的，而 deferred 的
+         module script 要等未完成的样式表 —— 实测这条链是「字体 CDN 慢 → React 不挂载 →
+         首屏只剩 #020202 的黑」。本机对 fonts.googleapis.cn 的 DNS 双峰（5.9s～11.8s 都出现过）。
+         同一个包只换这段 HTML，冷启动三轮 FCP：阻塞版 1.6s / 7.7s / 12.3s，
+         这一版 152 / 172 / 184 ms —— 而同一轮里字体 CSS 自己仍要 6.2s / 12.0s / 11.8s 才到，
+         差别就在于首屏不再等它。代价是先出系统字、CSS 到位后换字（URL 里本来就有 display=swap）。
+         字重清单按全站实测：900 与 italic 600 确实 0 引用。400 这一档要说准（sc69 普查，1470 宽，
+         跑的是 dist-deploy 这份包）：算到 font-weight:400 的叶子 46 个，其中 2 个是 <style>/<title>、
+         11 个零尺寸，剩下含拉丁又可见的只有 15 段 —— 由 --font-display（栈里打头是 Archivo）画的是
+         12 段（#about 3、#strengths 2、#experience 1、#media 6，字号 15px / 12px），另外 3 段跟
+         Archivo 无关：2 段 --font-mono（DM Mono 的 400 本来就在清单里），1 段 --font-sans
+         （#media 的一条 li，getPlatformFontsForNode 报 Noto Sans SC 把它的汉字和拉丁一起画了 ——
+         这台机器装着 Noto Sans SC，不是「站点不下发就用不上」；访客机器没装才往 PingFang / Segoe UI
+         掉，这一句是推断）。纯汉字的 29 段也不归 Archivo 画：同一把尺报的是分工，例如 #about 那句
+         「Noto Sans SC×60 + Archivo SemiBold×5」，汉字那 60 个字形来自系统里那份 Noto。
+         删掉 400 的实测后果只压在这 12 段的拉丁上：由 500 那一支画（15px 下同一串拉丁量宽 250.36px，
+         与直接请求 500 完全相等；有真 400 时是 247.48px，窄 1.15%），整段实宽平均窄 0.32%、
+         最大 1.00%。⚠️ getPlatformFontsForNode 回的族名是「Archivo SemiBold」，别看字面以为在画 600 ——
+         400 与 500 指向同一个可变字体文件，CSS 把范围钉成 500，族名是文件自带的默认实例名（推断），
+         宽度证据（实测）指的是 500。
+         加回 400 的代价已量：字体文件 0 字节增量（400 与 500 是同一支可变字体，URL 相同，
+         实测 latin 子集 34,928 B 本来就在下发），只有字体 CSS 多 567 B。
+         改字体族或字重时改下面这一行（两处：preload 与 stylesheet，必须一致），
+         别在 global.css 里加回 @import（那边有同主题注释）；
+         public/scrolly/index.html 是另一份清单，别照抄主站这条。 -->
     <link rel="preconnect" href="https://fonts.googleapis.cn" />
     <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,500;0,600;0,700;0,800;1,800&display=swap"
+    />
+    <link
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
       href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,500;0,600;0,700;0,800;1,800&display=swap"
     />
 
