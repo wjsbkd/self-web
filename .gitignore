@@ -4,8 +4,9 @@ node_modules/
 # 构建产物
 dist/
 dist-verify/
-# dist-deploy/ 是 Qoder Sites 的发布快照，可随时 vite build --outDir dist-deploy 重出；
-# 需要长期保存的那一份在 backups/2026-10-16-deploy-baseline/（已一并排除）
+# dist-deploy/ 是 Qoder Sites 的发布快照，可随时 vite build --outDir dist-deploy 重出。
+# 平台侧另有 release，本地不再另存上线基线 —— 10-16 那份 backups/2026-10-16-deploy-baseline/
+# 已在第八十一次逐层验证"无当前版本缺少之物"后删除，别再照这条旧注释去找它。
 dist-deploy/
 
 # Qoder 平台的部署元数据（隐藏文件，含发布 ID 与 base64 的 index.html）
