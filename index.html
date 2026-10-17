@@ -43,6 +43,10 @@
          宽度证据（实测）指的是 500。
          加回 400 的代价已量：字体文件 0 字节增量（400 与 500 是同一支可变字体，URL 相同，
          实测 latin 子集 34,928 B 本来就在下发），只有字体 CSS 多 567 B。
+         ✅ **2026-10-17 深夜定论：加回。** 代价仅 567 B 的 CSS，收益是全站正文默认字重回真 400
+         （源码里没有一处显式 font-weight:400，那 12 段吃的是 body 继承的默认值，原本被 500 顶替）；
+         删 400 那个决定的收益只有 567 B，与风险不成比例。下面 URL 已含 `0,400`（preload 与
+         stylesheet 两处一致）；scrolly 那份同样加回。
          改字体族或字重时改下面这一行（两处：preload 与 stylesheet，必须一致），
          别在 global.css 里加回 @import（那边有同主题注释）；
          public/scrolly/index.html 是另一份清单，别照抄主站这条。 -->
@@ -51,13 +55,13 @@
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,500;0,600;0,700;0,800;1,800&display=swap"
+      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap"
     />
     <link
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
-      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,500;0,600;0,700;0,800;1,800&display=swap"
+      href="https://fonts.googleapis.cn/css2?family=DM+Mono:wght@400;500&family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&display=swap"
     />
 
     <!-- 基础 SEO -->
