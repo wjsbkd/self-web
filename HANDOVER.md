@@ -6849,3 +6849,56 @@ JS `index-Dicnb14N` 319.62 kB / gzip 109.54 —— 与第七十九次**同哈希
 > **一条要记住的方法**：子代理报「`image4.png` 仍被 `projects.js:9` 引用」是**错的**（那里早已改指 `.webp`）。
 > 这就是本项目第三次印证"子代理摘要当数据复核、不当结论用"——前两次是 Q17 那个编行号的代理、
 > Q24 那个像素账数不对的代理。审计类任务尤其要逐条 grep 复核。
+
+## 第八十一次：本地重复副本清理 —— `backups/` 231M → 15M（2026-10-17，仅本地，不入库）
+
+他问「本地项目里面的东西是否存在可以删除的」，并给的口径是「**我想删掉的是对现有版本没有任何影响的部分**」。
+同时确认了两件不动的：两份 PDF 都保留（`作品集.pdf` 仍挂 Media 入口）、根目录 806M `作品集.pptx` 保留（编辑源件）。
+
+### 一、先说结论：这些大目录**全都没入库**
+
+`.gitignore` 早把 `node_modules/ dist/ dist-verify/ dist-deploy/ backups/ cf/ probe-shots/ probe-af.mjs
+*.qoder.site 作品集.pptx 李纵横15087322631.pdf` 全覆盖（`git ls-files` 实测入库数 0）。所以它们
+**只占本地磁盘，对仓库体积、部署产物、访客加载零影响** —— 这是判断"能不能删"的前提。
+
+### 二、删了的（三类，每类都有"删了不损失"的硬证据）
+
+**① `backups/2026-10-16-deploy-baseline/` 整个目录（159M → 0）**
+它是 10-16 上线时留的工作区全量快照。逐层验过"快照没有任何当前版本缺少的东西"：
+
+- `src/` `public/` `docs/` `cf/` `assets-src/` 五层**快照独有文件各 0**（`find` 逐文件比对，不是目录级 diff）
+- 里面的 `main.mp4` md5 `73cbc27f…`、`intro.mp4` md5 `c4cb8d96…` 与 `public/assets/scrolly/` 现值**逐字节相同**
+- `node_modules` 107M：`npm install` 一条命令重出
+- `dist-deploy/` 快照：JS `index-DcvoUcfg.js` 与根目录那份 md5 相同（`08d2cf67…`），且根目录那份**还多两个 mp4**（更完整）
+- `HANDOVER.md` 那份副本与当前差 205 行 = 当前更新，无引用价值
+
+想回到"上线基线"用 git 即可（本轮之前 HEAD 就在基线附近），不必靠磁盘快照。
+
+**② `backups/2026-10-16-deploy-baseline-portable.zip`（50M）**
+与解压目录 **234/234 条目 md5 全同、0 不同、0 缺失** —— 纯重复，二者留一。留解压态（删了 zip）是因为
+解压态还能逐层比对，zip 只是同内容的另一种存放形态。
+
+**③ `backups/2026-10-11-film-stage/public/assets/scrolly/main.mp4`（7.5M）**
+md5 与 `public/` 现值相同。同目录那份 **`intro.mp4` 1.5M 没删** —— 它是旧首片
+（md5 `c50f541f…`，与现值 3.2M 那份不同），且 HANDOVER 有 4 处引用它当证据（`:5430` fusion-pixel 字体的 `src:url()`、
+`:5996` 旧版 Canva 导出的 `作品集.pdf`），删了就不可复核。
+
+**结果 `backups/` 15M，剩 3 个目录**：`2026-10-11-film-stage`（15M，含独有旧首片 + 文档引用证据）、
+`2026-08-01-restore`（108K）、`2026-07-30-spiral-v3`（16K）、`2026-10-15-logs`（4K）。
+
+### 三、**没删**的与理由（他勾了"纯重复副本"，下面这些不属于纯重复）
+
+| 项 | 体积 | 为什么留 |
+|---|---|---|
+| `dist/` + `dist-deploy/` | 19M × 2 | 不是重复：`dist` 是新版 `index-Dicnb14N.js`、`dist-deploy` 是**线上正在跑的** `index-DcvoUcfg.js`，两份构成"本地新构建 ↔ 线上旧版"的对照链。删了下次要比对线上得重新 build |
+| `cf/` 55 个探针 + `probe-shots/` 6 张 + `probe-af.mjs` | 12.8M | HANDOVER 第五十一次「点名保留在本地、不入库」的复现脚本，文档引用 2~7 处。删了那些实测结论无法复核 |
+| `assets-src/` 13 张 | 2M | Q15 从 `public/` 搬出的**素材库**，供后续挑图用；去 PPTX 取要开 806M 的包 |
+| `作品集.pptx` / `李纵横15087322631.pdf`（根目录） | 806M / 0.3M | 编辑源件，他已明确保留 |
+| `probe-shots` 等在快照里的副本 | — | 属上面"纯重复"但**已在删 deploy-baseline 时一并消失**，不需要单独处理 |
+
+### 四、删后验证（不是"应该没事"，是量的）
+
+`git status` **空**（backups/ 与 dist/ 都在 ignore 里，未产生任何 tracked 变动）；
+`npx eslint src/` 0 error；`npm run build` 0 error（CSS `index-NVYaHiKV` 68.39 kB / JS `index-Dicnb14N` 319.62 kB，
+**与前两轮同哈希** —— 证明删的全是不进 bundle 的东西）；`public/assets/scrolly/*.mp4` 两个 md5 与删前逐字节相同；
+`dist-deploy/assets/index-DcvoUcfg.js` 319,472 B 仍在（线上版本对照件没被误删）。本轮**无临时产物**（探针脚本与 headless profile 上一轮已清）。
