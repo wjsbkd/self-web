@@ -271,7 +271,7 @@ export default function AbilityFolder() {
             >
               {abilityMaterials.map((mat) => (
                 <div key={mat.id} className="ability-page">
-                  <img src={mat.image} alt="" style={{ objectFit: mat.imageFit === 'contain' ? 'contain' : 'cover' }} />
+                  <img src={mat.image} alt="" loading="lazy" style={{ objectFit: mat.imageFit === 'contain' ? 'contain' : 'cover' }} />
                   <span>{mat.title}</span>
                 </div>
               ))}
