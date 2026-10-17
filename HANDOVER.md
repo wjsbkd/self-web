@@ -6670,3 +6670,13 @@ B 另加键盘 ← → / Home / End（原生 overflow 容器不认方向键，�
 - **水印 / 缓存 / sitemap MIME**：归平台，迁移时一并解决。
 - **Q22 图片延后**：`SpiralGallery.jsx` 的 `index < 6 ? 'eager'` 条件让 6 张图全不 lazy（首屏多拉 ~1MB）；若 Q40 轮播落地则顺手改，否则单独一行 `i < 3`。
 - 首屏多拉的能力档案 4 张图（1.15MB）仍按 Q22 原判挂起（等站主对「图晚出现」的取舍）。
+
+## 第七十八次：og:image 绝对 URL + 图片 lazy 两项落地（2026-10-17，提交 `aa45ee2`，已推送；**线上未更新，等站主重新发布**）
+
+第七十七次挂起的两项，他一句「你帮我处理」全落地：
+
+- **og:image / twitter:image 根相对 → 绝对**（`index.html:49/:59`）：Twitter / Slack / LinkedIn 的爬虫要求绝对 URL，根相对的抓不到分享图；微信/QQ 会拿 origin 补全、两种写法都兼容。换域名时同步面从四处变六处（canonical / og:url / og:image / twitter:image / robots Sitemap / sitemap loc）。
+- **SpiralGallery.jsx:299**：`index < 6 ? 'eager' : 'lazy'` → `index < 2`。15 张卡全在首屏外 6000px+，原条件让 lazy 形同虚设（6 条全命中），零滚动时白拉约 1MB；留前 2 张 eager 保滚动进板块时首视有图。
+- **AbilityFolder.jsx:274**：能力档案 4 张 `<img>` 补 `loading="lazy"`（要两次点击才看得见，零滚动时 1.15MB 白下）。展开态与收起态共用同一组 img，一处补全两态生效。
+- 产物核验：dist JS 里 `loading:n<2?'eager':'lazy'` + 4 处 `loading:'lazy'`（含 VideoRail/WorkModal 原有的）；og 绝对 URL 在 dist/index.html 2 处。lint 0 error，build 通过。
+- ⚠️ **线上还在跑旧版**（`index-DcvoUcfg.js`）：这两项要生效得在 Qoder 侧重新发布（vite build 后用新 dist 覆盖部署）。发布后可用微信/Twitter 各发一条消息验证分享卡片有图。
