@@ -7620,3 +7620,61 @@ ISO-IEC29500 Office schema，各 237K × 3）——**属于 App 本体，不是�
 项目 `git status` 与清理前**逐字相同**（3 个 M 仍是并行会话在途工作）；
 `npx eslint src/` 0 error；Claude Code 的 3 个会话没被误删（Cowork 与 Code 是两套存储，互不相干）。
 本轮无新增临时产物。
+
+## 第八十八次：全盘 Agent 清理 —— WorkBuddy 与 Qoder CN 的 session/产物共 ~168M（2026-10-19，只删本地）
+
+他问两件事：① Code 模式除我之外那两个对话框怎么办；② **全盘所有 Agent**（WorkBuddy / ChatGPT / Qoder CN /
+DeepSeek Harness / ZCode / Trae CN）对 self web 的改造记录与**对话框内产生的产物**哪些是垃圾。口径给了死的：
+「只要不影响最终版本都不可删，不必保留」。
+
+### 一、Code 模式另外两个会话：**一个都没删**（它们在跑）
+
+`a6acc808`（6.46M，76 Edit + 8 Write，视觉改造主线）、`9a092800`（1.86M，`.githome` 问答线）——
+两个都在我操作前 **12 分钟**还在写 jsonl。**删了会当场损坏在途工作。** 此前删的 37 个判据不同：那些的工作已全部提交入库。
+
+### 二、全盘清查：8 个 Agent 家目录共 3.2G，只有 3 个与 self web 有关
+
+| 目录 | 总量 | self web 相关 |
+|---|---|---|
+| `.workbuddy` | 1.67G | 23.7M（6 会话） |
+| `.qoder-cn` | 1.12G | 147.5M |
+| `.trae-cn` | 117M | **4K**（记忆，留） |
+| `.zcode` / `.qodersec` / `.codebuddy` / `.qoder` / `.qoder-cli` | 336M | **0** |
+
+`.zcode` 唯一命中是 `plugins/.../code-modernization/workflows/portfolio-asse…`（6K）—— 是**插件自带的模板**，
+与 self web 无关，没碰。ChatGPT / DeepSeek 在本机没有对应数据目录。
+
+### 三、删的与判据（两类：对话记录 + 对话产生的产物）
+
+**`.workbuddy`（28.9M）**
+- 6 个会话 jsonl（23.5M）：时间 **07-30 ~ 08-01**。判据不是"旧"而是**已被 git 完全覆盖**——
+  它碰过的在役文件（`VideoRail.jsx` / `SpiralGallery.jsx` / `nav.js` / `global.css` / `responsive.css` /
+  `vite.config.js`）在那之后每一个都有多次提交（VideoRail 到 `3ef70a2` 10-16、global.css 到 `4509772` 10-17）。
+- **22 个 `file-history` 快照目录（5.3M）**：这是它改文件前存的旧版本。项目当前版本在 git 里有完整历史，**无挽回价值**。
+
+**`.qoder-cn`（139M）**
+- `logs/sessions/D--AI------self-web/` **221 个 session 目录（108.9M）**
+- `projects/D--AI------self-web/` 的 2 个会话（最后两个会话本身只写自己的 memory 与 `%TEMP%` 探针，没碰项目代码）
+- `tmp/D--AI------self-web/`（30.1M）= `images/` 26.3M（会话里贴过的参考截图）+ `tool-outputs/` 4.5M + `attachments/` 48K
+- 判据：这些会话的工作时段 **10-12 ~ 10-18 全程有 56 个提交覆盖**（`f5134ca`…`4264002`）。
+
+**⚠️ 一次自我更正**：最初我按工具名 `Edit/Write` 统计 WorkBuddy 得到 0 次写入，差点判成"纯咨询"。
+实际它用另一套 schema（`Successfully overwrote file: …Experience.jsx`）—— **它确实改过**，只是已被 git 覆盖。
+按工具名判"有没有动手"在这里是错的，要看文件路径命中。
+
+### 四、**刻意保留**的
+
+| 项 | 体积 | 理由 |
+|---|---|---|
+| `.qoder-cn/projects/D--AI------self-web/memory/` **19 个 md** | 135K | `self-web-film-plate-contrast-constraint.md`(19.5K)/`mobile-audit.md`(19K)/`stacking-cascade-facts.md`(12.7K)/`font-import-facts.md` 等 —— **是技术结论不是对话垃圾**，与 HANDOVER 互补，删了不可再生 |
+| `.qoder-cn/memory/` 42 个 | — | 全局知识层（含 `claude-removal-20261007.md`、`chatgpt-*-*.md`、`c-drive-cleanup-20261018.md`） |
+| `.trae-cn/memory/projects/-d-AI------self-web--*/` | 4K | 08-03 的项目记忆 |
+| `.workbuddy` 其余 1.64G / `.qoder-cn` 其余 972M | — | **app 本体**（`binaries` 699M、`plugins` 319M、`logs` 787M、`file-history` 52M…），不是对话产物，不代他决定 |
+| `.zcode` 164M / `.qodersec` 168M | — | 与 self web 零关联 |
+
+### 五、删后验证
+
+项目 `git status` 与删前**逐字相同**（3 个 M = 并发会话在途）；`npx eslint src/` 0 error；`npm run build` 0 error
+（CSS `index-NVYaHiKV` 68.39 kB / JS `index-Dicnb14N` 319.62 kB，**与前几轮同哈希**）。
+五项交付物核对在位：`作品集.pdf` 1.4M、`李纵横15087322631.pdf` 304K、`intro.mp4` 3.2M、`og-cover.jpg` 96K、`apple-touch-icon.png` 8K。
+`.workbuddy` 的空壳目录 `projects/d-AI工作文件夹-self web` 也 rmdir 掉了。本轮无新增临时产物。
