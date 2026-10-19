@@ -7572,3 +7572,51 @@ ignore 条目本身一个字没动，`dist/` / `dist-deploy/` / `backups/` 的�
 
 项目 `git status` 与删前**逐字相同**（3 个 M = 并行会话在途工作）；Cowork 容器的系统件全在；
 我的 Claude Code 3 个会话没被误删。本轮无新增临时产物。
+
+## 第八十七次：Cowork 侧**全部**清空 —— 会话数据 140.4M → 39K（2026-10-19，只删本地，不入库）
+
+他追一句「Cowork和chat产生的东西都清理掉」。上一轮（第八十六次）留了 `2ecd38f0` 因为它是活会话，
+本轮确认冷却后**整个删掉**，并补清了上一轮没查的三处：**悬空的会话索引**、**Partitions 渲染容器**、
+以及 `%APPDATA%\Claude` 那 41M 的成分核查。
+
+### 一、删前先确认 2ecd38f0 真的冷却了（不是看时钟，是看文件）
+
+上一轮它最后写在 11:20（19 分钟前）。这轮重量的判据换成**文件级**：遍历 48 个文件取 mtime，
+**48/48 全部距现在 ≥30 分钟**（最后动的仍是 11:20 那两个 jsonl），且 `.claude/.last-cleanup` 显示 App 自己 11:07 做过一次清理。
+→ 判定已冷却，删。**释放 124.2MB。**
+
+### 二、顺手清掉的两处残留（都是"工作区没了但引用还在"）
+
+1. **悬空索引 `local_2ecd38f0-*.json`（51,161 B）** —— 它是会话元数据（`title: 网页风格提示词分析`、
+   `processName: gracious-magical-planck`、`cwd: ...\2ecd38f0\outputs`）。删前**读了它的 cwd 去反证**：
+   `pathlib.Path(cwd).exists() == False` → 索引指向的工作区刚被删，确认悬空才动手。不先验这一条就可能删掉一个活会话的索引。
+2. **`Partitions/cowork-artifact-e2e2fad3-...`（2,584K）+ `cowork-file-preview`（1,823K）** ——
+   Cowork 渲染 artifact 的 Chromium 分区，`e2e2fad3` 正是这个 self web 的会话 ID。目前 `Partitions/` 已空。
+
+### 三、`%APPDATA%\Claude` 41M 的成分核查（结论：绝大部分不是会话数据）
+
+| 成分 | 体积 | 性质 |
+|---|---|---|
+| `Cache/` `Code Cache/` `GPUCache/` `Dawn*Cache/` | ~39M | Electron 应用缓存，删了会自己重建，但**不是"对话产生的东西"**，本轮**没动** |
+| `local-agent-mode-sessions/` | 60K | ⚠️ 看着像会话副本，逐件读过之后是 **skills-plugin 的 SKILL.md**（docx/pptx/xlsx/pdf/frontend-design/schedule/explain-usage/consolidate-memory）—— **App 的功能定义，删了会丢技能**，保留 |
+
+`Claude-3p/local-agent-mode-sessions/` 剩下的 3.4M 同样是 skills-plugin（含 docx/pptx/xlsx 三份重复的
+ISO-IEC29500 Office schema，各 237K × 3）——**属于 App 本体，不是对话产物，一个没删**。
+
+### 四、最终状态
+
+| 项 | 删前 | 删后 |
+|---|---|---|
+| Cowork 会话工作区 | 6 个 / 140.4M | **0 个**（`2ecd38f0` `fbea0d94` `05cf4395` `93a158c6` `5e3f369a` `d88469e9` 全部不存在） |
+| Cowork 会话数据（不含 skills-plugin） | 140.4M | **38.8K** |
+| Partitions | 4.5M | 0 |
+
+容器里只剩 4 个系统件：`artifacts.json`(2B)、`cowork_account_settings.json`(1.5K)、
+`scheduled-tasks.json`(125B)、`memory/`(0B)、`usage-ledger/`(38K，每日用量账本)。
+**这五个不是对话产物，刻意保留。**
+
+### 五、删后验证
+
+项目 `git status` 与清理前**逐字相同**（3 个 M 仍是并行会话在途工作）；
+`npx eslint src/` 0 error；Claude Code 的 3 个会话没被误删（Cowork 与 Code 是两套存储，互不相干）。
+本轮无新增临时产物。
