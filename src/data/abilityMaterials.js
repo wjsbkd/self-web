@@ -2,7 +2,11 @@
 // 2026-10-17：四张图从 PNG 换成同目录 WebP（1,151,262 B → 304,276 B，−74%）。
 // PNG 原样保留在 public/ 里 —— 它们是 pptx 的逐字节导出件，覆盖会把
 // 「项目文件 ↔ pptx 媒体号」这条对应关系弄断，所以新增派生件、把引用改过去。
-// 回退只需把下面四处 .webp 改回 .png。
+// ⚠️ 这 4 个 PNG（image2/4/6 + poster-trio-ai）在 `assets-src/pptx-media/` 里**没有副本**
+//   （那次搬走的是另外 11 个未引用文件），但它们各自都已入库（`git hash-object` 与
+//   `rev-parse HEAD:` 逐个比对一致），所以删工作区那份也能从仓库取回。
+//   2026-10-18 审计曾误判「assets-src 有同字节副本」而要删，复核后撤回。
+//   回退只需把下面四处 .webp 改回 .png。
 export const abilityMaterials = [
   {
     id: 'capcut',
