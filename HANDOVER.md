@@ -7678,3 +7678,42 @@ DeepSeek Harness / ZCode / Trae CN）对 self web 的改造记录与**对话框�
 （CSS `index-NVYaHiKV` 68.39 kB / JS `index-Dicnb14N` 319.62 kB，**与前几轮同哈希**）。
 五项交付物核对在位：`作品集.pdf` 1.4M、`李纵横15087322631.pdf` 304K、`intro.mp4` 3.2M、`og-cover.jpg` 96K、`apple-touch-icon.png` 8K。
 `.workbuddy` 的空壳目录 `projects/d-AI工作文件夹-self web` 也 rmdir 掉了。本轮无新增临时产物。
+
+## 第八十九次：确认线上已更新（前几轮"线上待发布"的判断作废）+ 两个 Code 会话**仍未删**（2026-10-19）
+
+他两条：① Code 模式除本对话外都可删，且要我先查每个对话的产物；② **他说已经重新发布过，让我查**。
+
+### 一、线上逐项核对 —— **全部已生效**，我前几轮那句"线上还停在旧版"作废
+
+| 项 | 线上实测 |
+|---|---|
+| JS / CSS | `index-Dicnb14N.js` / `index-NVYaHiKV.css`，与本地 `dist/` **逐字同名同哈希** |
+| og:image | `https://lizongheng-ktftxw0cmi4.qoder.zone/assets/og-cover.jpg`（绝对 URL 在） |
+| 四张 WebP | 200，字节数与本地一致：`image2` 64,664 / `image4` 88,834 / `image6` 48,476 / `poster-trio-ai` 102,302 |
+| apple-touch-icon | 200，8,127 B |
+| 字体 | `rel="preconnect"` **2 条**；`^@import` **真实规则 0 条**（grep 到的 1 处是我写在 `index.html:47` 的注释文字"别加回 @import"，是假阳性，与 scrolly 页那次同类） |
+| sitemap | `<loc>` **2 条**（首页 + `/scrolly/index.html`） |
+| scrolly 页 | `og:image` 在、`@import` 0 处 |
+
+→ **第三轮之后我反复说的"线上还在跑旧版 / 待重新发布"这条从本轮起不再成立。** 判据是字节级核对，不是"他说发布了"。
+
+### 二、两个 Code 会话的产物查完了，但**会话本身仍不能删**
+
+产物清单（很少，都在各会话自己的附件目录里）：
+
+| 文件 | 大小 | 性质 | 判定 |
+|---|---|---|---|
+| `a6acc808/custom-title.json` | 1K | 会话标题「网站视觉风格改造检查」 | 该会话自己的元数据，跟它共存亡 |
+| `9a092800/custom-title.json` | 1K | 会话标题「现在项目已经部署，请你检查…」 | 同上 |
+| `9a092800/auto-mode-classifier-error.txt` | 256K | **10-17 一次 auto-mode 分类器超时的错误转储**（`Request was aborted` + 上下文对比 + 被分类动作原文） | 纯诊断废料、零复用价值 —— **但属于一个正在跑的会话，不能单独摘** |
+
+**为什么没删**：删前量的写入时间 —— `a6acc808` **5.7 分钟前**、`9a092800` **9.5 分钟前**，
+且 `claude.exe` 进程里 13:10:34（PID 9128）与 13:06:40~47 那批正对应这两个会话。
+**两个都是活的。** 他已经授权"除本对话外都可删"，但活会话一删就当场损坏，所以这条授权要等它们真的退出才生效。
+
+→ **下次的动作**：确认 30 分钟以上无写入（或 Claude Desktop 里那两个会话已关闭）后，
+`rm -f` 这两个 `.jsonl` 与它们的附件目录即可，共约 8.4M。连同那个 256K 错误转储一起消失，不需要单独处理。
+
+### 三、状态
+
+本轮**零写入**（全是只读核对）。工作区 `git status` 仍是那 3 个 M（并发会话在途），未提交、未推送。
