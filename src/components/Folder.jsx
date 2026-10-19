@@ -1,5 +1,3 @@
-'use client';
-
 import { Children, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './Folder.css';
 
