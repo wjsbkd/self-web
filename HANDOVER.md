@@ -7717,3 +7717,43 @@ DeepSeek Harness / ZCode / Trae CN）对 self web 的改造记录与**对话框�
 ### 三、状态
 
 本轮**零写入**（全是只读核对）。工作区 `git status` 仍是那 3 个 M（并发会话在途），未提交、未推送。
+
+## 第九十次：两个 Code 会话落地删除 + Trae CN 旁路产物清理（2026-10-19 下午）
+
+他先问的插话（另一对话框的三个说法）已当面逐条验证：①「HANDOVER 没写 .githome」**错**（`:29-30` 与 AGENTS.md `:7-8` 都有）；
+②「solar-system-3d 没 git」**对**（实测 74M/1477 文件、无 .git，git init 与否归他）；③「git 脏着 3 个文件」**事实存在但性质没说清**——
+那 3 个 M 是并发会话的工作：`index.html` 把 `0,400` 字重加回（⚠️ 这曾被 `925dcd6` 加回、他答"不要"后 `2641c6f` revert；
+**HEAD 与线上都无 0,400，只有本地未提交版 + dist 有**）、`Folder.jsx` 删 `'use client';`、`abilityMaterials.js` 补孤本注释。
+裁决权在他，我一字没碰。
+
+### 一、两个 Code 会话（`a6acc808` 6.5M + `9a092800` 1.9M + 附件）已删
+
+他说「两个会话已关闭」。删前量了写入时间：**27 分钟无写入**（正好卡在 30 分钟门槛下），
+但两个会话的"最新文件"都是 `custom-title.json` 且**时间戳完全相同**——那是**关闭时统一写标题的收尾动作**，不是活动迹象；
+加上 `claude.exe` 进程从 17 → 11（两个会话的进程树确实退出）。三证一致才动手。
+`9a092800` 那个 256K 的 auto-mode 分类器超时转储随会话一起消失。**Claude Code 会话目录只剩本会话（5.1M）。**
+
+### 二、Trae CN 的 self web 对话：诚实结论是「**我清不掉，需要他在 Trae UI 里删**」
+
+深查后：Trae 的对话本体全在 `%APPDATA%\Trae CN\ModularData\ai-agent\database.db`（**218.9M，加密格式，
+文件头非 SQLite/非 DuckDB，无法读取、无法按项目拆分删除**）。`.trae-cn` 那 117.7M 里 90.7M 是扩展本体，与对话无关。
+他看到的"self web 对话还在"就是这 219M 加密 DB 里的内容。**下次他在 Trae 界面里手动删那些对话，DB 才会回收。**
+
+旁路产物里与 self web 有关的，已查清全部落点：
+
+| 位置 | 内容 | 处置 |
+|---|---|---|
+| `User/History/` 3 目录 36K | Trae 编辑 `index.html`/`Footer.jsx`/`Hero.jsx` 留的旧版本快照（07-30/08-03），`entries.json` 指回 self web 路径 | **已删**——这三个文件分别演进到 10-18/10-11/10-12，git 历史完整覆盖，快照无挽回价值 |
+| `ModularData/ai-agent/sandbox/` 2 个 json 14K | 会话 `6a6a3e11` 的钩子配置（hex 名与 `.trae-cn/memory` 里 self web 会话内存档同名） | **已删** |
+| `Partitions/trae-webview/Cache` | webview 渲染缓存（对话 UI 渲染痕迹） | **已删 137.8M**（Trae 自己会重建；比预估的 15.3M 大——之前只统计含 self web 字样的文件） |
+| `ModularData/ckg_server/` 34 个历史日志 | 代码索引服务运行日志（07-08~08-04） | **已删 13.6M**，保留 `env_codekg.db` 索引本体与 `local_env.json` |
+| `User/workspaceStorage/f52c0892*/` 408K | `AI工作文件夹` 工作区状态 DB | **保留**——删了工作区状态会重置 |
+| `.trae-cn/memory` 4K 5 个文件 | self web 项目记忆（topics/project_memory/session_memory） | **保留**——技术结论层 |
+| `database.db` 218.9M | **对话本体（加密）** | **等他在 Trae UI 手动删** |
+
+本轮合计释放约 **168M**（Code 会话 8.4M + Trae 137.9M + ckg 日志 13.6M + sandbox/History 计入前项）。
+
+### 三、删后验证
+
+项目 `git status` 仍是那 3 个 M（并发会话在途，未动）；`npx eslint src/` 0 error；
+Trae 快照对应的 3 个在役文件完好。本轮无新增临时产物。
