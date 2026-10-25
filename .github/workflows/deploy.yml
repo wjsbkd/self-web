@@ -1,24 +1,32 @@
 name: 部署站点
 
-# 双目标部署：
-#   1. GitHub Pages（主站）https://wjsbkd.github.io/
-#      —— 走 actions/deploy-pages，零 secret、零 SSH key。
-#   2. Cloudflare Pages（备用）https://lizongheng-portfolio.pages.dev/
-#      —— 需要两个 secret：CF_API_TOKEN（Cloudflare Pages 写权限）
-#         + CLOUDFLARE_ACCOUNT_ID。名字在仓库 Settings 里创建时自己定，
-#         创建后把下面 with: 里的字面量名换成你起的那个。
+# 部署链路（2026-10-26 定稿，第三版）：
+#
+#   build ─┬─ deploy-github-pages   主站  https://wjsbkd.github.io/
+#          │    把 dist/ git push -f 到 wjsbkd/wjsbkd.github.io 的 main 分支
+#          │    （那个仓库的 Pages 构建源是 legacy：分支 main / 根目录）
+#          └─ deploy-cloudflare     备用  https://lizongheng-portfolio.pages.dev/
+#               只在 workflow_dispatch 时跑
+#
+# 为什么不用 actions/deploy-pages：Pages 站点在**另一个仓库**（wjsbkd.github.io），
+# self-work 自己的 repos/.../pages 返回 404，configure-pages 直接 Not Found。
+# 跨仓库供源只有 push 到那个仓库这一条路。
 #
 # 主站为什么是 GitHub Pages（2026-10-26 复核，推翻 HANDOVER 第九十二次的结论）：
-# 早前只各采样一次，得到「Cloudflare 快 5–15 倍」并据此迁主站。后来做 8 轮中位数采样发现
-# 节点分配变了：GitHub Pages 从 japaneast（东京）迁到 koreacentral（首尔 ICN），
-# Cloudflare Anycast 落点一直是 SEA（西雅图）。同机同网络重测：
+# 早前只各采样一次，得到「Cloudflare 快 5–15 倍」并据此迁主站。后来做 8 轮中位数
+# 采样发现节点分配变了：GitHub Pages 从 japaneast（东京）迁到 koreacentral
+# （首尔 ICN），Cloudflare Anycast 落点一直是 SEA（西雅图）。同机同网络重测：
 #   JS p50        GitHub 0.77s   vs Cloudflare 4.70s
 #   intro.mp4     GitHub 2.0–3.1s vs Cloudflare 10.9–48.3s
 #   main.mp4      GitHub 3.6–4.9s vs Cloudflare 38.3–57.9s
 # 结论反过来了，所以域名元数据已全量回退到 wjsbkd.github.io。
 #
-# ⚠️ Cloudflare 那一路在 token 配好前只在 workflow_dispatch 时跑（见下面 job 的 if）。
-#    配好 secret 后把那行 if 删掉，push 就会同时部署两个目标。
+# ⚠️ 依赖的 secret（在 self-work 仓库 Settings → Secrets and variables → Actions 建）：
+#   GH_PAGES_DEPLOY_KEY  —— 站点仓库 wjsbkd/wjsbkd.github.io 的 SSH deploy key 私钥，
+#                            公钥挂在那个仓库的 Deploy keys 里（写权限、已验证）。
+#                            生成方法见 HANDOVER 第九十三次。
+#   CLOUDFLARE_ACCOUNT_ID + CF_PAGES_TOKEN —— 只有 deploy-cloudflare 用到，
+#                            配好前那一路不跑（见 job 的 if），不影响主站。
 on:
   push:
     branches: [master]
@@ -64,30 +72,31 @@ jobs:
   deploy-github-pages:
     needs: build
     runs-on: ubuntu-latest
-    # deploy-pages 需要这两个权限；仓库级 permissions 只给了 contents: read
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
 
-      # 这一行会把仓库的 Pages 构建源从「分支 / 目录」切成「GitHub Actions」。
-      # 切过去之后 wjsbkd.github.io 仓库 main 分支里那份旧 dist 就不再被构建，
-      # 站点改由本 workflow 的 artifact 供源。想切回去：仓库 Settings → Pages
-      # → Source 选 Deploy from a branch（main / root）。
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - id: deployment
-        uses: actions/deploy-pages@v4
-        # 部署详情会出现在仓库 Environments → github-pages 里，含每次的 SHA
+      - name: 推送 dist/ 到 wjsbkd.github.io
+        env:
+          DEPLOY_KEY: ${{ secrets.GH_PAGES_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          cd dist
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b main
+          git add -A
+          git commit -q -m "部署 self-web · ${GITHUB_SHA}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=20"
+          # 本机实测：只有 ssh.github.com:443 这条路径通，github.com:443 恒定超时
+          git remote add origin ssh://git@ssh.github.com:443/wjsbkd/wjsbkd.github.io.git
+          git push -f origin main
 
   # 备用站。token 配好前只在手动 dispatch 时跑，否则每推一次就把整个 run 拖红
   # （push 不触发它，GitHub Pages 那一路完全不受影响）。
