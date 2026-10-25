@@ -4,7 +4,9 @@ name: 部署站点
 #   1. GitHub Pages（主站）https://wjsbkd.github.io/
 #      —— 走 actions/deploy-pages，零 secret、零 SSH key。
 #   2. Cloudflare Pages（备用）https://lizongheng-portfolio.pages.dev/
-#      —— 需要 secret：{{SECRET_5ehnpfyb}} + CLOUDFLARE_ACCOUNT_ID。
+#      —— 需要两个 secret：CF_API_TOKEN（Cloudflare Pages 写权限）
+#         + CLOUDFLARE_ACCOUNT_ID。名字在仓库 Settings 里创建时自己定，
+#         创建后把下面 with: 里的字面量名换成你起的那个。
 #
 # 主站为什么是 GitHub Pages（2026-10-26 复核，推翻 HANDOVER 第九十二次的结论）：
 # 早前只各采样一次，得到「Cloudflare 快 5–15 倍」并据此迁主站。后来做 8 轮中位数采样发现
@@ -102,9 +104,15 @@ jobs:
       # wrangler 在 CI 认这两个环境变量，不需要 wrangler login。
       # 若报「Authentication error」= secret 未配，或 token 缺 Pages 写权限
       # （Cloudflare 后台建 token 时权限要选 Account → Cloudflare Pages → Edit）。
+      #
+      # 这里必须写「字面量 secret 名」，不能把 secret 名再用一层表达式包起来：
+      # 表达式里套表达式会让 GitHub 的解析器把整份 workflow 判成文件错误，
+      # 连 job 都不建（实测 run 40213465063 就是这样，check-runs 为空）。
+      # token 的 secret 名由你自己在仓库 Settings → Secrets and variables →
+      # Actions 里创建时定，创建后把下面 CF_PAGES_TOKEN 换成你起的那个名字。
       - name: 部署到 Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.{{SECRET_5ehnpfyb}} }}
+          apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=lizongheng-portfolio --branch=main
