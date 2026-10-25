@@ -25,8 +25,10 @@ name: 部署站点
 #   GH_PAGES_DEPLOY_KEY  —— 站点仓库 wjsbkd/wjsbkd.github.io 的 SSH deploy key 私钥，
 #                            公钥挂在那个仓库的 Deploy keys 里（写权限、已验证）。
 #                            生成方法见 HANDOVER 第九十三次。
-#   CLOUDFLARE_ACCOUNT_ID + CF_PAGES_TOKEN —— 只有 deploy-cloudflare 用到，
-#                            配好前那一路不跑（见 job 的 if），不影响主站。
+#   CLOUDFLARE_ACCOUNT_ID + CF_PAGES_TOKEN —— deploy-cloudflare 用。
+#                            账号 857ebf14e5c227fb9256677b6d8718e8；
+#                            token 权限是 Account → Cloudflare Pages → Edit，
+#                            无过期时间。三者均已配好。
 on:
   push:
     branches: [master]
@@ -98,11 +100,10 @@ jobs:
           git remote add origin ssh://git@ssh.github.com:443/wjsbkd/wjsbkd.github.io.git
           git push -f origin main
 
-  # 备用站。token 配好前只在手动 dispatch 时跑，否则每推一次就把整个 run 拖红
-  # （push 不触发它，GitHub Pages 那一路完全不受影响）。
+  # 备用站。token（CF_PAGES_TOKEN + CLOUDFLARE_ACCOUNT_ID）已配好，2026-10-26 起
+  # push 与手动 dispatch 都会部署。注意它是备用：实测 GitHub Pages 快 5–15 倍。
   deploy-cloudflare:
     needs: build
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
