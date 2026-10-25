@@ -7826,3 +7826,138 @@ filter-repo 会删 origin remote，需手动 `git remote add` 加回；随后 `p
 
 - **Qoder 站点是否下线**：`https://lizongheng-ktftxw0cmi4.qoder.zone/` 仍在跑（200），与 GitHub Pages 并存、内容相同。两个地址的 og/canonical 现在都指向 GitHub —— 若希望访客统一走新地址，需要他在 Qoder 侧下掉旧站。
 - **自定义域名**：仍无。`index.html` 等处的域名本次已写成 `wjsbkd.github.io`，将来换域名要同步**六处**（canonical / og:url / og:image / twitter:image / robots Sitemap 行 / sitemap 两条 loc）。
+
+## 第九十二次：Cloudflare Pages 迁移 + 「加载慢、动效没了」的完整诊断（2026-10-25）
+
+他报「打开 https://wjsbkd.github.io/ 后网页加载速度很慢，动效也没了，不知道是没加载出来还是丢失了」，
+并补充「**动效可能没有丢失，但是它会一直卡住加载不出来（已经超过半小时以上）**」。
+结论：**代码与部署零缺陷，慢在网络链路**；已迁到 Cloudflare Pages 作主站。
+
+### 一、诊断过程与判据（「不动」≠「坏了」）
+
+**先排除代码侧**，用 ego(lite) 浏览器 + curl 双路实测线上：
+
+| 检查项 | 结果 |
+|---|---|
+| React 挂载 | ✅ `#root` innerHTML 37,066 B |
+| CSS 动画 | ✅ `document.getAnimations()` 14 个，8 个 running |
+| `prefers-reduced-motion` | ✅ `false`（本机 `MinAnimate=1`，动画效果是开的） |
+| 文案/导航/canvas/video 元素 | ✅ 全部在场 |
+| `main.mp4` 字节 | ✅ 线上 sha256 `ca9878724d240dc6…` 与本地**逐字相同** |
+| 全站资源 | ✅ 50/50 字节一致 |
+
+**再定位网络侧**，同机同网络实测：
+
+| 资源 | GitHub Pages | Cloudflare Pages |
+|---|---|---|
+| 首页 HTML 8KB | 0.83s | 1.10s |
+| JS 316KB | 4.0s | **2.4s** |
+| `intro.mp4` 3.2MB | **45~92s**（极不稳） | **12.1s** |
+| `main.mp4` 7.5MB | **165~173s** | **27.1s** |
+
+**根因**：GitHub Pages 在中国大陆无边缘节点，本站被分配到 `x-github-edge-region: japaneast`
+（东京 `cache-nrt-*`）。实测吞吐 13.5~47 KB/s，3.2MB 视频要 45~92 秒、7.5MB 要 165~173 秒，
+**两次采样 500 秒仍未下完**。首屏 `intro.mp4` 一项占总耗时 **93%**（70.5s / 75.4s）。
+
+**为什么表现为「动效没了」**：首屏 `FilmStage` 是**滚动驱动的视频层**，Hero 的眼神跟随靠 seek
+视频帧推进。`intro.mp4` 的 `readyState` 长期停在 0（HAVE_NOTHING），视频拿不到数据 → 依赖它的
+动效全部不启动。而 `intro.play().catch(() => {})` **把失败静默吞掉**，所以看到的是「卡住不动」而非报错。
+（`playError` 实测为 `AbortError: The play() request was interrupted by a call to pause()`——
+这是状态机的 seek/pause 行为，不是网络错误；真正的瓶颈是 `readyState: 0`。）
+
+### 二、⚠️ 本机 DNS 被污染，判可达性必须用真实子域名
+
+`getent hosts` / `nslookup`（本地 DNS、223.5.5.5、8.8.8.8 **三方一致地错**）对
+`vercel.app`/`github.io`/`netlify.app`/`pages.dev`/`gitee.io`/`qoder.zone` 全部返回假地址
+（Facebook/Dropbox 的 IP 段、或解析器自身 IP）。**但真实部署子域名是通的**：
+`octocat.github.io` 200、`react.pages.dev` 200、`gatsby-pre.netlify.app` 404。
+
+→ **教训：测可达性要用真实部署子域名，不能用裸 apex。** 按 apex 判会把可用平台误判为不可达。
+
+不可达：`vercel.app` / `workers.dev` / `gitee.io` / `qoder.zone` / `edgeone.tencent.cn`。
+可达：GitHub 全系、Netlify、Cloudflare（含 Pages）、国内云厂商官网（腾讯云/阿里云/百度云/火山/华为云）、coding.net。
+
+### 三、免费托管方案调研结论（一个结构性矛盾）
+
+**「免费 + 大陆快 + 无水印 + 自定义域名 + 不备案」五项不可能同时成立。**
+官方原文（腾讯云 CDN 文档）：「如果加速区域为中国境内、全球加速，域名需要已经在工信部进行过备案；
+如果加速区域为境外，域名可以不需要备案。」推论：**想要大陆节点快 ⇒ 必须备案**（无一例外）。
+
+| 方案 | 大陆节点 | 备案 | 水印 | 判定 |
+|---|---|---|---|---|
+| **Cloudflare Pages** | ❌ 无 | 免 | 无 | ✅ **本次选用**（快 4~7×，无水印，无限静态请求） |
+| EdgeOne Makers（原 EdgeOne Pages） | ✅ | 大陆区**必须** | 无 | ⚠️ 免费默认子域 `*.edgeone.app` **强制带 eo_token、3 小时失效**（实测 401），不能作正式链接 |
+| CODING Pages | ✅ | 大陆必须 | **强制 "Hosted by Coding Pages" 并过审** | ❌ 就是水印；且官方公告 **2028-09-30 全部关停** |
+| Netlify | ❌ | 免 | **2026-08-19 起默认注入 "Powered by Netlify"** | ❌ 徽章默认开 |
+| Gitee Pages | — | — | — | ❌ **官方已下线**（issue 状态 rejected，「暂无上线计划」） |
+| Vercel / Surge.sh / jsDelivr | ❌ | 免 | 无 | ❌ DNS 污染 / US Linode TTFB 3.7s / Near-China 非境内（实测 35KB/s） |
+| Cloudflare China Network | ✅ 京东云 | 必须 | 无 | ❌ **企业版加购**，且官方产品列表**不含 Pages** |
+| JSDMirror（cdn.jsdmirror.com） | ✅ 电信 IPv6 | 免 | 无 | ❌ **仅 public 仓库**（私有仓库实测 404），且不加速 HTML 入口 |
+
+备案本身免费，但前置条件是**名下要有一台中国大陆、有公网 IP 的云服务器**（域名+IP+主体三方绑定），
+上线后 30 日内还要公安联网备案。唯一能让备案成本归零的路径：**给名下已备案的域名加子域名**。
+
+### 四、一处对子 agent 结论的更正（重要，别再照做）
+
+子 agent 曾把「给 mp4 加 `-movflags +faststart`」列为最高杠杆。用纯 Python 解析 MP4 box 结构验证：
+
+```
+intro.mp4 | ftyp=4  moov=36   mdat=3804   → moov BEFORE mdat = FASTSTART OK
+main.mp4  | ftyp=4  moov=36   mdat=5260   → moov BEFORE mdat = FASTSTART OK
+```
+
+**两个视频早就 faststart 了**，浏览器本就可边下边播。照做只会白重编码一遍、损失一代画质。
+剩余真正有效的只有 CRF 重编码（需 libvmaf 验证）与懒加载。本机**无 ffmpeg**。
+
+### 五、Cloudflare Pages 的平台行为差异（踩过，记下）
+
+**所有 `*.html` 被 308 重定向到无扩展名 URL**：`index.html`→`/`、`404.html`→`/404`、
+`scrolly/index.html`→`/scrolly/`。浏览器跟随，用户无感。但：
+
+- **验证脚本必须带 `-L`**，否则所有 `.html` 报 0 字节（本次第一轮全站核对就误报了 3 个）。
+- **品牌化 404 页正常工作**：访问不存在路径返回 404 状态码 + 本地那份 3287B 的「页面不存在 · 李纵横」。
+- 因此 `Media.jsx:71` 的 scrolly 入口从 `/scrolly/index.html` 改成 `/scrolly/`（少一跳；
+  GitHub Pages 两种写法都能服）。sitemap 的 scrolly loc 同步改。
+
+### 六、当前部署形态（双目标）
+
+- **主站** `https://lizongheng-portfolio.pages.dev/`（Cloudflare Pages，项目 `lizongheng-portfolio`）
+- **备用** `https://wjsbkd.github.io/`（GitHub Pages）
+- canonical / og:url / og:image / twitter:image / robots Sitemap / sitemap 两条 loc
+  **共 11 处全部指向 Cloudflare**（旧 qoder.zone 域名与 wjsbkd.github.io 均 0 残留）。
+- `.github/workflows/deploy.yml` 改为 build → 两个 deploy job 并行：
+  `deploy-cloudflare`（wrangler-action）+ `deploy-github-pages`（SSH deploy key）。
+  build 产出 dist 并 upload-artifact，两个 job 分别 download。
+- `wrangler.toml` 新增（`pages_build_output_dir = "dist"`）。
+
+**⚠️ Cloudflare 的 CI 凭证尚未配好**：本机已 `wrangler login`（OAuth，账号 lzh3103875132@gmail.com，
+Account ID `857ebf14e5c227fb9256677b6d8718e8`，含 `pages:write`），所以**本机 `wrangler pages deploy` 可用**；
+但 CI 需要 secret `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`。配好前 `deploy-cloudflare` job 会红，
+`deploy-github-pages` 不受影响（本次 run 40192940433 正是这个形态：build ✓ / gh-pages ✓ / cloudflare ✗）。
+
+**创建 token 的步骤**（ego 里点 Cloudflare SPA 表单反复超时，没走通，交给他手动做）：
+dash.cloudflare.com → 右上头像 → My Profile → API 令牌 → 创建令牌 → 用「Edit Cloudflare Workers」
+模板 → 账户资源选 All accounts → 生成后**只显示一次**，立刻复制。然后：
+`gh secret set CLOUDFLARE_API_TOKEN --repo wjsbkd/self-web`
+`gh secret set CLOUDFLARE_ACCOUNT_ID --repo wjsbkd/self-web`（值 `857ebf14e5c227fb9256677b6d8718e8`）
+
+### 七、工具与环境的坑（本次新增）
+
+- **ego(lite) 的 `page.evaluate` 不能返回 Promise**：第一次探测脚本里返回了 fps 计算的 Promise，
+  整个调用挂死 30 分钟无输出。改成分步求值即可。
+- **ego 的 taskSpace 控制权会被用户接管**：报 `Control of this task space is with the user`，
+  这是**硬停止**，不要重试、不要绕；等用户明确说继续再用 `takeOverTaskSpace(spaceId)` 取回。
+- **Chrome headless 的 `--user-data-dir=/tmp/...` 在 Windows 下创建失败**（弹「无法创建数据目录」），
+  导致 CDP 端口不监听。本机改用 ego(lite) 浏览器，不再自己拉 Chrome。
+- Cloudflare dashboard 的 SPA 在 ego 里响应极慢（`Page.navigate` 后 evaluate 常超 100s），
+  多步表单不适合在里面自动化。
+
+### 八、归他的
+
+1. **Cloudflare API Token**（上面第六节步骤）—— 配好后 CI 才能自动部署主站。
+2. **旧站下线**：`https://lizongheng-ktftxw0cmi4.qoder.zone/`（Qoder，仍 200）与
+   `https://wjsbkd.github.io/`（GitHub Pages 备用）都还活着，三站内容相同。
+3. **是否备案**：若追求大陆秒开，唯一路径是备案 + EdgeOne Makers 大陆区（或给已备案域名加子域名）。
+   不备案的话，Cloudflare 已是免费方案里最快的。
+4. **视频压缩**：首屏 93% 时间耗在 `intro.mp4`。本机无 ffmpeg，装一个可把 3.2MB 压到数百 KB
+   （它是 seek 用的静态构图，可极低码率）。这是不备案前提下最大的剩余杠杆。
