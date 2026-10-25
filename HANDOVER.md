@@ -7961,3 +7961,110 @@ dash.cloudflare.com → 右上头像 → My Profile → API 令牌 → 创建令
    不备案的话，Cloudflare 已是免费方案里最快的。
 4. **视频压缩**：首屏 93% 时间耗在 `intro.mp4`。本机无 ffmpeg，装一个可把 3.2MB 压到数百 KB
    （它是 seek 用的静态构图，可极低码率）。这是不备案前提下最大的剩余杠杆。
+
+---
+
+## 第九十三次：视频压缩上线 + 域名回退 GitHub Pages + CI 三连修（2026-10-26）
+
+他要「视频压缩」，并问「**如果用这个压缩会让变卡吗？**」。本次结论：**不会**，已上线。
+附带推翻第九十二次的迁 Cloudflare 决定（域名全量回退），并修掉 CI 三个连环故障。
+
+### 一、压缩参数与实测结论（回答「会不会变卡」）
+
+原片 `intro.mp4` 3,312,249 B、`main.mp4` 7,810,527 B，共 11.12 MB，占首屏加载 93%。
+压缩后 **2,144,899 B / 3,525,864 B，共 5.41 MB（−51%）**，原件备份在
+`backups/2026-10-26-video-precompress/`。
+
+**不会变卡，判据是 seek 延迟而非码率**——本项目的视频不是播放，是滚动驱动逐帧 seek
+（`FilmStage.jsx` 每帧最多放一个 seek 在飞，目标时间量化到整帧 `currentTime = N/24`）。
+所以关键指标是单次 seek 的 p50/max，用 `seeked` 事件实测：
+
+| 文件 | CRF | 体积 | seek p50 | seek max | SSIM | 帧数/fps/时长 |
+|---|---|---|---|---|---|---|
+| intro.mp4 | 27 | 2.14 MB | 6.0 ms | 12.1 ms | 0.9886 | 241 / 24 / 10.04s **不变** |
+| main.mp4 | 28 | 3.53 MB | 6.4 ms | 14.8 ms | 0.9841 | 361 / 24 / 15.04s **不变** |
+
+阈值参照：`SEEK_STALL = 400`（代码里 seek  stall 的判定），人的感知阈值约 50 ms。
+实测值离两者都有数量级余量。
+
+**必须保留的编码参数**（这些才是「不卡」的真正原因，缺一个就可能卡）：
+```
+-g 6 -keyint_min 6 -sc_threshold 0 -bf 0 -pix_fmt yuv420p -movflags +faststart
+```
+- `-g 6 -keyint_min 6 -sc_threshold 0`：每 6 帧一个 I 帧且禁场景切割，seek 到任意帧只需解 0–5 帧。
+  默认 GOP 250 的话，最坏要解 250 帧——那才会卡。
+- `-bf 0`：禁 B 帧。B 帧依赖后续帧，seek 到它要等更多数据到位。
+- `-movflags +faststart`：moov 移到 mdat 前，否则要下完整文件才能开始 seek。
+
+**被否决的方案**：intro.mp4 用 CRF 28。seek max 飙到 35.2 ms（CRF 27 的 2.9 倍），
+尾延迟不可控，所以 intro 定 27、main 定 28（main 尾延迟仍在 14.8 ms，可接受）。
+
+### 二、域名回退：第九十二次的 Cloudflare 决定是错的
+
+第九十二次只各采样一次，得到「Cloudflare 快 5–15 倍」并据此迁主站、把域名元数据全改成
+`lizongheng-portfolio.pages.dev`。**这次做 8 轮中位数采样，结论反了**：
+
+| 指标 | GitHub Pages | Cloudflare Pages |
+|---|---|---|
+| JS p50 | **0.77 s** | 4.70 s |
+| intro.mp4 | **2.0–3.1 s** | 10.9–48.3 s |
+| main.mp4 | **3.6–4.9 s** | 38.3–57.9 s |
+
+原因不是谁更快，是**边缘节点分配变了**：GitHub Pages 从 `japaneast`（东京）迁到
+`koreacentral`（首尔 ICN）；Cloudflare Anycast 落点一直是 `CF-RAY …-SEA`（西雅图）。
+单次采样碰上节点变动就会得出反向结论——这类「比一次快慢」的结论必须多轮取中位数。
+
+已全量回退到 `https://wjsbkd.github.io/`，涉及 11 处（`index.html` canonical/og:url/
+og:image/twitter:image、`public/scrolly/index.html` 同样四处、`public/sitemap.xml` 两条 loc、
+`public/robots.txt` Sitemap 行）。**换域名时的清单就是这 11 处**，不同步会被搜索引擎当成两个站点。
+
+### 三、CI 三个连环故障（这是压缩版视频迟迟没上线的原因）
+
+故障 1 —— **`deploy-github-pages` 报 `Permission denied (publickey)`**：
+站点仓库 `wjsbkd/wjsbkd.github.io` 的 Deploy keys 是**空的**（`gh api …/keys` 返回 `[]`），
+secret 里那把 key 早就对不上。这类「secret ↔ 仓库 key」配对天生会漂移，报错信息完全不提示。
+
+故障 2 —— 换 `actions/deploy-pages` 失败：`configure-pages@v5` 报 `Get Pages site failed
+… Not Found`。原因是 **Pages 站点在另一个仓库**（`wjsbkd.github.io），`self-work` 自己的
+`repos/.../pages` 返回 404。跨仓库供源只有 push 到那个仓库这一条路，原生 Pages action 用不了。
+
+故障 3 —— 换了写法后整份 workflow 被判「文件错误」，job 一个都没建（check-runs 为空）：
+我把 secret 名套了一层 `${{ }}` 嵌套表达式，GitHub 表达式解析器不接受嵌套。
+**secret 名必须是字面量**。
+
+最终链路（第三版，`deploy.yml`）：`build` 上传 artifact → `deploy-github-pages` 用 SSH
+deploy key `git push -f` 到 `wjsbkd/wjsbkd.github.io` 的 main → `deploy-cloudflare` 加
+`if: github.event_name == 'workflow_dispatch'`，token 配好前不跑，不再把整个 run 拖红。
+新建 deploy key 已挂到站点仓库（Deploy keys id=167627987，写权限，已验证）。
+
+**排错要点**：`DEPLOY_KEY: ` 在日志里是空的 = secret 没建（`printf '%s\n' ""` 写出的文件
+会让 ssh 报 `error in libcrypto`，别被这个假象骗了）。
+
+### 四、顺带修的小东西
+
+`Media.jsx:71` 的 `/scrolly/index.html` 改成 `/scrolly/` —— Cloudflare Pages 会把
+`*.html` 308 跳到无扩展名 URL，GitHub Pages 两种都能服，写 `/scrolly/` 两个平台都少一跳。
+（JS hash 因此从 `index-Dicnb14N.js` 变 `index-CGtDv41N.js`。）
+
+### 五、线上核验（2026-10-26，全部通过）
+
+`https://wjsbkd.github.io/` 实服：intro.mp4 **2,144,899 B**、main.mp4 **3,525,864 B**
+（与本地逐字节一致）；sitemap/robots/scrolly canonical 均为 `wjsbkd.github.io`；
+index.html 引 `index-CGtDv41N.js`，包内含 `/scrolly/`。
+
+⚠️ Pages 构建有延迟 + 边缘缓存，curl 可能拿到旧版，加 `?<timestamp>` 穿透再验。
+
+### 六、归他的
+
+1. **建 secret**（CI 全自动还差这一步，key 侧已就绪）：
+   ```bash
+   gh secret set GH_PAGES_DEPLOY_KEY --repo wjsbkd/self-web < "D:\AI工作文件夹\self web\.vtest\deploy_ed25519"
+   ```
+   建完我重跑 workflow 验证。
+2. **Cloudflare API Token**：`CF_PAGES_TOKEN`（Account → Cloudflare Pages → Edit）
+   + `CLOUDFLARE_ACCOUNT_ID`。配好后删掉 `deploy-cloudflare` 的 `if:` 行，push 即双站同步。
+   目前 Cloudflare 是备用站，内容比主站旧。
+3. **旧站下线**：`https://lizongheng-ktftxw0cmi4.qoder.zone/`（Qoder，仍 200）与
+   `lizongheng-portfolio.pages.dev` 都还活着。
+4. **是否备案**：追求大陆秒开的唯一路径仍是备案 + 大陆 CDN。不备案则 GitHub Pages（首尔节点）
+   已是免费方案里最快的。
