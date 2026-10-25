@@ -68,7 +68,9 @@ export default function Media() {
           <span>SCROLLYTELLING / 01</span>
           <b>滚动看完这条片子</b>
         </div>
-        <a href="/scrolly/index.html">向下滚就是进度条 <Arrow /></a>
+        {/* 用 /scrolly/ 不带 index.html：GitHub Pages 与 Cloudflare Pages 都能直接服，
+            而 Cloudflare 会把 /scrolly/index.html 308 到 /scrolly/（多一跳）。 */}
+        <a href="/scrolly/">向下滚就是进度条 <Arrow /></a>
       </Reveal>
 
       {/* 完整作品集 PDF 入口 */}

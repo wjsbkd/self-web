@@ -48,3 +48,12 @@ backups/
 cf/
 probe-af.mjs
 probe-shots/
+
+# 托管平台调研的过程产物（抓取的官方文档 HTML、解析脚本、中间存档）
+.research-tmp/
+# ego(lite) 浏览器的自动化脚本（登录 Cloudflare、性能探测）
+.ego/
+# 抓页面留下的临时 HTML
+esap.html
+# Cloudflare Wrangler 的本机凭证与构建缓存（.wrangler/ 含 OAuth token）
+.wrangler/

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wjsbkd.github.io/sitemap.xml
+Sitemap: https://lizongheng-portfolio.pages.dev/sitemap.xml
