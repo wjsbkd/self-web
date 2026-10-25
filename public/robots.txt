@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lizongheng-ktftxw0cmi4.qoder.zone/sitemap.xml
+Sitemap: https://wjsbkd.github.io/sitemap.xml
