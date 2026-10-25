@@ -8068,3 +8068,32 @@ index.html 引 `index-CGtDv41N.js`，包内含 `/scrolly/`。
    `lizongheng-portfolio.pages.dev` 都还活着。
 4. **是否备案**：追求大陆秒开的唯一路径仍是备案 + 大陆 CDN。不备案则 GitHub Pages（首尔节点）
    已是免费方案里最快的。
+
+### 七、Cloudflare 备用站 token 已配好（2026-10-26 晚）
+
+用 ego(lite) 在 Cloudflare dashboard 建了 API token：
+`self-work CI pages deploy`，权限 **Account → Cloudflare Pages → Edit**，所有帐户，
+无过期时间，允许所有 IP。已存成 secret `CF_PAGES_TOKEN`；
+`CLOUDFLARE_ACCOUNT_ID` = 账号 `857ebf14e5c227fb9256677b6d8718e8`。
+`deploy-cloudflare` 的 `if: workflow_dispatch` 已删，push 与手动 dispatch 都双站部署。
+
+**三个 secret 现状**（都在 self-work 仓库）：
+`GH_PAGES_DEPLOY_KEY` / `CF_PAGES_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`。
+
+**建 token 时踩的坑**：模板里的「编辑 Cloudflare Workers」是 **Workers** 权限域，
+不是 Pages。用它会报 `Missing entry-point to Worker script`（wrangler 以为要部署 Worker）。
+必须走「自定义令牌」，权限选 `Cloudflare Pages → Edit`。
+
+**从结果页取 token**：值只在创建后显示一次。页面里它既不在 button 的 aria-label
+也不在 input value（被遮罩渲染），最后用 `document.body.innerText` 正则
+`/cfut_[A-Za-z0-9]+/` 抓到，直接写文件、不进对话，再由 `gh secret set < file` 读入。
+
+**核验备用站**：Cloudflare 不发 `content-length`（分块传输），curl -I 看不到大小，
+要比对内容得用 sha256。已确认两个视频与本地逐字节一致；域名元数据跟着主站走
+（`wjsbkd.github.io`），符合「主站在 GitHub」的设计。
+
+**run 40216649247 三 job 全绿**：build / deploy-github-pages / deploy-cloudflare。
+
+**排错笔记**：期间两次把仓库名打成 `self-work`，`gh` 报 404；正确名是 `wjsbkd/self-work`。
+另有一次删 secret 时漏了 `GH_` 前缀，删掉了正在用的那把，已立即重建
+（`gh secret set ... < 文件` 是重定向读文件，私钥不进上下文、不回显）。
