@@ -7757,3 +7757,72 @@ DeepSeek Harness / ZCode / Trae CN）对 self web 的改造记录与**对话框�
 
 项目 `git status` 仍是那 3 个 M（并发会话在途，未动）；`npx eslint src/` 0 error；
 Trae 快照对应的 3 个在役文件完好。本轮无新增临时产物。
+
+## 第九十一次：从 Qoder Sites 迁到 GitHub Pages + 历史清理（2026-10-25）
+
+他一句「之前已经在 Qoder CN 提供的网站上部署了，但带有他的水印，所以想再部署一个」。
+**已上线：https://wjsbkd.github.io/**（`wjsbkd/wjsbkd.github.io` 的 main 分支，Pages source=`/`）。
+
+### 一、为什么迁（三条全是平台侧行为，本地改不了）
+
+| 项 | Qoder 表现 | GitHub Pages 表现 |
+|---|---|---|
+| 水印 | HTML 尾部注入「Made with Qoder」徽章脚本 | **零平台徽章**（实测 grep 0 命中） |
+| 缓存 | 全站 `cache-control: no-cache`（含哈希命名的 JS/CSS） | `max-age=600`，哈希文件可长缓存 |
+| sitemap | 以 `application/octet-stream` 返回 | 正确 MIME |
+
+### 二、本机网络实测结论（下次选托管先看这里）
+
+- **DNS 被污染**：`getent hosts` 对 `vercel.app`/`github.io`/`netlify.app`/`pages.dev`/`gitee.io`/`qoder.zone` 全部返回假地址（本地 DNS 与 223.5.5.5、8.8.8.8 三方一致地错），但**真实子域名可达**（`octocat.github.io` 200、`react.pages.dev` 200、`gatsby-pre.netlify.app` 404）。**判断可达性要用真实部署子域名测，不能用裸 apex。**
+- **不可达**：`vercel.app` / `workers.dev` / `gitee.io` / `qoder.zone` / `edgeone.tencent.cn`。
+- **可达**：GitHub 全系（`github.com` 200、`api.github.com` 200、`pages.github.com` 200）、Netlify、Cloudflare Pages、`surge.sh`。
+- **SSH-over-443 仍是唯一能推 GitHub 的路径**（`ssh -p 443`，`github.com:443` 恒定超时），与 HANDOVER:34 那条一致。
+
+### 三、部署架构（两个仓库分离）
+
+用户主页 Pages 只能由 `<user>.github.io` 仓库的 main 分支提供，所以：
+
+- **`wjsbkd/wjsbkd.github.io`**（public）：只放 `dist/` 产物，main 分支根目录。
+- **`wjsbkd/self-web`**（public）：源码，`.github/workflows/deploy.yml` 构建后通过 **SSH deploy key** 推 dist 到站点仓库。
+  - deploy key 用 `ssh-keygen -t ed25519` 生成，私钥存仓库 secret `PAGES_DEPLOY_KEY`，公钥加到站点仓库 keys（write 权限）。
+  - **本机无 Browser 预览能力**（`preview_start` 对 https URL 直接拒绝），验证全靠 curl。
+
+**以后每次 push 到 master，站点自动更新**（实测两次 run 均 success，15~19s）。手动触发用 `workflow_dispatch`。
+
+### 四、域名占位全量替换（HANDOVER:60 那条「部署前必须替换」至此关闭）
+
+六处 + scrolly 页五处，从 `lizongheng-ktftxw0cmi4.qoder.zone` → `https://wjsbkd.github.io/`：
+`index.html` 的 canonical/og:url/og:image/twitter:image、`public/robots.txt` 的 Sitemap 行、
+`public/sitemap.xml` 两条 `<loc>`；`public/scrolly/index.html` 的 canonical/og:url/og:image/twitter:image。
+`vite.config.js` 的 `base` **未设**（默认 `/`）—— 用户主页根路径部署，不需要改。
+
+### 五、GitHub Pages 的两个坑（都撞过）
+
+1. **free 套餐 + private 仓库不能开 Pages**：`POST /repos/{owner}/{repo}/pages` 返 `422 Your current plan does not support GitHub Pages for this repository`。**必须 public。**
+2. **`gh api -F private=false` 不生效**：新建仓库时传 `private=false` 仍建成 private。要用 `-X PATCH -F visibility=public` 事后改。
+3. **空仓库开 Pages 会 422**（`The main branch must exist before GitHub Pages can be built`）。先推内容再开；本例中推送后 GitHub 因仓库名匹配用户主页模式**自动启用**了 Pages（再 POST 返 409 already enabled）。
+
+### 六、仓库整理（他同时要求「看一下仓库是否需要整理优化」）
+
+| 动作 | 结果 |
+|---|---|
+| `_pdfrender/`（pdfjs-dist）从历史中移除 | v4 引入、v5 已从工作区删，但**文件仍在历史里**，占 25.9MB（包体一半以上），站点从未引用。`git filter-repo --invert-paths` 清掉，需 `GIT_DIR`/`GIT_WORK_TREE` 环境变量指定（**filter-repo 不认 `--git-dir` 参数**） |
+| 删除 tag `archive-before-plan-a-20261013` | 它钉住 3 个已删除的大文件（`earth-texture.png` 1.9M / `intro.mp4` 旧版 1.5M / `account-and-video-links.png` 1.4M）；该 tag 是 master 祖先、撤销内容在历史中完整保留，删之无损 |
+| **包体 45.07 MiB → 38.85 MiB** | 剩余大 blob 全是站点在役资源（`main.mp4` 7.8M / `作品集.pdf` 3.5M / `intro.mp4` 3.4M / 像素字库 1.5M / `account-and-video-links.png` 1.5M），**不能再压** |
+| 清理本地临时产物 | `dist/.git`（19M，为首次推送临时建的，Actions 已接管）、`.deploy-tmp/` 私钥副本（已存 GitHub secret，本地不留）、`.claude/launch.json`（本机无预览能力，配置无效） |
+| **未动** | `assets-src/`（2.4M）—— 11 张零引用图，按 `42f28e6`「素材库搬出 public 但不删」的约定刻意保留 |
+
+**清理前已备份**：`backups/2026-10-25-pre-history-cleanup/self-web-before-cleanup.bundle`（46M，`git bundle create --all`）。
+filter-repo 会删 origin remote，需手动 `git remote add` 加回；随后 `push --force`。**改写历史影响面：89 个提交中 2 个触及 `_pdfrender`，单人项目无其他克隆。**
+
+### 七、验证（字节级）
+
+- 首页 200；**51/51 站点资源全部 200**（含 `main.mp4` 7.8M、两份 PDF、scrolly 页、全部图片）。中文路径 PDF 需 URL 编码后访问（`%E6%9D%8E%E7%BA%B5%E6%A8%AA...pdf`），与 Qoder 侧表现一致。
+- 关键资源字节数与本地 `dist/` 逐项相同：JS 319,622 / CSS 68,395 / og-cover 94,493 / apple-touch-icon 8,127。
+- 水印/平台徽章 grep **0 命中**；旧域名 grep **0 残留**；`npx eslint src/` 0 error。
+- 唯一一次 `000` 是 `scrolly.css` 网络抖动，重试即 200（1.09s）。
+
+### 八、归他的
+
+- **Qoder 站点是否下线**：`https://lizongheng-ktftxw0cmi4.qoder.zone/` 仍在跑（200），与 GitHub Pages 并存、内容相同。两个地址的 og/canonical 现在都指向 GitHub —— 若希望访客统一走新地址，需要他在 Qoder 侧下掉旧站。
+- **自定义域名**：仍无。`index.html` 等处的域名本次已写成 `wjsbkd.github.io`，将来换域名要同步**六处**（canonical / og:url / og:image / twitter:image / robots Sitemap 行 / sitemap 两条 loc）。
