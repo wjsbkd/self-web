@@ -108,6 +108,12 @@
     /* 隐藏的循环层停掉解码，省一份常驻开销；显示时再续上 */
     if (stage === 'intro') { if (!reduce && intro.paused) intro.play().catch(function () {}); }
     else if (!intro.paused) intro.pause();
+    /* 交棒给 main 时才把它的 preload 从 metadata 提到 auto：
+       HTML 里写 metadata 是为了「用户一次滚动都没有时别下整份 3.5 MB」，
+       但一旦真的开始往 main 走，就必须让它提前下，否则滚到中段才从零起缓冲。
+       提前点选在 intro→main 这一跳（而不是更早），是因为那是用户意图最明确的位置。
+       幂等：preload 已是 auto 时再赋值不产生新请求。 */
+    if (stage === 'main' && main.preload !== 'auto') main.preload = 'auto';
   }
 
   function applyCaption(key) {

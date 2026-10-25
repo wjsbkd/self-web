@@ -9,7 +9,13 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" as="image" href="/assets/scrolly/outro-poster.jpg">
-<link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>
+<!-- 原先这里有一行 <link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>，
+     2026-10-26 删掉：preload 是**无条件**下整份，与下面 v-main 的 preload="metadata"
+     直接矛盾（一个非要下、一个说别下），实际把 metadata 省下的量全部抵消。
+     intro.mp4 不预加载：它是 <video autoplay> 自己会发起请求的那一个，
+     且首屏 poster 走的是 index.html 那条 preload 的同源策略，重复预加载只会打架。
+     想要 main.mp4 早点到位，正确做法不是 preload，而是等 intro 交棒后再补一个
+     video.preload='auto'（见 scrolly.js 的 stage 切换处）——需要时再加。 -->
 <!-- 字体：与主站同一条理由（主站注释在 index.html 里，2026-10-17 起改成非阻塞加载）——
      外链样式表是渲染阻塞的，直接 <link rel="stylesheet"> 会让首屏等 fonts.googleapis.cn；
      这里改成 preload + media="print" onload 换回 all，首屏不等它，字体到了再换字（display=swap）。
@@ -59,7 +65,14 @@
            src="/assets/scrolly/intro.mp4"></video>
   </div>
   <div class="layer" id="layer-main">
-    <video id="v-main" class="film" muted playsinline preload="auto"
+    <!-- preload="metadata" 与主站 FilmStage.jsx:558 同一条理由（那边有完整实测）：
+         auto 会在用户一次滚动都没有时把整份 main.mp4 拉完，metadata 让 Chrome 缓冲够了
+         就掐掉请求，主站实测省 6.37–6.53 MB（−81.5%～−83.6%）、交棒与首帧代价为零。
+         本页用法与主站一致：scrolly.js 只要 main.duration（loadedmetadata）然后逐帧 seek，
+         所以 metadata 拿得到 duration，seek 门照开。视频压缩后绝对值降到 3.5 MB，
+         省下的量同比缩小，但「用户没滚动就不该下整份」这条不变。
+         intro 保持 auto：它是首屏，用户进来就要看。 -->
+    <video id="v-main" class="film" muted playsinline preload="metadata"
            src="/assets/scrolly/main.mp4"></video>
   </div>
   <div class="layer" id="layer-outro">
