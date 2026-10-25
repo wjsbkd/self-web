@@ -1,18 +1,22 @@
 name: 部署站点
 
 # 双目标部署：
-#   1. Cloudflare Pages（主站）https://lizongheng-portfolio.pages.dev/
-#      —— 需要 secret：CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
-#   2. GitHub Pages（备用）https://wjsbkd.github.io/
-#      —— 需要 secret：PAGES_DEPLOY_KEY（SSH deploy key）
+#   1. GitHub Pages（主站）https://wjsbkd.github.io/
+#      —— 走 actions/deploy-pages，零 secret、零 SSH key。
+#   2. Cloudflare Pages（备用）https://lizongheng-portfolio.pages.dev/
+#      —— 需要 secret：{{SECRET_5ehnpfyb}} + CLOUDFLARE_ACCOUNT_ID。
 #
-# 主站选 Cloudflare 的原因：本机实测 GitHub Pages 被分配到 japaneast（东京）节点，
-# JS 4.0s / intro.mp4 45~92s / main.mp4 165~173s；Cloudflare 同机同网络为
-# 2.4s / 12.1s / 27.1s。详见 HANDOVER 第九十二次。
+# 主站为什么是 GitHub Pages（2026-10-26 复核，推翻 HANDOVER 第九十二次的结论）：
+# 早前只各采样一次，得到「Cloudflare 快 5–15 倍」并据此迁主站。后来做 8 轮中位数采样发现
+# 节点分配变了：GitHub Pages 从 japaneast（东京）迁到 koreacentral（首尔 ICN），
+# Cloudflare Anycast 落点一直是 SEA（西雅图）。同机同网络重测：
+#   JS p50        GitHub 0.77s   vs Cloudflare 4.70s
+#   intro.mp4     GitHub 2.0–3.1s vs Cloudflare 10.9–48.3s
+#   main.mp4      GitHub 3.6–4.9s vs Cloudflare 38.3–57.9s
+# 结论反过来了，所以域名元数据已全量回退到 wjsbkd.github.io。
 #
-# ⚠️ Cloudflare 那一路在 secret 配好前会失败并让整个 job 变红。
-#    两种处理：配好 secret；或暂时把 deploy-cloudflare 的 `if` 条件改为只在
-#    手动 dispatch 时跑（workflow_dispatch）。GitHub Pages 那一路不受影响。
+# ⚠️ Cloudflare 那一路在 token 配好前只在 workflow_dispatch 时跑（见下面 job 的 if）。
+#    配好 secret 后把那行 if 删掉，push 就会同时部署两个目标。
 on:
   push:
     branches: [master]
@@ -55,49 +59,52 @@ jobs:
           path: dist
           retention-days: 1
 
-  deploy-cloudflare:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      # 主站。wrangler 在 CI 认这两个环境变量，不需要 wrangler login。
-      # 若 job 报「Authentication error」= secret 未配或 token 缺 Pages 写权限。
-      - name: 部署到 Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=lizongheng-portfolio --branch=main
-
   deploy-github-pages:
     needs: build
     runs-on: ubuntu-latest
+    # deploy-pages 需要这两个权限；仓库级 permissions 只给了 contents: read
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
 
-      - name: 推送 dist/ 到 wjsbkd.github.io
-        env:
-          DEPLOY_KEY: ${{ secrets.PAGES_DEPLOY_KEY }}
-        run: |
-          set -euo pipefail
-          cd dist
-          git init -q
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -q -b main
-          git add -A
-          git commit -q -m "部署 self-web · ${GITHUB_SHA}"
-          mkdir -p ~/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=20"
-          # 本机实测：只有 ssh.github.com:443 这条路径通，github.com:443 恒定超时
-          git remote add origin ssh://git@ssh.github.com:443/wjsbkd/wjsbkd.github.io.git
-          git push -f origin main
+      # 这一行会把仓库的 Pages 构建源从「分支 / 目录」切成「GitHub Actions」。
+      # 切过去之后 wjsbkd.github.io 仓库 main 分支里那份旧 dist 就不再被构建，
+      # 站点改由本 workflow 的 artifact 供源。想切回去：仓库 Settings → Pages
+      # → Source 选 Deploy from a branch（main / root）。
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        # 部署详情会出现在仓库 Environments → github-pages 里，含每次的 SHA
+
+  # 备用站。token 配好前只在手动 dispatch 时跑，否则每推一次就把整个 run 拖红
+  # （push 不触发它，GitHub Pages 那一路完全不受影响）。
+  deploy-cloudflare:
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      # wrangler 在 CI 认这两个环境变量，不需要 wrangler login。
+      # 若报「Authentication error」= secret 未配，或 token 缺 Pages 写权限
+      # （Cloudflare 后台建 token 时权限要选 Account → Cloudflare Pages → Edit）。
+      - name: 部署到 Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.{{SECRET_5ehnpfyb}} }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=lizongheng-portfolio --branch=main
