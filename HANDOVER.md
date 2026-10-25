@@ -8097,3 +8097,45 @@ index.html 引 `index-CGtDv41N.js`，包内含 `/scrolly/`。
 **排错笔记**：期间两次把仓库名打成 `self-work`，`gh` 报 404；正确名是 `wjsbkd/self-work`。
 另有一次删 secret 时漏了 `GH_` 前缀，删掉了正在用的那把，已立即重建
 （`gh secret set ... < 文件` 是重定向读文件，私钥不进上下文、不回显）。
+
+### 九、全面复查与 scrolly 预加载优化（2026-10-26 晚）
+
+他问「还有哪些地方需要优化修改的」。系统性过了一遍，结论：**站点整体健康，只有一处实质优化，已改并上线。**
+
+**查过且没问题的**：ESLint 0 error；无 console.log / debugger / TODO 残留；`npm audit` 零漏洞；
+依赖只有 react + react-dom 两个运行时；内部引用无死链（脚本扫 dist 全部 HTML 的 src/href）；
+og-cover 1200×630、apple-touch-icon 180×180、favicon.svg 均在位；10 个 `<img>` 里 9 个有 alt
+（唯一没有的是注释里的示例）；`video-covers/` 10 张封面与 `src/data/videos.js` 完全匹配，无死资源；
+域名元数据六处一致；404.html 是内联样式的独立页，两个平台都能直接用。
+
+**实质优化：scrolly 页的 main.mp4 预加载策略**（commit `7af57ac`）。三处改动一条主线：
+
+1. `public/scrolly/index.html` 的 `v-main` `preload="auto"` → `"metadata"`。
+   主站 `FilmStage.jsx:558` 早就实测过这条并写了长注释：auto 会在用户一次滚动
+   都没有时拉完整份视频，metadata 省 6.37–6.53 MB（−81.5%～−83.6%）、
+   交棒与首帧代价为零。scrolly 页用法与主站一致（`scrolly.js` 只要 `main.duration`
+   然后逐帧 seek），却一直用 auto —— **同一个项目里两个页面策略不一致**。
+2. 删掉 `<link rel="preload" as="video" href="/assets/scrolly/main.mp4" crossorigin>`。
+   preload 是**无条件**下整份，与 metadata 直接矛盾，把第 1 步省的量全部抵消。
+3. `scrolly.js` 的 `applyStage` 里，交棒到 `main` 时把 `preload` 提到 `auto`：
+   否则滚到中段才从零起缓冲。选 intro→main 那一跳是因为那里用户意图最明确，且幂等。
+
+**线上实测（ego 浏览器，2026-10-26）**：打开 scrolly 静置 8 秒，main.mp4 只传输
+**300 字节**（metadata 请求）而非 3,525,864 字节 —— **省 3.5 MB**。
+滚到中段后 `preload` 自动变 `auto`、`readyState` 4、`duration` 15.08 正常、
+`currentTime` 1.29 开始 seek 驱动、`videoWidth` 1280、图层切换正常，无卡顿无空白。
+
+**评估过但决定不做的**：
+
+- **douyin 图片压缩**：15 张共 3.0 MB。实测 800×1709 缩到 85% 只要 252 KB（−20%），
+  q4 是 276 KB（−13%）。但这是竖屏手机截图，缩放损失文字可读性，收益有限风险实在，不动。
+- **React.lazy 代码分割**：实验性构建显示首屏 JS gzip 可从 107 KB 降到 82 KB（−24%），
+  `WorkModal`（点开才显示的弹窗）也能被拆出来。**但没采纳**——这站动效是核心体验，
+  懒加载会让滚动到作品区时短暂空白，而 26 KB 的收益对首尔节点的站点不成比例。
+  实验源码已完整还原（`src/App.jsx` 0 处 lazy），无残留。
+- `Folder.jsx` 1941 行、`global.css` 1161 行体量大，但都是单文件内聚的逻辑，拆分属重构，非优化。
+
+**遗留的小尾巴**：`.vtest/` 里有个 `dist-lazy/` 目录删不掉（ego 浏览器占着句柄，
+`Device or resource busy`）。已在 `.gitignore`，不影响仓库；里面的 `deploy_ed25519`
+是 CI 在用的私钥，**不能删**（删了部署就断），但它已被 gitignore 覆盖、
+`git add -A --dry-run` 验证过不会入库。
