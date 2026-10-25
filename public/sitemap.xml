@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lizongheng-portfolio.pages.dev/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <loc>https://wjsbkd.github.io/</loc>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -13,8 +13,8 @@
        Vite dev 的 SPA fallback 会把 /scrolly/ 回落成首页 —— 那是本地开发的事，
        两个托管平台都不fallback，线上不受影响。 -->
   <url>
-    <loc>https://lizongheng-portfolio.pages.dev/scrolly/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <loc>https://wjsbkd.github.io/scrolly/</loc>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

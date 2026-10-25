@@ -57,3 +57,5 @@ probe-shots/
 esap.html
 # Cloudflare Wrangler 的本机凭证与构建缓存（.wrangler/ 含 OAuth token）
 .wrangler/
+# 视频压缩的 seek 延迟/画质测试产物（ego 浏览器实测用）
+.vtest/
