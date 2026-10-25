@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lizongheng-ktftxw0cmi4.qoder.zone/</loc>
+    <loc>https://wjsbkd.github.io/</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
@@ -10,7 +10,7 @@
        它是可被单独访问、单独分享的 URL，缺这一条等于页面在搜索引擎眼里不存在。
        访问路径必须带 index.html —— Vite dev 的 SPA fallback 会把 /scrolly/ 回落成首页。 -->
   <url>
-    <loc>https://lizongheng-ktftxw0cmi4.qoder.zone/scrolly/index.html</loc>
+    <loc>https://wjsbkd.github.io/scrolly/index.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

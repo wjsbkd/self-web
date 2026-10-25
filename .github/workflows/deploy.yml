@@ -1,0 +1,62 @@
+name: 部署到 GitHub Pages
+
+# 站点仓库（wjsbkd.github.io）与源码仓库（self-web）分离：
+# 用户主页 Pages 只能由 <user>.github.io 这个仓库的 main 分支直接提供，
+# 所以这里构建 self-web 的 dist/，再通过 SSH 把它推到站点仓库。
+#
+# 需要在本仓库 Settings → Secrets 配置：
+#   PAGES_DEPLOY_KEY  —— 可写 wjsbkd/wjsbkd.github.io 的 SSH deploy key（私钥）
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: 推送 dist/ 到 wjsbkd.github.io
+        env:
+          DEPLOY_KEY: ${{ secrets.PAGES_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          cd dist
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b main
+          git add -A
+          git commit -q -m "部署 self-web · ${GITHUB_SHA}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -p 443 -o StrictHostKeyChecking=no -o ConnectTimeout=20"
+          # 本机实测：只有 ssh.github.com:443 这条路径通，github.com:443 恒定超时
+          git remote add origin ssh://git@ssh.github.com:443/wjsbkd/wjsbkd.github.io.git
+          git push -f origin main
