@@ -10,7 +10,6 @@
 
   var main = document.getElementById('v-main');
   var intro = document.getElementById('v-intro');
-  var track = document.getElementById('track');
   var layers = {
     intro: document.getElementById('layer-intro'),
     main: document.getElementById('layer-main'),
@@ -146,7 +145,7 @@
       var f = Math.round(t * FPS);
       if (f !== issuedFrame && (!seeking || now - seekStartedAt > SEEK_STALL)) {
         issuedFrame = f; seeking = true; seekStartedAt = now;
-        try { main.currentTime = f / FPS; } catch (e) { seeking = false; }
+        try { main.currentTime = f / FPS; } catch { seeking = false; }
       }
     }
 

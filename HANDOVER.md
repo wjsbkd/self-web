@@ -8627,3 +8627,59 @@ ego-browser 的 `page.cdp('Network.setBlockedURLs')` 能真阻断 `*apicdn.sanit
   先花 30 秒确认探针（地址/路由/选择器）能读到东西，再谈结论。
 - `.ego/`、`backups/` 这类临时/备份目录未入库，全仓工具扫描会把它们算进来；
   以后加临时脚本，别放仓库根的可扫目录。
+
+## 第一百次：给 ESLint 加全局 ignores（2026-10-27）—— 全仓扫描 4077 错 → 0
+
+### 一、做了什么
+
+上一节（第九十九次）复查时留下的唯一真实缺口：`eslint.config.js` **没有 `ignores` 段**，
+所以 `npx eslint .` 会把构建产物、备份快照、工具运行时一起扫进来，噪音淹掉真实问题。
+
+改了两个文件：
+
+1. **`eslint.config.js`**
+   - 在配置数组**最前面**加了独立的 `{ ignores: [...] }` 对象（ESLint 9 flat config 要求
+     全局 ignores 是独立对象，不能和 `files`/`rules` 写一起）。覆盖：
+     `**/node_modules/**`、`dist/**`、`backups/**`、`.sanity/**`、`.vtest/**`、
+     `.ego/**`、`.research-tmp/**`、`.deploy-tmp/**`、`**/*.min.js`。
+     **`src/` 与 `public/` 一律不忽略** —— 那是真要检查的源码。
+   - 第二个配置块的 `files` 从 `'*.config.{js,mjs,ts}'` 改成 `'*.config.{js,mjs}'`：
+     `sanity.config.ts` 一直报 `Parsing error: Unexpected token as`，根因是项目**没装
+     `@typescript-eslint`**，默认解析器看不懂 TS 语法。这是解析器的能力边界，不是代码问题，
+     与其把 `.ts` 塞进一个它处理不了的配置块，不如先让 TS 文件不被 ESLint 扫
+     （TS 的正确性由 `npm run typecheck` 负责，那是真在跑的）。
+   - 新增第三个配置块：`public/**/*.js`。`public/scrolly/scrolly.js` 是**原样拷贝**给浏览器的
+     脚本（`<script src="scrolly.js">` 直挂、非 ESM），此前没有任何配置块匹配它，
+     于是 `document`/`window` 全被判 `no-undef`。现在按浏览器 script 全局跑、放开 `console`。
+
+2. **`public/scrolly/scrolly.js`** —— 修掉修完 ignores 后暴露出的 2 处真问题：
+   - `var track = document.getElementById('track')`：`track` 全文再没用过（赋值后即死），删。
+   - `catch (e)` → `catch {`：`e` 没用到，改可选 catch 绑定（浏览器 ES2019+ 都支持）。
+
+### 二、实测结果
+
+| 检查 | 改前 | 改后 |
+|---|---|---|
+| `npx eslint .`（全仓） | 4077 错 / 56 文件 | **0 错 0 警** |
+| `npm run lint`（只扫 `src/`） | 0 | **0**（未回归） |
+| `npm run build` | ✓ 1.46s | ✓ 1.59s |
+| `npx tsc --noEmit` | exit 0 | **exit 0** |
+
+改前的 4077 错分布（说明噪音都在哪）：`dist/` 3894（43 文件）、`backups/` 138（9 文件）、
+`public/scrolly/scrolly.js` 38、`.vtest/` 5、`.sanity/` 1、`sanity.config.ts` 1。
+
+### 三、值得记的
+
+1. **噪音压下去之后才看得见真问题。** 4077 错里只有 2 个是真的（`track` 死变量、未用的 `e`）。
+   之前它们一直躺在几千条 `no-undef` 下面 —— 一次全仓扫描如果出几千条错，它就已经失去作用了，
+   没人会往下翻。
+2. **ESLint 报 `Parsing error` 时先查解析器，别改代码。** `sanity.config.ts` 的
+   `Unexpected token as` 是**缺 `@typescript-eslint`**，跟文件内容无关。
+   区分办法：`Parsing error` = 工具读不懂语法（配错工具）；普通 rule 报错 = 代码问题。
+3. **全局 ignores 必须写成独立对象。** flat config 里 `{ ignores: [...] }` 与
+   `{ files: [...], ignores: [...] }` 语义不同 —— 后者只对 `files` 命中的范围生效，
+   前者才是真全局。
+
+> **纪律**：以后加临时脚本目录（探针、抓取产物、测试脚本），**同步在 `.gitignore` 和
+> `eslint.config.js` 的 ignores 各加一行**，否则全仓扫描又会被淹。本次清理 `.ego/` 时
+> 已经删了目录，ignores 里仍留了 `.ego/**` 作为防御条目，方便以后同类临时目录不再吵。
