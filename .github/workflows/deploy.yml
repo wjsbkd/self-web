@@ -36,6 +36,8 @@ on:
       - 'src/**'
       - 'public/**'
       - 'index.html'
+      - 'admin.html'
+      - 'sanity.config.ts'
       - 'package.json'
       - 'package-lock.json'
       - 'vite.config.js'
@@ -62,7 +64,16 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Sanity 连接参数走仓库 Variables（Settings → Secrets and variables →
+      # Actions → Variables），不是 Secret：projectId 本来就会出现在前台请求里。
+      # 没配也不报错 —— 构建出的站点会退回本地兜底数据（src/data/localFallback.ts），
+      # 只是不再跟随后台更新。想只用本地数据就保持留空。
       - run: npm run build
+        env:
+          VITE_SANITY_PROJECT_ID: ${{ vars.VITE_SANITY_PROJECT_ID }}
+          VITE_SANITY_DATASET: ${{ vars.VITE_SANITY_DATASET }}
+          VITE_SANITY_API_VERSION: ${{ vars.VITE_SANITY_API_VERSION }}
 
       # 产物给两个 deploy job 共用
       - uses: actions/upload-artifact@v4

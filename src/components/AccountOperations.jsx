@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './AccountOperations.css'
-import { douyinWorks, accountIdentity } from '@/data/douyinWorks.js'
+import { getDouyinWorks, getAccountIdentity } from '@/data/sanityData'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
@@ -27,6 +27,9 @@ export default function AccountOperations() {
       tags: work.tags,
     })
   }
+
+  const douyinWorks = getDouyinWorks()
+  const accountIdentity = getAccountIdentity()
 
   return (
     <section className="account-ops section wrap" id="account">

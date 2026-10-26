@@ -1,0 +1,246 @@
+/**
+ * ProjectDetail.css —— 作品详情页
+ * 复用 global.css 的 Design Token，不重新定义颜色体系。
+ * 双栏「左媒体右文案」沿用 Projects 的 Master-Detail 语言。
+ */
+.project-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 300; /* 高于 Nav(50) 与 WorkModal(200)，整屏覆盖 */
+  overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 0%, var(--void-5), var(--void-7));
+  color: var(--text-bright, #f5f3ff);
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 96px 24px 80px;
+  position: relative;
+}
+
+.detail-close {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--rim-brick-a40, rgba(187, 77, 5, 0.4));
+  background: var(--glass-void, rgba(2, 2, 2, 0.82));
+  cursor: pointer;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+}
+.detail-close span {
+  position: absolute;
+  width: 18px;
+  height: 1.5px;
+  background: var(--text-bright, #f5f3ff);
+}
+.detail-close span:first-child {
+  transform: rotate(45deg);
+}
+.detail-close span:last-child {
+  transform: rotate(-45deg);
+}
+.detail-close:hover {
+  border-color: var(--rim-ember, #d96a12);
+}
+
+.detail-loading {
+  text-align: center;
+  padding: 120px 0;
+  color: var(--text-dim, #8f8b8e);
+  font-family: var(--font-mono, monospace);
+}
+
+.detail-header {
+  margin-bottom: 40px;
+}
+.detail-kicker {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--rim-ember, #d96a12);
+  text-transform: uppercase;
+}
+.detail-title {
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1.05;
+  margin: 12px 0;
+  letter-spacing: -0.02em;
+}
+.detail-summary {
+  font-size: clamp(15px, 2vw, 19px);
+  color: var(--text-dim, #8f8b8e);
+  max-width: 60ch;
+  line-height: 1.7;
+}
+.detail-featured {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--rim-flare, #ffc489);
+}
+
+.detail-cover {
+  width: 100%;
+  margin: 24px 0 48px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--card-void, #0f0a09);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+.detail-cover img,
+.detail-cover video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.detail-body-text {
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.9;
+  max-width: 70ch;
+  color: var(--text-bright, #f5f3ff);
+}
+.detail-body-text p {
+  margin: 0 0 20px;
+}
+/* 无富文本时的三段式（复用 Projects.css 的 .detail-block 排版，这里只补间距） */
+.detail-body-text .detail-block + .detail-block {
+  margin-top: 22px;
+}
+.detail-body-text .detail-block p {
+  margin: 0;
+}
+.detail-body-text h2,
+.detail-body-text h3,
+.detail-body-text h4 {
+  margin: 32px 0 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.detail-body-text a {
+  color: var(--rim-flare, #ffc489);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.detail-body-text blockquote {
+  border-left: 2px solid var(--rim-brick, #bb4d05);
+  padding-left: 18px;
+  margin: 24px 0;
+  color: var(--text-dim, #8f8b8e);
+}
+.detail-body-text ul,
+.detail-body-text ol {
+  padding-left: 22px;
+  margin: 0 0 20px;
+}
+.detail-body-text li {
+  margin: 6px 0;
+}
+
+.detail-modules {
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.module--image img,
+.module--video video {
+  width: 100%;
+  border-radius: 14px;
+  display: block;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+}
+.module--image figcaption,
+.module--gallery {
+  margin-top: 10px;
+}
+.module--image figcaption {
+  font-size: 13px;
+  color: var(--text-dim, #8f8b8e);
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+}
+.module--gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+.module--gallery img {
+  width: 100%;
+  border-radius: 10px;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+.module--gallery img:hover {
+  transform: scale(1.03);
+}
+.module--image-text {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: center;
+  background: var(--card-void, #0f0a09);
+  border-radius: 16px;
+  padding: 28px;
+}
+.module--image-text img {
+  width: 100%;
+  border-radius: 12px;
+}
+.module--image-text h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+.module--image-text p {
+  color: var(--text-dim, #8f8b8e);
+  line-height: 1.8;
+}
+
+.detail-notfound {
+  text-align: center;
+  padding: 140px 0;
+}
+.detail-notfound h2 {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+.detail-notfound p {
+  color: var(--text-dim, #8f8b8e);
+  margin-bottom: 28px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper, #fefefe);
+  color: var(--ink, #1a1614);
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* 移动端：图文模块上下堆叠 */
+@media (max-width: 720px) {
+  .detail-inner {
+    padding: 80px 18px 60px;
+  }
+  .module--image-text {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 18px;
+  }
+}

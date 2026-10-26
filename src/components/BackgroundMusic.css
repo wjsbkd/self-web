@@ -1,0 +1,74 @@
+/**
+ * BackgroundMusic.css —— 右下角背景音乐开关
+ * 复用 global.css 的 Design Token，不重新定义颜色。
+ */
+.bgm-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 250; /* 低于详情页(300) 与 WorkModal(200) 之上 */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--rim-brick-a40, rgba(187, 77, 5, 0.4));
+  background: var(--glass-void, rgba(2, 2, 2, 0.82));
+  color: var(--text-bright, #f5f3ff);
+  cursor: pointer;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+.bgm-toggle:hover {
+  border-color: var(--rim-ember, #d96a12);
+}
+.bgm-icon {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.bgm-icon span {
+  width: 2px;
+  background: var(--rim-flare, #ffc489);
+  border-radius: 1px;
+  height: 5px;
+  transform-origin: bottom;
+}
+.bgm-toggle.is-on .bgm-icon span {
+  animation: bgm-eq 0.9s ease-in-out infinite;
+}
+.bgm-toggle.is-on .bgm-icon span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.bgm-toggle.is-on .bgm-icon span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes bgm-eq {
+  0%, 100% {
+    height: 5px;
+  }
+  50% {
+    height: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .bgm-toggle {
+    right: 14px;
+    bottom: 14px;
+    padding: 8px 11px;
+  }
+  .bgm-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgm-toggle.is-on .bgm-icon span {
+    animation: none;
+  }
+}

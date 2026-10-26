@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import './Nav.css'
 import Arrow from '@/components/Arrow.jsx'
 import Magnetic from '@/components/Magnetic.jsx'
-import { navLinks, contactEmail } from '@/data/nav.js'
+import { navLinks, contactEmail as localEmail } from '@/data/nav.js'
+import { useSiteSettings } from '@/data/hooks'
 import { useScrollProgress, useScrollDirection } from '@/hooks/useScroll.js'
 
 // 全局固定导航 —— 三段式浮件（2026-10 暗场语言）
@@ -16,6 +17,8 @@ export default function Nav({ active }) {
   const [open, setOpen] = useState(false)
   const progress = useScrollProgress()
   const { dir, scrolled } = useScrollDirection()
+  const { data: site } = useSiteSettings()
+  const email = site?.seo.contact.email ?? localEmail
 
   // Esc 键关闭移动端菜单（键盘交互）
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function Nav({ active }) {
           <div className="nav-tail">
             <span className="nav-status">AVAILABLE FOR 2026</span>
             <Magnetic strength={0.25} radius={90}>
-              <a className="nav-contact" href={`mailto:${contactEmail}`} onClick={() => setOpen(false)}>
+              <a className="nav-contact" href={`mailto:${email}`} onClick={() => setOpen(false)}>
                 联系我 <Arrow />
               </a>
             </Magnetic>

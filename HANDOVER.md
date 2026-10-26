@@ -8139,3 +8139,259 @@ og-cover 1200×630、apple-touch-icon 180×180、favicon.svg 均在位；10 个 
 `Device or resource busy`）。已在 `.gitignore`，不影响仓库；里面的 `deploy_ed25519`
 是 CI 在用的私钥，**不能删**（删了部署就断），但它已被 gitignore 覆盖、
 `git add -A --dry-run` 验证过不会入库。
+
+---
+
+## 第九十四次：接入 Sanity CMS 后台（2026-10-26）
+
+他要「开发一套内容管理后台并接入 Sanity，增量开发，不破坏前台视觉/动画/响应式」。
+
+### 一、现有项目核查结论（动手前）
+
+- **技术栈**：React 19 + Vite 8 纯 SPA，**无 TypeScript、无路由库、无数据层**。数据全硬编码在 `src/data/` 8 个 JS 文件。
+- **Sanity 接入状态**：全库搜索 sanity/groq/contentful 等 **0 命中**，要从零接入。
+- **架构约束（决定方案的关键）**：SPA + 静态托管（GitHub Pages 主站 + Cloudflare 备用），**无法用 Sanity Live Content API**（需服务端 SSE 长连接）—— 这是「实时更新」只能走兼容方案的根本原因。
+
+### 二、采用的架构（零侵入前台）
+
+```
+src/sanity/        Schema(7 类型+2 对象) + queries(集中 GROQ) + adapters(原始→页面结构) + client/env + types
+src/cms/           Studio 配置（admin.html 独立入口，**不进主站 bundle**）
+src/data/
+  sanityData.ts    统一数据接口 getProjects()/getProjectBySlug()/getResume()/getSiteSettings() + 本地兜底 + 实时刷新
+  useSanityData.ts 组件 Hook（loading/error/refresh + 30s 缓存）
+  （原 8 个 *.js 全部保留，作兜底）
+src/components/
+  ProjectDetail.*  新建作品详情页（hash 路由 #/project/:slug，复用现有 CSS Token）
+  BackgroundMusic.* 新建背景音乐按钮（遵守「不自动播放」红线）
+```
+
+**Vite 多入口**：`index.html`（前台）+ `admin.html`（Studio）。前台 bundle **不含任何 Sanity 代码**（已验证 `main-DrrRxvBM.js` 147KB，无 createClient/imageUrlBuilder/Studio）。
+
+### 三、数据策略（需求第七节）
+
+- `getProjects()` 等接口：有 `VITE_SANITY_PROJECT_ID` 且请求成功 → 用 Sanity；未配置/超时(3s)/失败 → 回退本地 `projects.js` 等。
+- 前台 `client.perspective='published'`，草稿永不出现在正式网站。后台预览才用带 token 的 `previewClient`。
+- **实时刷新**：SPA 无 Live API，采用「页面重新可见/focus 时静默重查 + 30s 缓存」（`registerLiveRefresh` + `DATA_REFRESH_EVENT`）。
+- 本地数据结构与 Sanity 适配后结构**严格对齐**，组件只吃一种结构。
+
+### 四、Schema 设计（7 文档 + 2 对象）
+
+`project`(作品：slug 唯一校验/status/featured/sortOrder/media[]可拖拽) · `resume`(单例：profile + 7 类列表，每类独立增删改排序草稿发布) · `siteSettings`(单例：SEO/分享/页脚/联系/背景音乐) · `category` · `mediaCover`(图片/视频二选一+hotspot) · `mediaModule`(单图/画廊/视频/图文，可排序)。slug 用 `source(title)` 自动生成 + `isUnique` 自定义校验保证唯一。
+
+### 五、破坏面（已确认未动）
+
+- 任何现有 CSS、所有动效组件（FilmStage/SpiralGallery/VideoRail/AbilityFolder/CursorGlow/Magnetic/Reveal）。
+- `src/data/*.js` 8 个兜底文件。
+- 前台视觉/动画/移动端布局与接入前**完全一致**（无 projectId 时 Local 兜底 = 原样）。
+
+### 六、验证
+
+- `npm run build` 双入口通过（2659 modules，1.4s）；`npm run lint` 0 error 0 warning；`npx tsc --noEmit` 0 error（新增 tsconfig.json 只覆盖 `src/sanity`/`src/cms`/`src/data/*ts`，现有 JS 不强制迁移）。
+- dev server 实测：index/App/Projects/sanityData/cms/main/studio/ProjectDetail/BackgroundMusic 全部 200 编译通过。
+
+### 七、用户下一步（归他的）
+
+1. `cp .env.example .env.local` 填 `VITE_SANITY_PROJECT_ID`（Sanity 后台拿），配 CORS（加站点域名 + localhost:5173）。
+2. 后台部署：`npx sanity deploy`（最简单）或随仓库部署后访问 `/admin`。
+3. `.env.local` 已入 `.gitignore`，真实密钥不进库。
+
+**真实接入需在浏览器跑通** —— 本机无 Sanity projectId，开发期全程走 Local 兜底验证，逻辑链已闭合但真机读 Sanity 需用户配好 projectId 后实测（详见 `docs/SANITY后台使用说明.md`）。
+
+---
+
+## 第九十五次：数据层瘦身 + 后台两条部署路径打通（2026-10-26 下午）
+
+接第九十四次。用户要求「把你能做的做了，后台部署方式你给的方案有什么区别」，
+于是做完了**不需要 Sanity 账号**就能验证的全部部分：性能返工、/admin 路径、CI 接线、部署文档。
+
+### 一、为什么返工数据层（第九十四次埋的坑）
+
+第九十四次的 `sanityData.ts` 在模块顶层 `import { createClient } from '@sanity/client'`，
+结果是：**即使一个 Sanity 变量都没配，首屏也要下载 @sanity/client**。
+首屏 JS 从 319.6KB 涨到 ~520KB（4 个 preload chunk），对这个靠动效吃饭的站是硬伤。
+
+改法（`src/data/` 拆成五个文件）：
+
+```
+types.ts         payload 类型，只 import type → 编译后零运行时依赖
+localFallback.ts 本地数据（同步、零网络），首帧直接上屏
+cache.ts         30s 内存缓存 + DATA_REFRESH_EVENT + registerLiveRefresh
+sanityRemote.ts  ← 动态 import；@sanity/client 只活在这个 chunk 里
+sanityData.ts    薄编排层：remoteFirst(key, remote, local)
+hooks.ts         useSanityData/useProjects/useProjectDetail/useResume/useSiteSettings
+```
+
+**关键顺序是「本地先上屏，远程后替换」**，不是「先转圈再出内容」：
+`useState(() => getCached(key) ?? initialData)`，首帧永远有内容。
+这同时修掉一个真 bug —— 第九十四次版本里配置了 Sanity 但请求未返回时 `projects = []`，
+Projects 区块会空白一瞬。
+
+实测（`dist/`）：首屏 main 139.6KB + client(react-dom) 178.2KB + dist-9fSU(portabletext) 25.8KB
+= 343.6KB / gzip 117KB，比接入前多 ~24KB（Portable Text + 数据层）；
+`createClient` 只出现在 `sanityRemote-*.js` 与 Studio 的 chunk 里，**首屏 HTML 不引用**。
+
+### 二、/admin 在两个平台上都能开
+
+`npm run build` 出 `dist/admin.html`，新增的 `emitAdminIndex` 插件（vite.config.js）
+再复制一份成 `dist/admin/index.html`。原因：GitHub Pages / Cloudflare Pages 只对
+**目录**给默认首页，没有这一步 `/admin` 会 404。现在 `/admin`、`/admin/`、`/admin.html` 三种写法都行。
+
+另加：`admin.html` 的 `<meta name="robots" content="noindex, nofollow">` + `robots.txt` 里
+`Disallow: /admin`（后台不该被搜到）。
+
+### 三、两条部署路径（对用户问题的回答）
+
+同一份 `src/cms/studio.tsx`，两种托管：
+
+| | A 随站点部署 `/admin` | B `npm run studio:deploy` |
+|---|---|---|
+| 地址 | `wjsbkd.github.io/admin` | `<名字>.sanity.studio` |
+| 发布 | `git push`（现有 Actions 已覆盖） | 手动跑一次 |
+| 站点仓库体积 | 每次多推 ~8MB Studio 文件 | 站点可用 `npm run build:site`，不含 Studio |
+| 配置来源 | `VITE_SANITY_*` | `SANITY_STUDIO_*`（Sanity 构建器只认这个前缀） |
+
+**定的是 A（默认已生效）**，B 也接好了只是没跑（需要用户自己的 Sanity 账号登录）。
+
+相关文件：
+- 根目录 `sanity.config.ts` —— 给 CLI 用，把 `src/cms/studio.tsx` 原样交出去（配置只有一份）。
+- `src/cms/studio.tsx` 改成工厂 `createStudioConfig(overrides)`：/admin 走 `VITE_`，CLI 走 `SANITY_STUDIO_`。
+- 新脚本：`studio`（本地 Studio 3333）、`studio:build`、`studio:deploy`、`build:site`、`typecheck`。
+- `.env.example` 补了 `SANITY_STUDIO_PROJECT_ID/DATASET`（注释掉，只有用 B 才需要）。
+- `.gitignore` 修了一处错：`.env.example` 之前被忽略，模板进不了库，已移出。
+
+### 四、CI 接线
+
+`deploy.yml`：
+- `paths` 补 `admin.html`、`sanity.config.ts`（否则改后台代码不触发部署）。
+- `npm run build` 增加 env，读仓库 **Variables**（不是 Secret）：
+  `VITE_SANITY_PROJECT_ID / VITE_SANITY_DATASET / VITE_SANITY_API_VERSION`。
+  **没配也能构建**，产物退回本地兜底数据 —— 这是有意设计，不是静默失败。
+
+### 五、验证（本机实跑）
+
+- `npm run lint` 0 error 0 warning；`npx tsc --noEmit` 0 error。
+  （修了三处：`ProjectDetailPayload` 可空与泛型约束冲突；tsconfig 补进新的数据层文件后暴露的未检查代码。）
+- `npm run build` 通过，1.5s；`dist/admin/index.html` 已生成；前台入口哈希未变，无回归。
+- `npm run build:site -- --outDir dist-verify` 通过：产物 7 个文件，**无任何 admin/Studio 文件**。
+- 未做：`npm run studio:deploy` 未执行（需 Sanity 登录 + 真实 projectId），
+  也**没跑过带 projectId 的真机联调** —— 这一步仍然只能等用户配好项目后实测。
+
+### 六、给用户的下一步
+
+1. Sanity 建项目 → `.env.local` 填 `VITE_SANITY_PROJECT_ID` → Sanity 后台 CORS 加站点域名。
+2. 仓库 Settings → Variables 加 `VITE_SANITY_PROJECT_ID`（这样线上构建才会连 Sanity）。
+3. push 一下，打开 `https://wjsbkd.github.io/admin` 登录即可。
+
+### 七、第九十五次收尾补记：两个真问题（都会上线即炸）
+
+**1. react 与 react-dom 版本不一致 → 白屏**
+装 Sanity 依赖时 npm 把 `react` 解到了 19.3.1，而 `react-dom` 停在 19.2.7。
+React 19 在入口做严格版本比对，不一致直接抛错 —— **dev 和线上都会白屏**，构建本身却完全成功。
+发现方式：起 dev server 看控制台（`npm run build` 绿不代表能跑）。
+修法：`react`/`react-dom` 都锁成 `19.3.1`（去掉 `^`，写死版本），并清 `node_modules/.vite` 缓存重起。
+教训：**依赖变更后必须真开一次页面**，构建日志看不出这类问题。
+
+**2. 前台视觉被改动（第九十四次遗留）**
+第九十四次把 Projects 概览卡右下角的 `stat`（70W+）`label`（系列总浏览）换成了 ★ 与 sortOrder，
+又删掉了详情面板的「我的职责 / 项目成果」两段，只留一段 summary —— 这违反「不要重做前台视觉」。
+修法：
+- project schema 补了 5 个**可选**字段：`stat` `label` `background` `responsibility` `result`，
+  GROQ 投影、类型、adapter、本地兜底同步补齐；缺省时不显示，不破版。
+- Projects.jsx 恢复 `index`（01/02/03，按展示顺序生成）/`stat`/`label` 与三段式面板，
+  新增的「查看完整详情 →」是独立的一枚文字链接（新能力，不复用原 `.feature-stat` 位）。
+- 详情页在无富文本时按同样三段式铺文案；背景与摘要同文时不重复显示。
+
+**3. 顺手清掉两处隐患**
+- 删掉 `previewClient` / `canPreviewDrafts`：它读 `SANITY_WRITE_TOKEN`，但 Vite 只注入 `VITE_`
+  前缀变量，这段代码永远拿不到值 —— 留着只会诱导别人给 token 加 `VITE_`，正好撞安全红线。
+  现在项目里**不存在任何 token**，草稿预览靠 Studio 自己的草稿视角。
+- `/admin` 未配置 projectId 时不再挂载 Studio（它会拿 placeholder 去请求
+  placeholder.api.sanity.io，刷一屏 CORS 报错），改成一张中文配置指引卡。
+
+**验证**：dev server 与 `vite preview`（构建产物）都实测打开过 —— 首屏、三张概览卡、
+悬停详情面板、`#/project/local-01` 详情页、`/admin`、`/admin/`、`/admin.html` 全部正常，控制台无报错。
+
+---
+
+## 第九十六次：Sanity 项目落地 + 封面图真 bug（2026-10-26 晚）
+
+第九十五次把代码写完了但没连过真项目，这次把 Sanity 真正接上，并修掉两个"看不出来"的 bug。
+
+### 一、Sanity 项目（已建成）
+
+| 项 | 值 |
+|---|---|
+| projectId | `ncixtjar` |
+| 组织 | `o9rxl4yoh`（lizongheng） |
+| 项目名 | 李纵横作品集 |
+| dataset | `production`（public） |
+| CORS 白名单 | `http://localhost:3333`、`5173`、`4173`、`https://wjsbkd.github.io`、`https://lizongheng-portfolio.pages.dev` |
+
+`.env.local`（不进库）已写好 `VITE_SANITY_*` 与 `SANITY_STUDIO_*`；
+GitHub 仓库 **Variables** 已配 `VITE_SANITY_PROJECT_ID / DATASET / API_VERSION`。
+
+### 二、存量内容已迁进后台
+
+不迁的话一旦连上 Sanity，前台的三个作品会全部消失（Sanity 返回空列表 ≠ 本地兜底）。
+已迁：3 个分类 + 3 个作品，封面图上传到 Sanity 资源库，`status=published`，`_id` 固定为
+`project-local-01/02/03`（与本地的 `local-01…` 对得上，slug 不变，详情页 URL 不受影响）。
+本地 `src/data/projects.js` 与 `public/assets/` **原样保留**，继续当兜底。
+
+写入用的临时 token 建完即删（Sanity → API → Tokens），项目里仍然没有任何 token。
+
+### 三、两个真 bug
+
+**1. GROQ 里 `asset._id` 恒为 null —— 封面图静默失效（最隐蔽）**
+
+`image` 字段下的 `asset` 是**引用**（reference），不是解引用后的文档：
+
+```groq
+image { "id": asset._id }    // ❌ 永远是 null
+image { "id": asset._ref }   // ✅ "image-<hash>-1280x720-jpg"
+```
+
+`@sanity/image-url` 拿到空串直接 `.url()` 返回 `''`，于是 `<img src="">` —— 页面不报错、
+不抛异常，只是图不显示。三处查询（projects / resume / siteSettings）的 `IMAGE_FIELDS` 全中招，
+已统一改成 `asset._ref` 并在 `queries/projects.ts` 写明原因。
+
+顺带纠正一处误判：上一轮怀疑是 `buildImageUrl` 传参结构不对（`{asset:{_ref}}` vs 扁平 id），
+那层转换本身是对的，**根因在查询**。两层都留着（adapter 里 `toImageSource()` 负责还原结构）。
+
+**2. 空壳履历会把经历区整块抹掉**
+
+`fetchResume()` 原来只判断"文档存不存在"。有人在后台点开「个人履历」、什么都没填就发布，
+前台经历区没有任何空状态，会直接消失。现在补了一条：**已发布的工作经历为 0 条 → 抛错走本地兜底**。
+代价是"真的想清空经历"做不到——这是有意取舍，经历区没有空状态可画。
+
+### 四、顺手修的
+
+- `.npmrc` 加 `legacy-peer-deps=true`：Sanity 6.20 的插件把 `@portabletext/editor` 的 peer
+  写成 `^8.2.7`，注册表最高只有 `8.2.6`，不开这个开关 `npm ci` 会 ETARGET —— **本地和 CI 都装不上**。
+- `.gitignore` 补 `.sanity/`（Studio 本地构建产物）。
+- `@sanity/image-url` 换成命名导出 `createImageUrlBuilder`（默认导出已标记废弃）。
+
+### 五、验证
+
+- `npx tsc --noEmit` 0 error；`npm run build` 通过。
+- 真机实测（`vite preview` 读构建产物）：三张概览卡的标题来自 Sanity 而非本地；
+  悬停锁卡后详情面板封面 `src` 指向 `cdn.sanity.io`，浏览器解码出 **1280×720、渲染 761×300**；
+  三张 CDN 图 curl 全部 `200 image/webp`（67KB / 125KB / 81KB）。
+- 未做：`resume` 与 `siteSettings` 两个单例**还没灌入内容**（Sanity 登录态在浏览器里失效，
+  没再建 token）。当前它们不存在 → 前台照常走本地兜底，不影响展示；但在后台填之前，
+  这两块编辑后发布会把内容替换成你填的东西（履历为空则按上面第 2 条兜底）。
+
+**`/admin` 这次没能当场验完，原因在机器出网、不在代码。** 现象：构建产物与 `sanity dev`（3333）
+都停在 Studio 的加载动画。已排除代码面：
+- 产物里 `VITE_SANITY_PROJECT_ID: 'ncixtjar'` 已正确内联（`authStore-*.js` / `dist-*.js` / `lite-*.js` 三处都能看到），
+  不是退回 `placeholder` 的老问题；`dist/admin/index.html` 用的是 `/assets/...` 绝对路径，子目录不会 404。
+- 同一时刻：Node 直连 `cdn.sanity.io` 报 `ECONNRESET`（curl 取同一 URL 却 200）；
+  内置浏览器整片 `ERR_PROXY_CONNECTION_FAILED`；ego 里 `api.sanity.io` 的 fetch 15s 不返回。
+结论：这台机器的出网代理是间歇性坏的。**Studio 启动必须连 `*.api.sanity.io`，连不上就永远转圈**，
+所以这一项要等网络正常时再点一次 `/admin` 确认。前台不受影响——它有 3s 超时 + 本地兜底。
+
+### 六、给用户的下一步
+
+1. 打开 `https://wjsbkd.github.io/admin` 登录，把「个人履历」「网站全局设置」按现在的样子填一遍
+   （脚本迁移需要临时 token，浏览器登录态已失效，这一步留给登录后的你自己建 token 跑，或直接手填）。
+2. 想让线上生效，push 一次 `master`（`deploy.yml` 会自动带上 `VITE_SANITY_*` 构建）。

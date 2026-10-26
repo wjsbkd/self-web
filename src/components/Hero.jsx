@@ -2,13 +2,16 @@ import './Hero.css'
 import { useRef, useEffect } from 'react'
 import Arrow from '@/components/Arrow.jsx'
 import Magnetic from '@/components/Magnetic.jsx'
-import { resumePdf } from '@/data/nav.js'
+import { useResume } from '@/data/hooks'
+import { resumePdf as localResumePdf } from '@/data/nav.js'
 
 // Hero 首页 —— 背景换成全站影片层（FilmStage）后，本组件只负责内容与离场。
 // 原先手工搭的天光 / 数字雨 / 穹顶 / 灯泡四层已移除：首屏画面由首屏视频承担，
 // 跟随鼠标的视差也在 FilmStage 里做（它持有那两个 <video> 的引用）。
 export default function Hero() {
   const heroRef = useRef(null) // 区块根：驱动 --hero-exit 滚动进度
+  const { data: resume } = useResume()
+  const resumePdf = resume?.profile?.resumeFile ?? localResumePdf
   const contentRef = useRef(null) // 内容层：近景视差 + 滚动退出
 
   const reduceMotionRef = useRef(

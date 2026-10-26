@@ -1,9 +1,17 @@
 # 依赖
 node_modules/
 
+# 环境变量（含 Sanity projectId / token，**绝不进库**）
+# 注意：.env.example 是**模板**，只有变量名没有真实值，必须入库，别加到这里
+.env
+.env.local
+.env.*.local
+
 # 构建产物
 dist/
 dist-verify/
+# Sanity Studio 本地构建产物（sanity build / sanity deploy 生成，可随时重出）
+.sanity/
 # dist-deploy/ 是 Qoder Sites 的发布快照，可随时 vite build --outDir dist-deploy 重出。
 # 平台侧另有 release，本地不再另存上线基线 —— 10-16 那份 backups/2026-10-16-deploy-baseline/
 # 已在第八十一次逐层验证"无当前版本缺少之物"后删除，别再照这条旧注释去找它。

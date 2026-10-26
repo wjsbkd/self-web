@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 后台是登录后才可用的管理界面，禁止搜索引擎收录（robots.txt 里另有 Disallow） -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>李纵横 · 作品集后台</title>
+    <style>
+      html,
+      body,
+      #studio-root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: #0d0a0c;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 注意：本页是 Sanity Studio 后台，与 index.html 完全独立。
+         部署后访问 /admin 打开。登录后才有读写权限（未登录看不到内容）。 -->
+    <div id="studio-root"></div>
+    <script type="module" src="/src/cms/main.tsx"></script>
+  </body>
+</html>

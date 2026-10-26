@@ -2,10 +2,20 @@ import './Footer.css'
 import Arrow from '@/components/Arrow.jsx'
 import Magnetic from '@/components/Magnetic.jsx'
 import Reveal from '@/components/Reveal.jsx'
-import { contactEmail, contactWechat, resumePdf } from '@/data/nav.js'
+import { useSiteSettings } from '@/data/hooks'
+import { contactEmail as localEmail, contactWechat as localWechat, resumePdf as localResumePdf } from '@/data/nav.js'
 
 // 页脚 / 联系方式 —— 暗场收尾（居中单轴，与 Hero 首尾呼应）
+//
+// 2026-10-26 Sanity 接入：联系方式从全局设置取（含本地兜底）。
+// 视觉与交互完全保留，只把硬编码的邮箱/微信/简历替换为变量。
 export default function Footer() {
+  const { data: site } = useSiteSettings()
+  const contact = site?.seo.contact ?? {}
+  const email = contact.email ?? localEmail
+  const wechat = contact.wechat ?? localWechat
+  const resumeUrl = contactResumeFile(site) ?? localResumePdf
+
   return (
     <footer className="footer" id="contact">
       <div className="footer-rim" aria-hidden="true" />
@@ -20,7 +30,7 @@ export default function Footer() {
         </Reveal>
         <Reveal delay={0.15} className="footer-email-wrap">
           <Magnetic strength={0.3} radius={140}>
-            <a className="footer-cta" href={`mailto:${contactEmail}`}>
+            <a className="footer-cta" href={`mailto:${email}`}>
               发邮件聊聊 <Arrow />
             </a>
           </Magnetic>
@@ -30,7 +40,7 @@ export default function Footer() {
           <Magnetic strength={0.5} radius={60}>
             <a
               className="social-btn"
-              href={`mailto:${contactEmail}`}
+              href={`mailto:${email}`}
               aria-label="发送邮件"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -57,7 +67,7 @@ export default function Footer() {
           <Magnetic strength={0.5} radius={60}>
             <a
               className="social-btn"
-              href={resumePdf}
+              href={resumeUrl}
               target="_blank"
               rel="noreferrer"
               download
@@ -76,7 +86,7 @@ export default function Footer() {
               <circle cx="8" cy="9.5" r="0.8" fill="currentColor" />
               <circle cx="13" cy="9.5" r="0.8" fill="currentColor" />
             </svg>
-            <span>微信 {contactWechat}</span>
+            <span>微信 {wechat}</span>
           </span>
         </Reveal>
 
@@ -101,4 +111,13 @@ export default function Footer() {
       </div>
     </footer>
   )
+}
+
+/** 从全局设置 social 里找「简历」链接，没有则返回 undefined */
+function contactResumeFile(site) {
+  const social = site?.seo.social ?? []
+  const resumeEntry = social.find((s) => s.platform.includes('简历'))
+  // Sanity 的简历文件在 contact 对象之外，这里只取 social 里的；
+  // 真正的 resumeFile 由 About 的 profile.resumeFile 提供。
+  return resumeEntry?.url
 }

@@ -1,11 +1,16 @@
 import './Experience.css'
-import { experiences } from '@/data'
+import { useResume } from '@/data/hooks'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
 
 // 工作经历 —— timeline 风格：左 period 固定列 + 右 body 限宽列
 // body 内 company/role/tags/points 垂直堆叠，points 沿用简历的分点结构（小标题 + 描述）
+//
+// 2026-10-26 Sanity 接入：数据改从 getResume() 取，渲染结构不变。
 export default function Experience() {
+  const { data } = useResume()
+  const experiences = data?.experiences ?? []
+
   return (
     <section className="experience section wrap" id="experience">
       <div className="section-rim" aria-hidden="true" />

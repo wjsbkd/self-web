@@ -1,5 +1,5 @@
 import './Strengths.css'
-import { strengths, tools } from '@/data'
+import { getStrengths, getTools } from '@/data/sanityData'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
@@ -8,6 +8,8 @@ import Reveal from '@/components/Reveal.jsx'
 // 带图的「能力展示」已挪到 Media（作品展示区），见 Media.jsx
 export default function Strengths() {
   // 核心能力（带编号）+ 个人优势（软技能）合并为同一文本网格
+  const strengths = getStrengths()
+  const tools = getTools()
   const capabilities = [
     ...strengths.map(([number, title, text]) => ({
       index: number,

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './AbilityFolder.css'
 import Folder from '@/components/Folder.jsx'
 import WorkModal from '@/components/WorkModal.jsx'
-import { abilityMaterials } from '@/data/abilityMaterials.js'
+import { getAbilityMaterials } from '@/data/sanityData'
 
 /* 能力展示：两段式交互。
    0 收起 —— 文件夹在版块左侧，右边跟四行真标题（沿用 h3 的字号，不用缩略图，
@@ -31,6 +31,7 @@ const CARD_BACK = 420
 
 export default function AbilityFolder() {
   const [stage, setStage] = useState(0)
+  const abilityMaterials = getAbilityMaterials()
   const [pinned, setPinned] = useState(false)
   const [spread, setSpread] = useState(false)
   const [active, setActive] = useState(null)

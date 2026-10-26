@@ -1,40 +1,50 @@
-import './About.css'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import CountUpGroup from '@/components/CountUp.jsx'
 import Reveal from '@/components/Reveal.jsx'
-import { contactEmail, contactPhone, contactPhoneTel, contactWechat, resumePdf } from '@/data/nav.js'
+import { useResume, useSiteSettings } from '@/data/hooks'
+import { contactEmail as localEmail } from '@/data/nav.js'
 
 export default function About() {
+  const { data: resume } = useResume()
+  const { data: site } = useSiteSettings()
+  const profile = resume?.profile
+  // 优先级：Sanity profile → 本地兜底（nav.js）
+  const email = profile?.email ?? site?.seo.contact.email ?? localEmail
+  const phone = profile?.phone
+  const phoneTel = profile?.phoneTel
+  const wechat = profile?.wechat
+
   return (
     <section className="about section wrap" id="about">
       <div className="section-rim section-rim--lit" aria-hidden="true" />
       <SectionHeading num="01" kicker="ABOUT ME" />
       <div className="about-links">
-        <a href={`mailto:${contactEmail}`} aria-label={`发送邮件到 ${contactEmail}`}>
-          {contactEmail} <Arrow />
-        </a>
-        <a href={`tel:${contactPhoneTel}`} aria-label={`拨打 ${contactPhone}`}>
-          {contactPhone} <Arrow />
-        </a>
-        <a
-          href={resumePdf}
-          target="_blank"
-          rel="noreferrer"
-          download
-          aria-label="下载李纵横简历 PDF"
-        >
-          下载简历 PDF <Arrow />
-        </a>
-        <span className="wechat-line">微信（同号）：{contactWechat}</span>
+        {email && (
+          <a href={`mailto:${email}`} aria-label={`发送邮件到 ${email}`}>
+            {email} <Arrow />
+          </a>
+        )}
+        {phone && phoneTel && (
+          <a href={`tel:${phoneTel}`} aria-label={`拨打 ${phone}`}>
+            {phone} <Arrow />
+          </a>
+        )}
+        {profile?.resumeFile && (
+          <a href={profile.resumeFile} target="_blank" rel="noreferrer" download aria-label="下载简历 PDF">
+            下载简历 PDF <Arrow />
+          </a>
+        )}
+        {wechat && <span className="wechat-line">微信（同号）：{wechat}</span>}
       </div>
       <Reveal className="about-copy">
         <p className="lead">
-          我是李纵横，一名关注内容、人与体验的<span>AI 内容运营与视觉创作者</span>。
+          我是{profile?.name ?? '李纵横'}，一名关注内容、人与体验的
+          <span>{profile?.role ?? 'AI 内容运营与视觉创作者'}</span>。
         </p>
         <p>
-          从 AI 赛事到产品推广，从节目现场到城市晚会，我始终在创意与执行的交界处工作。
-          擅长用内容建立连接，用结构化的方法推动事情发生。
+          {profile?.bio ??
+            '从 AI 赛事到产品推广，从节目现场到城市晚会，我始终在创意与执行的交界处工作。擅长用内容建立连接，用结构化的方法推动事情发生。'}
         </p>
       </Reveal>
 

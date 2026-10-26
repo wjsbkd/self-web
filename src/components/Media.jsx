@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './Media.css'
-import { videos } from '@/data/videos.js'
+import { getVideos } from '@/data/sanityData'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import Reveal from '@/components/Reveal.jsx'
@@ -11,6 +11,7 @@ import AbilityFolder from '@/components/AbilityFolder.jsx'
 export default function Media() {
   const [modalOpen, setModalOpen] = useState(false)
   const [activeVideo, setActiveVideo] = useState(null)
+  const videos = getVideos()
 
   const openVideo = (video) => {
     setActiveVideo(video)
