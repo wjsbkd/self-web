@@ -15,16 +15,10 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    # 直接读仓库 Variables（不是 Secret），不用 gh CLI —— 少一层可能失败
+    env:
+      PROJECT_ID: ${{ vars.VITE_SANITY_PROJECT_ID }}
     steps:
-      - name: 拉取仓库变量
-        id: vars
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 仓库 Variables（不是 Secret）里读 Sanity 配置
-          pid=$(gh variable list --repo wjsbkd/self-web -L 100 | awk -F'\t' '$1=="VITE_SANITY_PROJECT_ID"{print $2}')
-          echo "pid=$pid" >> "$GITHUB_OUTPUT"
-
       - name: 主站 / admin 可达 + bundle 哈希
         run: |
           set -e
@@ -42,8 +36,6 @@ jobs:
           curl -fsS --max-time 30 "https://wjsbkd.github.io/robots.txt" | grep -q 'Disallow: /admin'
 
       - name: Sanity 数据 API + CORS（模拟真实访客）
-        env:
-          PROJECT_ID: ${{ steps.vars.outputs.pid }}
         run: |
           set -e
           API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
@@ -58,8 +50,6 @@ jobs:
           echo "CORS 头确认"
 
       - name: Sanity CDN 图片
-        env:
-          PROJECT_ID: ${{ steps.vars.outputs.pid }}
         run: |
           set -e
           # 拿第一个项目的封面 asset ref
