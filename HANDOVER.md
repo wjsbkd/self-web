@@ -1,7 +1,7 @@
 # self web · 项目交接说明（HANDOVER）
 
 > 生成：2026-09-23 · 由 Codex 汇总本项目历史对话后生成
-> 更新：2026-10-27 · 最新到第一百零一次（结构整理：补目录、lint/tsconfig 全覆盖、去硬编码 projectId）
+> 更新：2026-10-27 · 最新到第一百零二次（仓库清理：归档待决问题清单、删 esap.html、清空目录 web/）
 > 历史更新：2026-09-26 · Qoder 完成 git 治理（大文件排除 + 6 次分批提交），并修正本文档中过期的配色与站点结构描述
 > 用途：本项目的历史对话已归档清理（详见 `D:\AI工作文件夹\全局工作台\Codex执行记录\工具维护-三项目对话归档清理-20260923.md`）。本文档保存关键结论，供后续接手的对话快速了解项目情况。
 
@@ -137,6 +137,7 @@
 - 第九十九次：收尾复核（2026-10-27）—— 全部验收点复核通过 + 两个验证方法学坑
 - 第一百次：给 ESLint 加全局 ignores（2026-10-27）—— 全仓扫描 4077 错 → 0
 - 第一百零一次：结构整理三件事（2026-10-27）—— HANDOVER 目录、lint/tsconfig 全覆盖、去硬编码 projectId
+- 第一百零二次：仓库清理三件事（2026-10-27）—— 归档待决问题清单、删 scrape 残留、清空目录
 
 ## 项目是什么
 
@@ -8878,3 +8879,60 @@ ego-browser 的 `page.cdp('Network.setBlockedURLs')` 能真阻断 `*apicdn.sanit
 3. **脚本纳入类型检查的价值是即时的**：`sanity.cli.ts` 一进 `tsconfig.include` 就参与校验，
    本次改动（去掉字面量兜底后 projectId 变成 `string | undefined`）正好在它上面验证通过，
    说明 `defineCliConfig` 的 api 字段本就允许省略 —— 以前是字面量兜底把这个事实盖住了。
+
+## 第一百零二次：仓库清理三件事（2026-10-27）—— 归档待决问题清单、删 scrape 残留、清空目录
+
+> 用户要求：「剩下的三项仓库清理也做了吧：归档 `待决问题-20261015.md`、删 `esap.html`、
+> 清掉空目录 `web/`，并且把网页网址和后台管理面板网址给我」。
+
+### 一、做了什么
+
+1. **`待决问题-20261015.md` → `backups/2026-10-27-decision-log/`**
+   - 这是 2026-10-15 收尾审计留下的 Q01…Q40 决策台账（148,613 B），问题已全部关闭，
+     之后只在被引用、不再被维护，留在仓库根目录只会制造「这是什么」的疑问。
+   - 归到 `backups/` 是**本仓库既有的归档惯例**（同目录已有 `2026-10-11-film-stage/`、
+     `2026-10-17-holo-mock/`、`2026-10-25-pre-history-cleanup/`、`2026-10-26-video-precompress/`），
+     且 `backups/` 在 `.gitignore` 里 —— 所以文件**本地还在、原样可读，但退出 git 跟踪**。
+   - 内容没有丢：git 历史里仍可 `git log --all -- 待决问题-20261015.md` 找回任意版本。
+   - 注意：`HANDOVER.md` 里有约 20 处引用这个名字（历史记录，按规矩不改写），
+     看到「详见 `待决问题-20261015.md` 的 Q38」这类似表述时，去上面那个 archives 目录找。
+
+2. **删 `esap.html`**（877,524 B）—— 2026-10-25 抓页面时存下的某站点整页快照（内联了阿里 CDN 的
+   favicon / 统计脚本），既未被任何代码引用，也在 `.gitignore` 里。它从未进过 git，删了不可恢复，
+   但内容是公开网页的副本，无自有信息。
+
+3. **删空目录 `web/`** —— 并非字面全空：里面有一个空的 `web/.research-tmp/`（0 B），
+   `.research-tmp/` 本身也已被 `.gitignore:61` 忽略。它就是早期把 `.research-tmp/` 建错位置留下的壳，
+   删掉后仓库根目录与 `.gitignore` 的规则重新对齐。
+
+### 二、实测结果
+
+| 检查 | 结果 |
+|---|---|
+| `npm run lint`（`eslint .` 全仓） | 0 错 0 警 |
+| `npm run typecheck` | exit 0 |
+| `npm run build` | ✓ built in 1.44s |
+| `grep` 全仓搜 `esap` / `web/` 引用 | 仅命中 `.research-tmp/volc_iga.html`（本身是被忽略的抓页残留），无代码引用 |
+
+### 三、本次核实的两个线上地址
+
+| 用途 | 地址 | 实测 |
+|---|---|---|
+| **前台（作品集）** | `https://wjsbkd.github.io/` | HTTP 200 |
+| **后台（Sanity Studio）** | `https://wjsbkd.github.io/admin` | HTTP 200，`<title>李纵横 · 作品集后台</title>`，带 `noindex` |
+| 备用站（Cloudflare Pages） | `https://lizongheng-portfolio.pages.dev/` | 部署链路里的第二目标 |
+
+- 后台走的是 `docs/SANITY后台使用说明.md` 里的**方式 A（随站点部署）**：`admin.html` 是 Vite 第二入口，
+  构建时 `emitAdminIndex` 插件额外产出 `dist/admin/index.html`，所以 `/admin`、`/admin/`、`/admin.html`
+  三种写法都能开。**不需要**再跑 `npm run studio:deploy`（方式 B，Sanity 托管，至今未执行过）。
+- 后台页面本身可公开访问，但 Studio 内部要 Sanity 账号登录、且只允许项目成员 ——
+  所以「地址公开」不等于「谁都能改数据」。
+
+### 四、值得记的
+
+1. **「归档」在这套仓库里有明确落点：`backups/YYYY-MM-DD-<英文短slug>/`。** 该目录被 gitignore，
+   归档 = 文件留在本地 + 退出版本库；要改内容先想清楚这一步是不可逆的（历史版本仍可捞）。
+2. **「空目录」要实测再删。** `web/` 用 `ls` 看着是空的，`find -mindepth 1` 才照出里面的
+   `web/.research-tmp/`；因为 `.research-tmp/` 被忽略，`git status` 也一直不显示它，纯看 git 会误判。
+3. **删东西前先搜引用。** 三个目标都先 grep 过代码与配置，确认零引用再动手；`esap.html` 尤其要确认
+   不是被 `index.html` 或构建脚本当素材引用的。
