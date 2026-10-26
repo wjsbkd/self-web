@@ -8434,3 +8434,68 @@ image { "id": asset._ref }   // ✅ "image-<hash>-1280x720-jpg"
 
 **给后续**：`api.sanity.io` 从本机不可达，以后凡是要验"线上读得到数据"，
 一律走这个 workflow（`gh workflow run 线上冒烟测试 --repo wjsbkd/self-web`），别在本机白试。
+
+---
+
+## 第九十七次：履历 + 全局设置灌进 Sanity，`footerText` 接线（2026-10-26 深夜）
+
+第九十六次"留给用户手填"的两份单例，这次灌完了；顺手抓出一个后台改了前台不动的地方。
+
+### 一、出网：不修代理，绕过它
+
+Node 的 `fetch` 和 `sanity` CLI **都不读系统代理** —— 所以 `sanity login` 卡住、
+`seed-sanity.mjs` 报 `fetch failed`，而同一时刻 curl 直连却 200。这不是 Sanity 拒了我们，
+是这两个客户端根本没走代理。
+
+**新增 `scripts/lib/proxy-fetch.mjs`**（零依赖，只用 `net` + `tls` + `http`）：建 CONNECT 隧道，
+在上面发 HTTPS，返回 `{status, headers, text(), json()}`。设了 `PROXY_HOST` 就走隧道，
+不设就退化成原生 `fetch` —— **不设则行为完全不变**，不留任何隐式依赖。
+
+**新增 `scripts/get-sanity-token.mjs`**：四跳 GitHub OAuth 换一次性 token，只打 stdout 不落盘。
+第一跳必须带 `origin` 且要已加进 CORS 白名单（用 `http://localhost:3333`）；
+`sid` 是**一次性**的，第 3、4 跳必须紧挨着。GitHub 出「确认授权」页时脚本主动停下报错——
+那一步是用户在授权，不替人点同意。
+
+### 二、写入踩的三个坑（都在 `seed-sanity.mjs` 注释里）
+
+1. **mutate 的 URL 必须带 API 版本**：`{base}/v{apiVersion}/data/mutate/{dataset}`。
+   我一度删掉 `/v${API_VERSION}` 改成 `/data/mutate/{dataset}`，直接
+   `404 no Route matched with those values`。
+2. **body 要包一层**：`{mutations: [{createOrReplace: doc}]}`。少了外层就是
+   `400 Unknown field "createOrReplace"`。
+3. **上传端点是 `/v1/assets/files/{dataset}`**，dataset 是路径第一段；写成 projectId 就
+   `404 "Dataset not found"`。响应里资产 id 在 `asset.document._id`，不是 `asset._id`。
+
+三个都踩过才对，不是从文档抄的。
+
+### 三、已落地
+
+- `resume` + `siteSettings` 两个单例写入 `production`（幂等，可重跑）。
+- 简历 PDF 上传成 Sanity 文件资产（302KB），前台「下载简历」指向 `cdn.sanity.io`。
+- **所有凭据跑完即删**（`.claude/gh-cookies.json`、`token.txt` 与二十来个探针脚本全清）。
+  项目里依旧没有任何 token。
+
+### 四、真 bug：后台改页脚文案，前台不变
+
+`siteSettings` 有 `footerText`，schema / query / adapter 三层都通，**但 `Footer.jsx` 是硬编码
+`© 2026 LIZONGHENG`** —— 全局设置那一栏等于白填，违反"全局设置后台可管"的验收点。
+
+已接上：`site?.seo.footerText || '© 2026 LIZONGHENG'`（保留原值当兜底，视觉不变）。
+同时给 `localFallback.ts` 的 `localSitePayload()` 补上 `siteName` / `footerText` ——
+**没接 Sanity 时文案与改版前逐字一致**，这也是需求第七节"本地结构与 Sanity 返回结构一致"的要求。
+
+### 五、验证（这次是真验，不是推断）
+
+- 浏览器里直接 GROQ 查 `siteSettings`：`footerText` = `© 李纵横 · 内容运营与视觉创作者`，200。
+- 页面 `<footer>` 实际渲染出同一串 —— 接线生效。
+- **中途被浏览器缓存骗了一次**：dist 里 `index.html` 已经指向新包 `main-DJ9oQTox.js`，
+  但浏览器还挂着旧 `main-tX5hPW46.js`，于是"改了没生效"是假象。
+  **改完前端一定要确认页面加载的 chunk 名，别只看构建输出。**
+- GitHub Actions 冒烟测试 run `40330605404` 四步全绿，6 秒 —— 真实访客读得到 Sanity。
+- `npm run typecheck` / `npm run build` 均通过。
+
+### 六、待你确认
+
+改动**未提交**：`scripts/seed-sanity.mjs`、`src/components/Footer.jsx`、`src/data/localFallback.ts`、
+`docs/SANITY后台使用说明.md`、本文件；新增未跟踪：`scripts/get-sanity-token.mjs`、
+`scripts/lib/proxy-fetch.mjs`。要推 `master` 触发部署的话说一声。

@@ -58,6 +58,21 @@
    ```
    脚本读 `src/data/experiences.js` 与 `src/data/nav.js`，与前台本地兜底同源，幂等可重跑。跑完把 token 删掉——平时用不到。
 
+   两种拿 token 的方式，能直连就用前者：
+   - **前台能打开 sanity.io**：`sanity login`（CLI 会开浏览器），再在 manage → API → Tokens 建 Editor token。
+   - **本机只有代理能出网**（`sanity login` 会卡住或报 `Could not verify token: fetch failed`）：用
+     ```bash
+     PROXY_HOST=127.0.0.1 PROXY_PORT=10811 node scripts/get-sanity-token.mjs > .token
+     ```
+     它走 GitHub OAuth 换一个一次性 token 并打到 stdout，不落盘。需要一份 GitHub 会话 cookie 文件（默认 `.claude/gh-cookies.json`，含 httpOnly 的 `user_session`），跑完请删掉。若 GitHub 出「确认授权」页，脚本会停下并提示你在浏览器里点一次同意——它不替你点。
+   - 写入时同样要带代理（Node 的 fetch 不读系统代理）：
+     ```bash
+     PROXY_HOST=127.0.0.1 PROXY_PORT=10811 SANITY_WRITE_TOKEN=xxx node scripts/seed-sanity.mjs
+     ```
+     不设 `PROXY_HOST` 则按原样直连，行为不变。代理逻辑全在 `scripts/lib/proxy-fetch.mjs`，无第三方依赖。
+
+   已经灌过的内容（resume / siteSettings 两个单例 + 简历 PDF）不需要再跑；后台改完内容直接发布即可，前台自己会拉到。
+
 > 没配置 projectId 时，前台自动用本地数据（`src/data/*.js`）兜底，网站照常展示，不影响开发。
 
 ---

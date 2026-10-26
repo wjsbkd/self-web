@@ -8,6 +8,12 @@
  *
  * token 在 https://www.sanity.io/manage/project/ncixtjar/settings/api
  * 建 **Editor** 权限的 token，跑完可以删。项目里平时不存 token。
+ * 没有现成 token 时，可以先用 scripts/get-sanity-token.mjs 换一个。
+ *
+ * 网络：Node 的 fetch 不读系统代理。若本机直连不到 api.sanity.io，
+ * 设 PROXY_HOST（及 PROXY_PORT）让所有请求走代理隧道：
+ *   PROXY_HOST=127.0.0.1 PROXY_PORT=10811 SANITY_WRITE_TOKEN=xxx node scripts/seed-sanity.mjs
+ * 不设则按原样直连，行为不变。
  *
  * 读的是 src/data/experiences.js 与 src/data/nav.js —— 与前台本地兜底同源，
  * 所以灌进去的内容和现在线上看到的完全一致。重跑会覆盖（createOrReplace）。
@@ -15,6 +21,7 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve, basename } from 'node:path'
+import { request } from './lib/proxy-fetch.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const PROJECT_ID = 'ncixtjar'
@@ -117,33 +124,47 @@ if (!token) {
 const apiBase = `https://${PROJECT_ID}.api.sanity.io`
 
 // 1. 上传简历 PDF（让 About 的「下载简历」指向 Sanity 资源）
-const pdfPath = resolve(ROOT, 'public', nav.resumePdf)
+// nav.resumePdf 是站点路径（以 / 开头），要剥掉前导斜杠再拼到 public/ 下，
+// 否则 resolve 会把它当成绝对路径，落到磁盘根目录去。
+const pdfPath = resolve(ROOT, 'public', nav.resumePdf.replace(/^\/+/, ''))
 const pdfBytes = await readFile(pdfPath)
-const uploadUrl = `${apiBase}/v1/assets/files/${PROJECT_ID}?filename=${encodeURIComponent(basename(pdfPath))}`
-const upRes = await fetch(uploadUrl, {
+// 上传端点：/v1/assets/files/{dataset}?filename= —— dataset 是路径第一段，
+// 不是 projectId。写成 /assets/files/{projectId} 会被当成 dataset 名而报
+// "Dataset not found"。
+const uploadUrl = `${apiBase}/v1/assets/files/${DATASET}?filename=${encodeURIComponent(basename(pdfPath))}`
+const upRes = await request(uploadUrl, {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/pdf' },
   body: pdfBytes,
 })
-if (!upRes.ok) {
+if (upRes.status < 200 || upRes.status >= 300) {
   console.error('✗ 简历 PDF 上传失败:', upRes.status, (await upRes.text()).slice(0, 200))
   process.exit(1)
 }
 const asset = await upRes.json()
-resume.resumeFile = { _type: 'file', asset: { _type: 'reference', _ref: asset._id } }
-console.log(`✓ 简历 PDF 已上传: ${asset._id} (${(pdfBytes.length / 1024).toFixed(0)}KB)`)
+// 上传接口返回 {document: {...}}，资产 id 在 document._id
+const assetId = asset.document?._id || asset._id
+if (!assetId) {
+  console.error('✗ 上传响应里没有资产 id:', JSON.stringify(asset).slice(0, 200))
+  process.exit(1)
+}
+resume.resumeFile = { _type: 'file', asset: { _type: 'reference', _ref: assetId } }
+console.log(`✓ 简历 PDF 已上传: ${assetId} (${(pdfBytes.length / 1024).toFixed(0)}KB)`)
 
 // 2. createOrReplace 两个单例（幂等）
+// 请求格式与 @sanity/client 一致：
+//   URL  是 /v{apiVersion}/data/mutate/{dataset}
+//   body 是 {mutations:[{createOrReplace: doc}]}，不是 {createOrReplace: doc}
 async function createOrReplace(doc) {
   const url = `${apiBase}/v${API_VERSION}/data/mutate/${DATASET}`
-  const res = await fetch(url, {
+  const res = await request(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ createOrReplace: doc }),
+    body: JSON.stringify({ mutations: [{ createOrReplace: doc }] }),
   })
   const j = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    console.error(`✗ ${doc._id} 写入失败:`, res.status, JSON.stringify(j).slice(0, 300))
+  if (res.status < 200 || res.status >= 300) {
+    console.error(`✗ ${doc._id} 写入失败:`, res.status, JSON.stringify(j).slice(0, 600))
     process.exit(1)
   }
   const rev = j.results?.[0]?.rev ?? '?'

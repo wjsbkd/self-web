@@ -15,6 +15,8 @@ export default function Footer() {
   const email = contact.email ?? localEmail
   const wechat = contact.wechat ?? localWechat
   const resumeUrl = contactResumeFile(site) ?? localResumePdf
+  // 页脚版权行来自全局设置；后台没填就沿用现有的硬编码文案，视觉不变。
+  const footerText = site?.seo.footerText || '© 2026 LIZONGHENG'
 
   return (
     <footer className="footer" id="contact">
@@ -103,7 +105,7 @@ export default function Footer() {
                 H
               </text>
             </svg>
-            <span>© 2026 LIZONGHENG</span>
+            <span>{footerText}</span>
           </span>
           <span>长春 / 中国</span>
           <a href="#top">BACK TO TOP ↑</a>

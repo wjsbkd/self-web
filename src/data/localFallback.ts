@@ -137,7 +137,10 @@ export function localResumePayload(): ResumePayload {
 export function localSitePayload(): SiteSettingsPayload {
   return {
     source: 'local',
+    siteName: '李纵横 · 个人作品集',
     seo: {
+      // 与 Footer.jsx 改版前的硬编码一致：没接 Sanity 时页面文案不变。
+      footerText: '© 2026 LIZONGHENG',
       contact: {
         email: localEmail,
         phone: localPhone,
