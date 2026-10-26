@@ -270,9 +270,16 @@ export default function AbilityFolder() {
               bounce={0.32}
               onItemClick={(item, index) => setActive(abilityMaterials[index] ?? null)}
             >
+              {/* 纸片一律撑满裁切（CSS 里就是 cover），不再跟 imageFit 走。
+                 ⚠️ 2026-10-27 他反馈"文件夹里还有一张白纸"：3D 那张是 792×432，
+                 imageFit:'contain' 放进 180×216 的竖版纸片 → 上下各留 42.3px 纯白
+                 letterbox（.ability-page 的 #fff 透出来）；而收起态折页只露出上沿
+                 66.7px，这一条整好落在白边里，看起来就是一张空纸。
+                 contain 只对展开后 16:9 的大卡有意义（见下面 .ability-card），
+                 那里 792/432=1.833 与 16/9=1.778 只差左右各 1.5%，肉眼看不出来。 */}
               {abilityMaterials.map((mat) => (
                 <div key={mat.id} className="ability-page">
-                  <img src={mat.image} alt="" loading="lazy" style={{ objectFit: mat.imageFit === 'contain' ? 'contain' : 'cover' }} />
+                  <img src={mat.image} alt="" loading="lazy" />
                   <span>{mat.title}</span>
                 </div>
               ))}
@@ -347,9 +354,10 @@ export default function AbilityFolder() {
                   bounce={0.32}
                   onItemClick={(item, index) => setActive(abilityMaterials[index] ?? null)}
                 >
+                  {/* 与收起态那份同一套纸片，撑满裁切的原因见上面那段注释 */}
                   {abilityMaterials.map((mat) => (
                     <div key={mat.id} className="ability-page">
-                      <img src={mat.image} alt="" style={{ objectFit: mat.imageFit === 'contain' ? 'contain' : 'cover' }} />
+                      <img src={mat.image} alt="" />
                       <span>{mat.title}</span>
                     </div>
                   ))}

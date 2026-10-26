@@ -1,7 +1,7 @@
 # self web · 项目交接说明（HANDOVER）
 
 > 生成：2026-09-23 · 由 Codex 汇总本项目历史对话后生成
-> 更新：2026-10-27 · 最新到第一百零二次（仓库清理：归档待决问题清单、删 esap.html、清空目录 web/）
+> 更新：2026-10-27 · 最新到第一百零三次（前台回归修复 + 后台中文化：About.css 丢 import、能力展示白纸、Studio 中文界面与侧栏分组）
 > 历史更新：2026-09-26 · Qoder 完成 git 治理（大文件排除 + 6 次分批提交），并修正本文档中过期的配色与站点结构描述
 > 用途：本项目的历史对话已归档清理（详见 `D:\AI工作文件夹\全局工作台\Codex执行记录\工具维护-三项目对话归档清理-20260923.md`）。本文档保存关键结论，供后续接手的对话快速了解项目情况。
 
@@ -138,6 +138,7 @@
 - 第一百次：给 ESLint 加全局 ignores（2026-10-27）—— 全仓扫描 4077 错 → 0
 - 第一百零一次：结构整理三件事（2026-10-27）—— HANDOVER 目录、lint/tsconfig 全覆盖、去硬编码 projectId
 - 第一百零二次：仓库清理三件事（2026-10-27）—— 归档待决问题清单、删 scrape 残留、清空目录
+- 第一百零三次：前台回归修复 + 后台中文化（2026-10-27）—— About.css 丢 import、能力展示白纸、Studio 中文界面与侧栏分组
 
 ## 项目是什么
 
@@ -8936,3 +8937,97 @@ ego-browser 的 `page.cdp('Network.setBlockedURLs')` 能真阻断 `*apicdn.sanit
    `web/.research-tmp/`；因为 `.research-tmp/` 被忽略，`git status` 也一直不显示它，纯看 git 会误判。
 3. **删东西前先搜引用。** 三个目标都先 grep 过代码与配置，确认零引用再动手；`esap.html` 尤其要确认
    不是被 `index.html` 或构建脚本当素材引用的。
+
+## 第一百零三次：前台回归修复 + 后台中文化（2026-10-27）—— About.css 丢 import、「一张白纸」、Studio 按发布状态分组
+
+> 用户先后要求：「这一部分的文字排版为什么跟之前的不一样？请你再整体检查一遍，网页好像还存在一些问题」；
+> 「此外，文件夹里还有一张白纸，所以你需要对整个项目整体再检查一遍，看看网页还有哪些问题？」；
+> 「完成上述内容后可以对后台（管理面板）发掘问题再继续优化，比如：界面尽量用汉字，排版和结构存在一些问题」。
+
+### 一、做了什么
+
+**A. 前台两处回归**
+
+1. **About 板块排版变了 —— 丢了 CSS 引入**
+   - 根因：`About.css` 的规则全在，但 `About.jsx` 顶部少了 `import './About.css'`。
+     `373c0ef` 那次重构（抽出 `SectionHeading`）把这行一并删了；
+     **打包不报错、页面也不报错，只是整套样式静默失效** —— 所以肉眼是「字号/间距不对」，不是白屏。
+   - 修复：补回 import，信息道、联系条、教育块的规则随之恢复。
+
+2. **能力展示文件夹里有一张「白纸」**
+   - 根因：3D 纸片是 180×216 的**竖版**，图片本体 792×432 横图，`imageFit: 'contain'`
+     → 上下各留 42.3px 纯白 letterbox；`.ability-page` 背景是 `#fff`，而收起态折页只露出上沿 66.7px，
+     这一条恰好整条落在白边里，看起来就是一张空纸。
+   - 修复：纸片一律 `cover`（删掉内联 `objectFit`，收起态与展开态两处都改）。
+     `contain` 只对展开后的 16:9 大卡有意义，那里 792/432=1.833 与 16/9=1.778 只差左右各 1.5%，肉眼无感。
+
+3. **顺带修了 About 的标题大纲**（全站巡检发现）：About 没有可见 h2，
+   大纲从首屏 h1 直接跳到「吉林建筑大学」h3。补了一个 1×1 视觉隐藏的 `<h2>关于我</h2>`；
+   样式写成 `.about .about-h2-sr`（0,2,0）压过 `global.css` 里 `.section-rim ~ *` 的
+   `position:relative`（0,1,0），本板块几何逐像素不变。`global.css` 的注释同步改成「没有**可见的** h2」。
+
+**B. 后台界面中文化**
+
+4. **`@sanity/locale-zh-hans` + `zhHansLocale()`**（新增依赖 2.1.40）
+   - 之前只做了第一层：schema 的 title / description 是中文；但 Studio 自己的按钮、菜单、对话框
+     （Save / Publish / Add / Delete / Search、校验提示）全是英文 ——
+     因为 **sanity 6 核心包不带任何语言包**，这部分文案不归项目代码管。
+   - 在 `src/cms/studio.tsx` 的 `plugins` 数组最前面注册 `zhHansLocale()`（locale title = 简体中文）。
+   - 文件头注释写清「中文化分两层，缺一不可」，防止下次又只改 schema。
+
+**C. 后台两个会卡住发布的真 bug**
+
+5. **单张图片模块的 alt 永远填不了（hidden 条件写反）**
+   - `mediaModule.alt` 的 hidden 写成 `parent?.moduleType === 'image'`（少了取反）：
+     选了「单张图片」反而把 alt 藏起来，而 validation 又要求它必填 →
+     字段看不见、发布一直报「图片必须填写替代文本」，图片模块根本存不下来。
+   - 修复为 `!==`，并把「隐藏条件必须与校验条件互补」写进注释。
+
+6. **视频模块 / 视频封面可以「什么都没有」**
+   - `mediaCover.videoFile`、`mediaModule.videoFile` 原本没有校验：选了视频但文件和地址都空，
+     发布能过，前台这个封面/模块是空的。
+   - 两处都补 `Rule.custom`：「需要上传视频文件或填写视频地址（二选一）」。
+
+**D. 后台侧栏结构**
+
+7. **作品按发布状态分三个入口**（原先是把 project 平铺成一个列表）：
+   - 全部作品 / 草稿（前台不显示）/ 已发布（前台显示）。
+   - 理由：status 才是「前台是否显示」的唯一依据（见 `project.ts`），平铺时草稿和已发布混在一起，
+     容易把半成品当成线上内容。
+   - 三个视图都按 `sortOrder` 升序。
+   - 两个自定义 filter 都链了 `.apiVersion(sanityEnv.apiVersion)` —— 不链也能跑，
+     但 Studio 每次启动都会在控制台警告「No apiVersion specified for document type list with custom filter」。
+8. 修正 `studio.tsx` 头部一处错误注释：原文暗示作品列表能拖拽排序，实际作品排序靠 `sortOrder` 数字字段，
+   只有数组项（详情页媒体模块）能拖。
+
+### 二、实测结果
+
+| 检查 | 结果 |
+|---|---|
+| `npm run typecheck` | exit 0 |
+| `npm run lint`（`eslint .`） | 0 错 |
+| `npm run build` | ✓ built in 1.50s（只有既有的 chunk 体积警告） |
+| About 排版（C） | 1440×900 实测：补回 import 后字号/间距回到原设计数值 |
+| 能力展示纸片（D） | 内联 objectFit 移除后 `object-fit: cover` 生效，白边消失 |
+| About 大纲 | 隐藏 h2 不占布局（1×1 + 裁切），板块几何与修改前一致 |
+| 侧栏结构 | 用真实 `createStructureBuilder` 在 Node 里序列化（`.research-tmp/structure-check.mjs`，一次性脚本不提交），三个视图的 filter / ordering / apiVersion 全部符合预期，无警告 |
+| `/admin` 运行 | `admin.html` 标题 `李纵横 · 作品集后台`、root 正常挂载、配置与插件加载无报错；但预览浏览器不出外网（Sanity 请求 `ERR_PROXY_CONNECTION_FAILED`），登录后的真实工作台没在这里看到 |
+
+### 三、没能验证的
+
+- Studio 登录后的实际界面（中文按钮是否全部生效、三个作品视图的真实列表、上传交互）
+  需要出网 + Sanity 账号，内置预览浏览器拿不到。部署后在 `https://wjsbkd.github.io/admin`
+  用真实账号点一遍即可。
+
+### 四、值得记的
+
+1. **删 CSS import 不报错。** Vite 打包时样式文件没被任何模块引用只是被丢掉，不产生错误或警告；
+   重构 JSX 时删 import 极易顺手带走。看到「样式变了但不是全白」先查 `import './X.css'`。
+2. **竖版小卡片不要用 contain。** 横图进竖版框，contain 等于上下留白；框又只露出一条时，露出的就是纯白边。
+   小尺寸缩略图一律 cover。
+3. **sanity 6 的中文化是两层：schema 文案 + 语言包插件。** 只改 schema，字段说明是中文、按钮菜单仍是英文。
+4. **hidden() 与 validation 必须互补。** 隐藏条件写反 = 字段永远填不到 + 校验永远不过，
+   而 Studio 只报校验、不报「字段被藏了」，极难自查。写 hidden 时对照 validation 念一遍。
+5. **自定义 filter 的 documentList 必须 `.apiVersion()`。** 不链也能跑，但控制台每次启动都警告。
+6. **结构可以离线自检。** `createStructureBuilder` 在 Node 里给个桩 source（projectId / dataset / schema /
+   document.resolveNewDocumentOptions）就能序列化整棵侧栏树，不连网也能确认 builder 调用合法。

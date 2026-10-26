@@ -1,3 +1,4 @@
+import './About.css'
 import Arrow from '@/components/Arrow.jsx'
 import SectionHeading from '@/components/SectionHeading.jsx'
 import CountUpGroup from '@/components/CountUp.jsx'
@@ -19,6 +20,13 @@ export default function About() {
     <section className="about section wrap" id="about">
       <div className="section-rim section-rim--lit" aria-hidden="true" />
       <SectionHeading num="01" kicker="ABOUT ME" />
+      {/* 语义标题：About 的可见标题只有序号标签（SectionHeading 的用法一，不渲染 h2），
+          大纲会从首屏的 h1 直接跳到教育块的 h3（吉林建筑大学）。这里补一个视觉隐藏的 h2
+          把大纲接上：绝对定位 + 1×1 裁切，不占布局、不上色，本板块几何逐像素不变。
+          ⚠️ 样式写成 `.about .about-h2-sr` (0,2,0) 不是为了好看：global.css 的
+          `.section-rim ~ *` 会给板块里 rim 之后的所有兄弟设 position:relative (0,1,0)，
+          同特异度只能靠打包顺序决胜，太脆。 */}
+      <h2 className="about-h2-sr">关于我</h2>
       <div className="about-links">
         {email && (
           <a href={`mailto:${email}`} aria-label={`发送邮件到 ${email}`}>

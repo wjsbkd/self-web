@@ -5,6 +5,23 @@
    · 等宽只留给纯拉丁/数字的读数（邮箱、电话、日期），中文一律 display 族。
    已删：.tool-list（About.jsx 里没有对应节点，第三轮就悬空的死规则）。 */
 
+/* 视觉隐藏的 h2（补标题大纲，见 About.jsx）。全站没有现成的 sr-only 工具类，
+   这条只服务本板块，就别往 global.css 里塞一个通用件。
+   ⚠️ 选择器必须是 (0,2,0)：global.css 的 `.section-rim ~ *` 会把 rim 之后的兄弟
+   设成 position:relative (0,1,0)，同特异度靠打包顺序决胜会翻车。 */
+.about .about-h2-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* 联系条 / 自述 / 教育经历统一收进信息道（宽度见 global.css 的 .about --lane-w）：
    主视频这两秒人头就在画面正中，铺满内容列等于把字压在脸上。 */
 .about-links {

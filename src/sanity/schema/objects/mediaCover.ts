@@ -79,6 +79,15 @@ export const mediaCover = defineType({
         '直接上传到 Sanity。⚠️ 免费档资产额度 5GB / 250 个，大文件建议改用「视频地址」。',
       options: { accept: 'video/*' },
       hidden: ({parent}: any) => parent?.mediaType !== 'video',
+      // 文件与地址至少填一个：都空的话前台封面没有可播放的源
+      validation: (Rule) =>
+        Rule.custom((value, context) => {
+          const parent = context.parent as any
+          if (parent?.mediaType === 'video' && !value && !parent?.videoUrl) {
+            return '视频封面需要上传视频文件或填写视频地址（二选一）'
+          }
+          return true
+        }),
     }),
     defineField({
       name: 'videoUrl',

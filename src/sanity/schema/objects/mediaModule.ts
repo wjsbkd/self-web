@@ -55,7 +55,11 @@ export const mediaModule = defineType({
       name: 'alt',
       title: '替代文本（alt）',
       type: 'string',
-      hidden: ({parent}: any) => parent?.moduleType === 'image',
+      /* ⚠️ 这里曾经写成 `parent?.moduleType === 'image'`（少了取反），
+         结果是「选了单张图片」时 alt 反而被隐藏，而下面的校验又要求它必填 ——
+         字段看不见、发布却一直报「图片必须填写替代文本」，图片模块根本存不下来。
+         隐藏条件必须与校验条件互补：非图片模块才隐藏。 */
+      hidden: ({parent}: any) => parent?.moduleType !== 'image',
       validation: (Rule) =>
         Rule.custom((value, context) => {
           if ((context.parent as any)?.moduleType === 'image' && !value) {
@@ -101,6 +105,15 @@ export const mediaModule = defineType({
       type: 'file',
       options: { accept: 'video/*' },
       hidden: ({parent}: any) => parent?.moduleType !== 'video',
+      // 文件与地址至少填一个：两个都空的话前台这个模块是空白的
+      validation: (Rule) =>
+        Rule.custom((value, context) => {
+          const parent = context.parent as any
+          if (parent?.moduleType === 'video' && !value && !parent?.videoUrl) {
+            return '「视频」模块需要上传视频文件或填写视频地址（二选一）'
+          }
+          return true
+        }),
     }),
     defineField({
       name: 'videoUrl',
