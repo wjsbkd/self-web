@@ -8409,3 +8409,28 @@ image { "id": asset._ref }   // ✅ "image-<hash>-1280x720-jpg"
 **安全**：脚本只在跑的那一刻用 `SANITY_WRITE_TOKEN`，平时项目里仍然没有 token（第 4 步那句话不变）。token 建完即删，文档里写明了。
 
 **还没做的**：脚本没在本机真实跑过写入——`api.sanity.io` 从这台机器被代理挡死（curl 21s 超时，HTTP 000），只能在网络正常的机器上跑。payload 结构已用 `--dry-run` 验过。
+
+### 八、第九十六次终局：线上冒烟测试跑通（2026-10-26 晚末）
+
+本机代理挡死 `api.sanity.io`（curl 21s 超时、HTTP 000），所以"线上对**真实访客**通不通"
+这一环本机永远验不了。解法：把验证搬到 GitHub Actions 的网络上。
+
+**新增 `.github/workflows/冒烟测试`（workflow_dispatch）**，三步全绿（run 40308310901）：
+1. 主站 `/` 与 `/admin/` 都 200，`<title>` 正确，`robots.txt` 屏蔽 `/admin`；
+2. **Sanity 数据 API 带 `Origin: https://wjsbkd.github.io` 返回 200 + CORS 头 + 3 篇作品标题**
+   —— 这是最关键的一条：证明真实访客的浏览器能读到 Sanity 数据，不只是本机下得动图；
+3. CDN 图片返回 `image/webp`。
+
+**CI 里踩的四道坑（都在 workflow 注释里写明了）**：
+1. `gh variable list -L 100` 会 `unknown shorthand flag: 'L'` → PROJECT_ID 取空 →
+   curl 解析 `.api.sanity.io` 失败。改用 job 级 `env: vars.VITE_SANITY_PROJECT_ID`，去掉 gh CLI 这层。
+2. 手改 YAML 时把 `env:` 缩进放错、`steps:` 写成两个 → 非法 YAML。**改完 workflow 一律
+   `yaml.safe_load` 验一遍再提交**。
+3. GROQ 里的花括号不能裸着进 URL：curl 当成范围语法（`bad range specification`）。
+   用 `python3 -c urllib.parse.quote` 编码（`--data-urlencode` 会被 Sanity 拒，400）。
+4. **CDN 文件名格式**：ref 是 `image-<hash>-1280x720-jpg`，CDN 路径要的是 `<hash>-1280x720.jpg`
+   —— 剥掉 `image-` 后还要把**最后一个短横线换成点号**。只留 hash 或保留 `-jpg` 都会
+   `400 Invalid filename`。这个是真踩出来的，本机三条封面 URL 实测过才定。
+
+**给后续**：`api.sanity.io` 从本机不可达，以后凡是要验"线上读得到数据"，
+一律走这个 workflow（`gh workflow run 线上冒烟测试 --repo wjsbkd/self-web`），别在本机白试。
