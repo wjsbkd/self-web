@@ -42,8 +42,19 @@ import type {
   ProjectDetailPayload,
 } from './types'
 
-/** 单次请求超时：超过就当网络失败，回退本地 */
-const FETCH_TIMEOUT = 3000
+/**
+ * 单次请求超时：超过就当网络失败，回退本地。
+ *
+ * 为什么是 8s 而不是 3s（2026-10-26 线上实测）：
+ *   冷启动（浏览器第一次连 apicdn.sanity.io，要做 DNS + TLS）时，
+ *   单个请求实测 2.6s。原来的 3s 只比它多 0.4s 余量，
+ *   碰上网络抖动就整页回退本地数据 —— 访客看到的是旧内容，
+ *   而页面**没有任何报错**，属于静默失败。
+ *
+ * 超时长不影响首屏：首帧用的是同步的本地兜底数据，
+ * Sanity 数据是后到的替换，这个预算只在「等不到」时才用得上。
+ */
+const FETCH_TIMEOUT = 8000
 
 // 图片 URL builder 需要在任何 adapter 调用前初始化（模块加载即执行，幂等）
 initImageBuilder(publishedClient)

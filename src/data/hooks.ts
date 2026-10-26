@@ -13,6 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  CACHE_KEYS,
   getProjects,
   getProjectBySlug,
   getResume,
@@ -22,7 +23,15 @@ import {
   localResumePayload,
   localSitePayload,
 } from './sanityData'
-import { DATA_REFRESH_EVENT, deleteCache, getCached, setCached } from './cache'
+import {
+  DATA_REFRESH_EVENT,
+  deleteCache,
+  getCached,
+  getInflight,
+  hasFailure,
+  setCached,
+  trackInflight,
+} from './cache'
 import type {
   DataSource,
   ProjectsPayload,
@@ -66,20 +75,32 @@ export function useSanityData<T>(
     const cached = getCached<T>(key)
     if (cached !== undefined) {
       setData(cached)
+      // 缓存可能正是上一次远程失败后存下来的本地兜底，
+      // 所以这里也要看失败表，不能想当然当成「成功」。
+      setError(hasFailure(key))
       setLoading(false)
       return
     }
     setLoading(true)
     try {
-      const result = await fnRef.current()
+      // 同 key 的并发调用共享同一个进行中的请求：
+      // 首屏 5 个 useSiteSettings + 3 个 useResume 现在只发 3 个请求，
+      // 不是 9 个（详见 cache.ts 里 trackInflight 的注释）。
+      const pending = getInflight<T>(key)
+      const result = pending
+        ? await pending
+        : await trackInflight(key, fnRef.current())
       setData(result)
       setCached(key, result)
-      setError(false)
     } catch (err) {
       // 生产环境不暴露错误详情；页面继续显示已有（本地）数据
       if (import.meta.env.DEV) console.warn(`[data:${key}] 查询异常：`, err)
       setError(true)
     } finally {
+      // remoteFirst 内部已把远程异常吞掉并回退本地，Promise **不会** reject，
+      // 所以上面的 catch 不会跑 —— 失败与否只能查失败表。
+      // （成功时由 remoteFirst 自己 clearFailure，见 sanityData.ts。）
+      setError(hasFailure(key))
       setLoading(false)
     }
   }, [key])
@@ -113,26 +134,26 @@ export function useSanityData<T>(
 
 /** 作品列表（含本地兜底，首帧即有数据） */
 export function useProjects(): UseDataResult<ProjectsPayload> {
-  return useSanityData(getProjects, 'projects', localProjectsPayload())
+  return useSanityData(getProjects, CACHE_KEYS.projects, localProjectsPayload())
 }
 
 /** 单个作品详情 */
 export function useProjectDetail(slug: string): UseDataResult<ProjectDetailPayload> {
   return useSanityData<ProjectDetailPayload>(
     () => getProjectBySlug(slug),
-    `project-${slug}`,
+    CACHE_KEYS.projectDetail(slug),
     localProjectDetail(slug),
   )
 }
 
 /** 履历（工作经历 + 个人资料 + 各类列表） */
 export function useResume(): UseDataResult<ResumePayload> {
-  return useSanityData(getResume, 'resume', localResumePayload())
+  return useSanityData(getResume, CACHE_KEYS.resume, localResumePayload())
 }
 
 /** 全局设置（SEO / 联系方式 / 社交 / 背景音乐） */
 export function useSiteSettings(): UseDataResult<SiteSettingsPayload> {
-  return useSanityData(getSiteSettings, 'site-settings', localSitePayload())
+  return useSanityData(getSiteSettings, CACHE_KEYS.siteSettings, localSitePayload())
 }
 
 /** 作品列表便捷选择器 */

@@ -19,7 +19,7 @@ import WorkModal from '@/components/WorkModal.jsx'
  * ⚠️ 本页是整屏覆盖式（fixed），用 portal 到 body，避免被 .section-rim 的 z-index 压住。
  */
 export default function ProjectDetail({ slug, onClose }) {
-  const { data: project, loading, reload } = useProjectDetail(slug)
+  const { data: project, loading, error, reload } = useProjectDetail(slug)
   const [modal, setModal] = useState(null)
 
   // Esc 关闭
@@ -38,6 +38,11 @@ export default function ProjectDetail({ slug, onClose }) {
         <div className="detail-inner wrap">
           {loading ? (
             <p className="detail-loading">加载中…</p>
+          ) : error ? (
+            // 远程查询失败（超时/断网）≠ 作品不存在。
+            // 需求验收点：详情页刷新不得 404 或丢失数据 ——
+            // 所以这里要说「暂时加载不出来」，而不是谎报「作品不存在」。
+            <LoadFailed onClose={onClose} onRetry={reload} />
           ) : (
             <NotFound onClose={onClose} onRetry={reload} />
           )}
@@ -181,6 +186,29 @@ function NotFound({ onClose, onRetry }) {
     <div className="detail-notfound">
       <h2>作品不存在</h2>
       <p>这件作品可能尚未发布，或链接已失效。</p>
+      <button className="pill" onClick={onRetry}>
+        重新加载
+      </button>
+      <button className="pill pill--ghost" onClick={onClose}>
+        返回首页
+      </button>
+    </div>
+  )
+}
+
+/**
+ * 远程查询失败（超时 / 断网）—— 与「作品不存在」是两回事。
+ *
+ * 2026-10-26：线上实测发现冷启动时 Sanity 查询会撞超时，
+ * 而 `remoteFirst` 会静默回退本地数据、把异常吞掉，
+ * 于是详情页把「没查到」当成「不存在」，访客看到 404 —— 直接违反
+ * 「详情页刷新不得 404 或丢失数据」这条验收点。
+ */
+function LoadFailed({ onClose, onRetry }) {
+  return (
+    <div className="detail-notfound">
+      <h2>暂时加载不出来</h2>
+      <p>网络似乎不太稳定，稍后重试一下。</p>
       <button className="pill" onClick={onRetry}>
         重新加载
       </button>

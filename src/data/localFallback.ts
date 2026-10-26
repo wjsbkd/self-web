@@ -30,13 +30,40 @@ import type {
   ProjectDetailPayload,
 } from './types'
 
+/**
+ * 本地作品 → Sanity slug 的对应表。
+ *
+ * 为什么需要（2026-10-26 线上实测）：
+ *   详情页的 URL 是 slug 决定的（#/project/:slug），而后台里的 slug 是英文的
+ *   （hupu-csgo-shanghai-major 等）。本地兜底原来只有 `local-01` 这种
+ *   临时 slug，于是 **远程查询一失败，详情页连本地内容都取不到** ——
+ *   访客刷新详情页看到「作品不存在」，直接违反
+ *   「详情页刷新不得 404 或丢失数据」这条验收点。
+ *
+ *   这张表让「同一个作品」在两条数据源下用同一个 slug：
+ *   远程可达 → 显示后台内容；远程超时 → 显示本地内容，URL 不用变。
+ *
+ * ⚠️ 这张表必须与 Sanity 里 project-01/02/03 的 slug 保持一致。
+ *    换 slug 时两边一起改（后台改完，这里同步）。
+ */
+export const LOCAL_SLUGS: Record<string, string> = {
+  '01': 'hupu-csgo-shanghai-major',
+  '02': 'waytoagi-edu-spring-gala',
+  '03': 'mile-spring-festival-gala',
+}
+
+/** 本地 index → slug（取不到就退回原来的 local-XX，保证不为空） */
+function localSlug(index: string): string {
+  return LOCAL_SLUGS[index] ?? `local-${index}`
+}
+
 /** 本地作品 → 统一结构（与 Sanity 适配后字段一致） */
 export function localProjectsPayload(): ProjectsPayload {
   return {
     source: 'local',
     projects: localProjects.map((p, i) => ({
       id: p.index,
-      slug: `local-${p.index}`,
+      slug: localSlug(p.index),
       title: p.title,
       year: '2026',
       index: p.index,
@@ -60,13 +87,21 @@ export function localProjectsPayload(): ProjectsPayload {
   }
 }
 
-/** 本地单个作品详情（slug 形如 local-01） */
+/**
+ * 本地单个作品详情。
+ *
+ * 同时接受两种 slug：后台用的英文 slug（hupu-csgo-shanghai-major）
+ * 和历史遗留的 local-XX —— 老的收藏链接不该因此失效。
+ */
 export function localProjectDetail(slug: string): ProjectDetailPayload {
-  const local = localProjects.find((p) => `local-${p.index}` === slug)
+  const local = localProjects.find((p) => {
+    const canonical = localSlug(p.index)
+    return slug === canonical || slug === `local-${p.index}`
+  })
   if (!local) return null
   return {
     id: local.index,
-    slug: `local-${local.index}`,
+    slug: localSlug(local.index),
     title: local.title,
     year: '2026',
     index: local.index,
@@ -93,9 +128,9 @@ export function localProjectDetail(slug: string): ProjectDetailPayload {
   }
 }
 
-/** 本地作品 slug 列表 */
+/** 本地作品 slug 列表（与后台一致，详情页存在性预检用） */
 export function localProjectSlugs(): string[] {
-  return localProjects.map((p) => `local-${p.index}`)
+  return localProjects.map((p) => localSlug(p.index))
 }
 
 /** 本地履历 */

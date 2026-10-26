@@ -26,6 +26,7 @@ import {
   localResumePayload,
   localSitePayload,
 } from './localFallback'
+import { clearFailure, markFailure } from './cache'
 import type {
   ProjectsPayload,
   ResumePayload,
@@ -56,17 +57,27 @@ async function loadRemote() {
 /** 远程模块的静态类型（去掉 null，方便在回调里直接用） */
 type RemoteModule = NonNullable<Awaited<ReturnType<typeof loadRemote>>>
 
-/** 统一的「远程优先，失败留本地」执行器 */
+/**
+ * 统一的「远程优先，失败留本地」执行器
+ *
+ * @param key 缓存键。必须与 hooks.ts 里 useSanityData 用的 key 一致，
+ *            因为失败状态也按这个 key 记（见 cache.ts 的 markFailure）。
+ */
 async function remoteFirst<T>(
   key: string,
   remote: (m: RemoteModule) => Promise<T>,
   local: () => T,
 ): Promise<T> {
   const m = await loadRemote()
+  // 没配置 Sanity 不是错误：这是「有意只用本地数据」的状态
   if (!m) return local()
   try {
-    return await remote(m)
+    const result = await remote(m)
+    clearFailure(key)
+    return result
   } catch (err) {
+    // 记下失败，让上层能区分「远程真的没这条」与「网络抖了一下没查到」
+    markFailure(key, err)
     if (import.meta.env.DEV) {
       console.warn(`[sanity] ${key} 查询失败，使用本地数据：`, err)
     }
@@ -76,15 +87,27 @@ async function remoteFirst<T>(
 
 /* ───────────────────────── 作品 ───────────────────────── */
 
+/**
+ * 缓存键：**必须与 hooks.ts 里的 key 完全一致**，否则失败状态对不上。
+ * 集中在这里定义，避免两处各写一份字符串、以后改一处忘一处。
+ */
+export const CACHE_KEYS = {
+  projects: 'projects',
+  resume: 'resume',
+  siteSettings: 'site-settings',
+  /** 单个作品详情：project-${slug} */
+  projectDetail: (slug: string) => `project-${slug}`,
+} as const
+
 /** 作品列表（远程优先，失败回退本地） */
 export function getProjects(): Promise<ProjectsPayload> {
-  return remoteFirst('getProjects', (m) => m.fetchProjects(), localProjectsPayload)
+  return remoteFirst(CACHE_KEYS.projects, (m) => m.fetchProjects(), localProjectsPayload)
 }
 
 /** 单作品详情；远程查不到时再看本地 slug（返回 null 表示确实不存在） */
 export function getProjectBySlug(slug: string): Promise<ProjectDetailPayload> {
   return remoteFirst(
-    'getProjectBySlug',
+    CACHE_KEYS.projectDetail(slug),
     async (m) => {
       const remote = await m.fetchProjectBySlug(slug)
       // 远程没找到：如果本地有同 slug（例如 local-01）就用本地，否则 null
@@ -102,13 +125,13 @@ export function getPublishedSlugs(): Promise<string[]> {
 /* ───────────────────────── 履历 ───────────────────────── */
 
 export function getResume(): Promise<ResumePayload> {
-  return remoteFirst('getResume', (m) => m.fetchResume(), localResumePayload)
+  return remoteFirst(CACHE_KEYS.resume, (m) => m.fetchResume(), localResumePayload)
 }
 
 /* ───────────────────────── 全局设置 ───────────────────────── */
 
 export function getSiteSettings(): Promise<SiteSettingsPayload> {
-  return remoteFirst('getSiteSettings', (m) => m.fetchSiteSettings(), localSitePayload)
+  return remoteFirst(CACHE_KEYS.siteSettings, (m) => m.fetchSiteSettings(), localSitePayload)
 }
 
 /* ───────────────────────── 首帧用的同步本地数据 ───────────────────────── */
@@ -139,6 +162,11 @@ export {
   getCached,
   setCached,
   deleteCache,
+  getInflight,
+  trackInflight,
+  markFailure,
+  clearFailure,
+  hasFailure,
   DATA_REFRESH_EVENT,
   triggerDataRefresh,
   registerLiveRefresh,

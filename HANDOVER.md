@@ -8499,3 +8499,78 @@ Node 的 `fetch` 和 `sanity` CLI **都不读系统代理** —— 所以 `sanit
 改动**未提交**：`scripts/seed-sanity.mjs`、`src/components/Footer.jsx`、`src/data/localFallback.ts`、
 `docs/SANITY后台使用说明.md`、本文件；新增未跟踪：`scripts/get-sanity-token.mjs`、
 `scripts/lib/proxy-fetch.mjs`。要推 `master` 触发部署的话说一声。
+
+---
+
+## 第九十八次：上线后抓到三个真 bug —— 首屏静默回退、详情页误报 404（2026-10-27）
+
+第九十七次推上去之后，**线上真访客首屏看到的是本地旧数据，不是后台数据**。
+页面不报错、不空白、动画照常 —— 属于最坏的一类 bug：看起来一切正常。
+
+### 一、怎么发现的
+
+部署后用 ego-browser 打开线上站，页脚显示 `© 2026 LIZONGHENG`（本地兜底文案），
+但后台里明明是 `© 李纵横 · 内容运营与视觉创作者`。查 `performance.getEntriesByType('resource')`：
+**首屏 9 个 Sanity 请求全部 `dur ≈ 3005ms`** —— 正好是代码里 `FETCH_TIMEOUT = 3000`
+的中止点。第二次刷新（连接已热）就正常了。
+
+### 二、根因一：9 个重复并发把 3s 预算耗尽
+
+`useSiteSettings()` 被 **5 个**组件调用（App / About / BackgroundMusic / Footer / Nav），
+`useResume()` 被 **3 个**调用（About / Experience / Hero）。每个 hook 实例**各自独立**发请求，
+首屏因此打出 9 个**完全重复**的查询。冷启动时这 9 个并发把 DNS/TLS 一起压上，
+全部撞在 3s 超时线上 → 整页静默回退本地数据。
+
+**修法**：在 `cache.ts` 加「进行中请求表」，同 key 的并发调用共享同一个 Promise
+（`getInflight` / `trackInflight`）。首屏 9 个请求 → **3 个**（实测）。
+
+### 三、根因二：3s 预算太紧
+
+冷启动时**单个**请求实测 2.6s（要建 DNS + TLS）。3s 只多 0.4s 余量，碰上抖动就全线超时。
+改成 **8s**：不影响首屏（首帧用的是同步本地兜底数据，Sanity 是后到的替换），
+只在「等不到」时才用得上这个预算。
+
+### 四、根因三：远程失败被当成「作品不存在」——**直接违反验收点**
+
+`remoteFirst()` 的设计是「远程失败就静默回退本地」，这个策略本身没错，
+但它把失败信息一起吞了 → hook 的 `error` 恒为 false → 详情页无法区分
+「这件作品真不存在」和「网络抖了一下没查到」→ **访客刷新详情页看到 404**。
+需求白纸黑字写着「详情页刷新不得 404 或丢失数据」。
+
+**修法**（三层）：
+1. `cache.ts` 加失败表 `markFailure` / `clearFailure` / `hasFailure`（按 key 记）。
+   `remoteFirst` 成功时 clear、失败时 mark。
+2. hook 的 `error` 改从失败表读 —— 注意**不能**在 try 块里 `clearFailure`：
+   `remoteFirst` 已吞掉异常，Promise 不会 reject，try 里的 clear 会把刚标的失败抹掉
+   （这个坑我第一版就踩了，测出来才改对）。
+3. `ProjectDetail` 新增「暂时加载不出来」状态，与「作品不存在」分开。
+
+### 五、根因四（顺带）：本地兜底的 slug 与后台对不上
+
+后台 slug 是英文的（`hupu-csgo-shanghai-major`），本地兜底只有 `local-01` 这种临时 slug。
+远程一失败，详情页连本地内容都取不到 → 又是 404。
+已在 `localFallback.ts` 加 `LOCAL_SLUGS` 映射表，让同一作品在两条数据源下用同一个 slug；
+同时保留 `local-XX` 的识别，老收藏链接不失效。
+
+### 六、验证（用 CDP 阻断 CDN，不是靠猜）
+
+ego-browser 的 `page.cdp('Network.setBlockedURLs')` 能真阻断 `*apicdn.sanity.io*`，
+四种组合都实测过：
+
+| 场景 | 结果 |
+|---|---|
+| 远程可达 + 已知 slug | 正常显示作品 ✅ |
+| 远程可达 + 真不存在的 slug | 「作品不存在」✅（这是对的） |
+| **远程被阻断** + 已知 slug | **显示本地内容，不报 404** ✅ |
+| **远程被阻断** + 未知 slug | **「暂时加载不出来」**，不谎报 404 ✅ |
+
+首屏请求数也从 9 降到 3。
+
+### 七、给后续
+
+- **「页面看着正常」不等于「数据是对的」**。这次页脚文案不对，是唯一的症状。
+  上线后要拿后台的真实值跟线上渲染值**逐字比**，别只看「有没有报错」。
+- 静默兜底是双刃剑：它保证页面永远不空白，但也把失败藏起来了。
+  兜底必须配一条「这次是兜底的」的信号，否则出问题根本看不见。
+- `performance.getEntriesByType('resource')` 的 `dur` 是查这类问题的最快手段：
+  **一批请求的 dur 全都卡在同一个整数**（这里是 3005ms），基本就是超时阈值。
