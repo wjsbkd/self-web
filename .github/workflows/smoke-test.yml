@@ -53,12 +53,13 @@ jobs:
         run: |
           set -e
           # 拿第一个项目的封面 asset ref。
-          # 注意：GROQ 里的花括号必须编码成 %7B/%7D —— curl 会把裸 {} 当成 URL 范围语法
-          # （bad range specification），这一步之前就栽在这。
+          # 注意：GROQ 里的花括号不能裸着写进 URL —— curl 会当成范围语法。
+          # 这里沿用上一步验证过的方式：python 做 URL 编码。
           API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
+          Q='*[_type=="project"][0]{"r":cover.image.asset._ref}'
           ref=$(curl -fsS --max-time 30 \
-            -G --data-urlencode 'query=*[_type=="project"][0]{"r":cover.image.asset._ref}' \
-            "$API" | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
+            "${API}?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$Q")" \
+            | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
           url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${ref#image-}?w=800&fm=webp&q=82"
           ct=$(curl -fsS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
           echo "CDN 图 content-type: $ct"
