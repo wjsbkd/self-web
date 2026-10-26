@@ -128,6 +128,20 @@ export const resume = defineType({
       description: '显示用的号码，例如 150-8732-2631。',
     }),
     defineField({
+      name: 'phoneTel',
+      title: '电话（拨号链接）',
+      type: 'string',
+      group: 'profile',
+      description: 'tel: 用的纯数字格式。与 siteSettings 里那份保持一致；不填则前台拨号链接回退到 phone。',
+    }),
+    defineField({
+      name: 'wechat',
+      title: '微信号',
+      type: 'string',
+      group: 'profile',
+      description: '微信号或手机号。不填时 adapter 会回退到 social 里备注为「微信」的那条。',
+    }),
+    defineField({
       name: 'social',
       title: '社交平台链接',
       type: 'array',

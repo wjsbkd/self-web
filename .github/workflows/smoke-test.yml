@@ -1,0 +1,71 @@
+name: 线上冒烟测试
+
+# 从 GitHub Actions 的网络（能到 api.sanity.io）验证部署后的站点，
+# 用于绕开本机代理挡 api.sanity.io 的限制。手动触发。
+#
+# 验证三件事：
+#   1. 主站 / /admin 都返回 200 且 HTML 引用的是预期 bundle
+#   2. Sanity 数据 API 在带 Origin 头时返回 200 + CORS 头 + 真实数据
+#      （证明真实访客的浏览器能读到数据，不只是本机 CDN 图能下）
+#   3. Sanity CDN 图片返回 200 image/webp
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取仓库变量
+        id: vars
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 仓库 Variables（不是 Secret）里读 Sanity 配置
+          pid=$(gh variable list --repo wjsbkd/self-web -L 100 | awk -F'\t' '$1=="VITE_SANITY_PROJECT_ID"{print $2}')
+          echo "pid=$pid" >> "$GITHUB_OUTPUT"
+
+      - name: 主站 / admin 可达 + bundle 哈希
+        run: |
+          set -e
+          curl -fsS --max-time 30 "https://wjsbkd.github.io/" -o /tmp/idx.html
+          grep -q '<title>李纵横' /tmp/idx.html
+          idx_bundle=$(grep -o '/assets/main-[^"]*\.js' /tmp/idx.html | head -1)
+          echo "主站 OK，bundle: $idx_bundle"
+
+          curl -fsS --max-time 30 "https://wjsbkd.github.io/admin/" -o /tmp/adm.html
+          grep -q 'studio-root' /tmp/adm.html
+          adm_bundle=$(grep -o '/assets/admin-[^"]*\.js' /tmp/adm.html | head -1)
+          echo "/admin OK，bundle: $adm_bundle"
+
+          # robots 屏蔽 /admin
+          curl -fsS --max-time 30 "https://wjsbkd.github.io/robots.txt" | grep -q 'Disallow: /admin'
+
+      - name: Sanity 数据 API + CORS（模拟真实访客）
+        env:
+          PROJECT_ID: ${{ steps.vars.outputs.pid }}
+        run: |
+          set -e
+          API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
+          QUERY='*[_type=="project" && status=="published"]{title}|order(sortOrder asc)'
+          # 带 Origin 头发 GET，验证 CORS 头 + 返回的是 3 个项目标题
+          resp=$(curl -fsS --max-time 30 -D /tmp/hdrs.txt \
+            -H "Origin: https://wjsbkd.github.io" \
+            "${API}?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$QUERY")")
+          echo "$resp" | python3 -c 'import json,sys;d=json.load(sys.stdin);ts=[r["title"] for r in d["result"]];assert len(ts)==3,ts;print("数据 API OK，3 篇作品：", ts)'
+          grep -i 'access-control-allow-origin: https://wjsbkd.github.io' /tmp/hdrs.txt || \
+            grep -i 'access-control-allow-origin: \*' /tmp/hdrs.txt
+          echo "CORS 头确认"
+
+      - name: Sanity CDN 图片
+        env:
+          PROJECT_ID: ${{ steps.vars.outputs.pid }}
+        run: |
+          set -e
+          # 拿第一个项目的封面 asset ref
+          API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
+          ref=$(curl -fsS --max-time 30 "${API}?query=*[_type==%22project%22][0]{%22r%22:cover.image.asset._ref}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
+          url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${ref#image-}?w=800&fm=webp&q=82"
+          ct=$(curl -fsS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
+          echo "CDN 图 content-type: $ct"
+          [ "$ct" = "image/webp" ]

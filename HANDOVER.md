@@ -8395,3 +8395,17 @@ image { "id": asset._ref }   // ✅ "image-<hash>-1280x720-jpg"
 1. 打开 `https://wjsbkd.github.io/admin` 登录，把「个人履历」「网站全局设置」按现在的样子填一遍
    （脚本迁移需要临时 token，浏览器登录态已失效，这一步留给登录后的你自己建 token 跑，或直接手填）。
 2. 想让线上生效，push 一次 `master`（`deploy.yml` 会自动带上 `VITE_SANITY_*` 构建）。
+
+### 七、第九十六次再补：种子脚本 + resume schema 补字段（2026-10-26 晚续）
+
+把"灌履历/全局设置"这步的摩擦降到最低——之前说"留给用户手填"，现在写好了脚本，建个 token 跑一条命令即可。
+
+**新增 `scripts/seed-sanity.mjs`**：读 `src/data/experiences.js` 与 `src/data/nav.js`（与本地兜底同源），`createOrReplace` 写 `resume` + `siteSettings` 两个单例，幂等可重跑。简历 PDF 走 Sanity 文件资产上传，About 的「下载简历」指向 CDN。`--dry-run` 不联网只打印 payload（已实测：4 条工作经历、period 解析、points/tags/\_key、社交绝对 URL 全对）。
+
+**resume schema 补 `phoneTel` / `wechat` 两个字段**：adapter（`adaptProfile`）本来就 `resume.phoneTel` / `resume.wechat` 地读，但 schema 一直没这两格、GROQ 也没投影 → 从 Sanity 取永远 undefined。schema、query、types 三处对齐补上。
+
+**eslint config 加 scripts/ 与 \*.config.\* 的 Node 环境块**：之前 lint 只管 `src/`，seed 脚本会被 `no-undef`（console/process）报错。补一个 block，`no-console` 关掉。
+
+**安全**：脚本只在跑的那一刻用 `SANITY_WRITE_TOKEN`，平时项目里仍然没有 token（第 4 步那句话不变）。token 建完即删，文档里写明了。
+
+**还没做的**：脚本没在本机真实跑过写入——`api.sanity.io` 从这台机器被代理挡死（curl 21s 超时，HTTP 000），只能在网络正常的机器上跑。payload 结构已用 `--dry-run` 验过。

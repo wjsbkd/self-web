@@ -49,6 +49,14 @@
    - 本地开发加 `http://localhost:5173`。
 4. **不需要建 token**：Studio 用你的登录会话读写，前台只做公开读。整个项目里没有任何地方需要写 token（这也是安全红线的来源，见第六节）。
 5. **部署 Studio**：见第三节。
+6. **把现有内容迁进 Sanity（可选，一次性）**：作品已经在库里了；履历与全局设置可以用脚本灌进去，免去手填。建一个 **Editor** 权限的临时 token（manage → API → Tokens），然后：
+   ```bash
+   # 先看会写什么（不联网）：
+   node scripts/seed-sanity.mjs --dry-run
+   # 真实写入：
+   SANITY_WRITE_TOKEN=xxx node scripts/seed-sanity.mjs
+   ```
+   脚本读 `src/data/experiences.js` 与 `src/data/nav.js`，与前台本地兜底同源，幂等可重跑。跑完把 token 删掉——平时用不到。
 
 > 没配置 projectId 时，前台自动用本地数据（`src/data/*.js`）兜底，网站照常展示，不影响开发。
 

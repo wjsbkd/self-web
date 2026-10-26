@@ -36,4 +36,16 @@ export default [
       react: { version: 'detect' },
     },
   },
+  {
+    // 一次性脚本与构建工具：Node 环境，不套 React 规则
+    files: ['scripts/**/*.{js,mjs}', '*.config.{js,mjs,ts}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]

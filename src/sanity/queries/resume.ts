@@ -41,6 +41,8 @@ export const resumeQuery = defineQuery(`
     location,
     email,
     phone,
+    phoneTel,
+    wechat,
     social[] { ${SOCIAL_FIELDS} },
     resumeFile { ${FILE_FIELDS} },
 
