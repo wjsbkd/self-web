@@ -52,9 +52,13 @@ jobs:
       - name: Sanity CDN 图片
         run: |
           set -e
-          # 拿第一个项目的封面 asset ref
+          # 拿第一个项目的封面 asset ref。
+          # 注意：GROQ 里的花括号必须编码成 %7B/%7D —— curl 会把裸 {} 当成 URL 范围语法
+          # （bad range specification），这一步之前就栽在这。
           API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
-          ref=$(curl -fsS --max-time 30 "${API}?query=*[_type==%22project%22][0]{%22r%22:cover.image.asset._ref}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
+          ref=$(curl -fsS --max-time 30 \
+            -G --data-urlencode 'query=*[_type=="project"][0]{"r":cover.image.asset._ref}' \
+            "$API" | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
           url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${ref#image-}?w=800&fm=webp&q=82"
           ct=$(curl -fsS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
           echo "CDN 图 content-type: $ct"
