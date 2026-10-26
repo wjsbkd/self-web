@@ -12,8 +12,8 @@
     "studio:build": "node ./node_modules/sanity/bin/sanity build",
     "studio:deploy": "node ./node_modules/sanity/bin/sanity deploy",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\""
   },
   "dependencies": {

@@ -8,15 +8,16 @@
 import { defineCliConfig } from 'sanity/cli'
 
 /**
- * 优先读环境变量；只有没配时才退回本项目的默认值。
- * projectId/dataset 不是密钥（数据集公开可读），但按需求「配置不写死」的原则，
- * 换项目时改 .env.local 就行，不用改代码。
+ * 全部从环境变量读，源码里不写死 projectId（需求：「不要把 projectId、dataset、
+ * token 等敏感配置硬编码在源码中」）。与 sanity.config.ts 保持同一套读取顺序。
+ * Sanity CLI 会自动加载项目根的 .env.local，所以本机 `npm run studio` 照常能起来；
+ * 换项目只改 .env.local，不用改代码。没配时 CLI 会提示选择项目，不会静默写到别的项目。
  */
 const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {}
 
 export default defineCliConfig({
   api: {
-    projectId: env.SANITY_STUDIO_PROJECT_ID || env.VITE_SANITY_PROJECT_ID || 'ncixtjar',
+    projectId: env.SANITY_STUDIO_PROJECT_ID || env.VITE_SANITY_PROJECT_ID,
     dataset: env.SANITY_STUDIO_DATASET || env.VITE_SANITY_DATASET || 'production',
   },
   /**

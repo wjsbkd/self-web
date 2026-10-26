@@ -3,10 +3,12 @@
  * 把本地履历 + 全局设置灌进 Sanity（一次性迁移，幂等可重跑）。
  *
  * 用法：
- *   SANITY_WRITE_TOKEN=xxx node scripts/seed-sanity.mjs     # 真实写入
- *   node scripts/seed-sanity.mjs --dry-run                  # 只打印 payload，不联网
+ *   SANITY_WRITE_TOKEN=xxx node --env-file=.env.local scripts/seed-sanity.mjs   # 真实写入
+ *   node scripts/seed-sanity.mjs --dry-run                                      # 只打印 payload，不联网
  *
- * token 在 https://www.sanity.io/manage/project/ncixtjar/settings/api
+ * projectId / dataset 从环境变量读（SANITY_PROJECT_ID / SANITY_DATASET，兼容
+ * VITE_SANITY_*），源码里不写死；加 --env-file=.env.local 就直接用项目已有配置。
+ * token 在 Sanity Manage（https://www.sanity.io/manage）→ 你的项目 → API → Tokens
  * 建 **Editor** 权限的 token，跑完可以删。项目里平时不存 token。
  * 没有现成 token 时，可以先用 scripts/get-sanity-token.mjs 换一个。
  *
@@ -24,13 +26,21 @@ import { dirname, resolve, basename } from 'node:path'
 import { request } from './lib/proxy-fetch.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const PROJECT_ID = 'ncixtjar'
-const DATASET = 'production'
-const API_VERSION = '2024-10-01'
+// 与 sanity.config.ts / sanity.cli.ts 同一套读取顺序（Studio 前缀优先，VITE_ 兜底）；
+// 都不写死，换项目改 .env.local 即可。
+const PROJECT_ID = process.env.SANITY_PROJECT_ID || process.env.VITE_SANITY_PROJECT_ID
+const DATASET = process.env.SANITY_DATASET || process.env.VITE_SANITY_DATASET || 'production'
+const API_VERSION = process.env.SANITY_API_VERSION || process.env.VITE_SANITY_API_VERSION || '2024-10-01'
 const ORIGIN = 'https://wjsbkd.github.io'
 
 const token = process.env.SANITY_WRITE_TOKEN
 const dryRun = process.argv.includes('--dry-run')
+
+if (!PROJECT_ID) {
+  console.error('✗ 缺 projectId。加 --env-file=.env.local 复用项目配置，或显式设 SANITY_PROJECT_ID。')
+  console.error('  例：node --env-file=.env.local scripts/seed-sanity.mjs')
+  process.exit(1)
+}
 
 const { experiences } = await import(pathToFileURL(resolve(ROOT, 'src/data/experiences.js')).href)
 const nav = await import(pathToFileURL(resolve(ROOT, 'src/data/nav.js')).href)

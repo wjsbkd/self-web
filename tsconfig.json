@@ -28,7 +28,8 @@
     "src/data/cache.ts",
     "src/data/types.ts",
     "src/data/hooks.ts",
-    "sanity.config.ts"
+    "sanity.config.ts",
+    "sanity.cli.ts"
   ],
   "exclude": ["node_modules", "dist", "src/data/*.js", "src/components", "src/hooks"]
 }
