@@ -54,9 +54,13 @@ jobs:
       - name: Sanity CDN 图片
         run: |
           set -e
+          # ref 形如 image-<hash>-1280x720-jpg，而 CDN 路径要的是 <hash>-1280x720.jpg：
+          # 先剥 image- 前缀，再把最后一个 - 换成 .（格式后缀必须用点号分隔，
+          # 用短横线或只留 hash 都会 400 Invalid filename）。
           ref=$(python3 -c 'import json;print(json.load(open("/tmp/projects.json"))["result"][0]["r"])')
-          # ref 形如 image-<hash>-1280x720-jpg，CDN 路径要剥掉 image- 前缀
-          url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${ref#image-}?w=800&fm=webp&q=82"
+          base="${ref#image-}"
+          file="${base%-*}.${base##*-}"
+          url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${file}?w=800&fm=webp&q=82"
           echo "图片 URL: $url"
           ct=$(curl -fsS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
           echo "CDN 图 content-type: $ct"
