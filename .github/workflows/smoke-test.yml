@@ -39,11 +39,13 @@ jobs:
         run: |
           set -e
           API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
-          QUERY='*[_type=="project" && status=="published"]{title}|order(sortOrder asc)'
-          # 带 Origin 头发 GET，验证 CORS 头 + 返回的是 3 个项目标题
+          # 一条查询同时取标题与封面 asset ref：ref 存盘给下一步用，少一次请求。
+          # 注意：image 字段里的 asset 是引用，必须用 asset._ref（asset._id 恒为 null）。
+          QUERY='*[_type=="project" && status=="published"] | order(sortOrder asc) { title, "r": cover.image.asset._ref }'
           resp=$(curl -fsS --max-time 30 -D /tmp/hdrs.txt \
             -H "Origin: https://wjsbkd.github.io" \
             "${API}?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$QUERY")")
+          echo "$resp" > /tmp/projects.json
           echo "$resp" | python3 -c 'import json,sys;d=json.load(sys.stdin);ts=[r["title"] for r in d["result"]];assert len(ts)==3,ts;print("数据 API OK，3 篇作品：", ts)'
           grep -i 'access-control-allow-origin: https://wjsbkd.github.io' /tmp/hdrs.txt || \
             grep -i 'access-control-allow-origin: \*' /tmp/hdrs.txt
@@ -52,15 +54,10 @@ jobs:
       - name: Sanity CDN 图片
         run: |
           set -e
-          # 拿第一个项目的封面 asset ref。
-          # 注意：GROQ 里的花括号不能裸着写进 URL —— curl 会当成范围语法。
-          # 这里沿用上一步验证过的方式：python 做 URL 编码。
-          API="https://${PROJECT_ID}.api.sanity.io/v2024-10-01/data/query/production"
-          Q='*[_type=="project"][0]{"r":cover.image.asset._ref}'
-          ref=$(curl -fsS --max-time 30 \
-            "${API}?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$Q")" \
-            | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["r"])')
+          ref=$(python3 -c 'import json;print(json.load(open("/tmp/projects.json"))["result"][0]["r"])')
+          # ref 形如 image-<hash>-1280x720-jpg，CDN 路径要剥掉 image- 前缀
           url="https://cdn.sanity.io/images/${PROJECT_ID}/production/${ref#image-}?w=800&fm=webp&q=82"
+          echo "图片 URL: $url"
           ct=$(curl -fsS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
           echo "CDN 图 content-type: $ct"
           [ "$ct" = "image/webp" ]
