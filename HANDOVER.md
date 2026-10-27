@@ -1,7 +1,7 @@
 # self web · 项目交接说明（HANDOVER）
 
 > 生成：2026-09-23 · 由 Codex 汇总本项目历史对话后生成
-> 更新：2026-10-27 · 最新到第一百零五次（新增 `docs\常用地址.md`：全项目地址一页清单，含实测核验与套餐结论）
+> 更新：2026-10-27 · 最新到第一百零六次（backups 大件迁移：视频原片入库、旧历史推远端备用分支，bundle 与原片本地副本删除；释放 57MB）
 > 历史更新：2026-09-26 · Qoder 完成 git 治理（大文件排除 + 6 次分批提交），并修正本文档中过期的配色与站点结构描述
 > 用途：本项目的历史对话已归档清理（详见 `D:\AI工作文件夹\全局工作台\Codex执行记录\工具维护-三项目对话归档清理-20260923.md`）。本文档保存关键结论，供后续接手的对话快速了解项目情况。
 
@@ -141,6 +141,7 @@
 - 第一百零三次：前台回归修复 + 后台中文化（2026-10-27）—— About.css 丢 import、能力展示白纸、Studio 中文界面与侧栏分组
 - 第一百零四次：清理各 AI 工具在本项目的临时产物（2026-10-27）—— .research-tmp/.vtest/.sanity/dist 嵌套 .git/.workbuddy/.wrangler/qoder 元数据，约 22.3MB
 - 第一百零五次：新增 `docs\常用地址.md`（2026-10-27）—— 全部对外地址/控制台/本地端口一页清单，含实测核验与 Sanity Free 套餐结论
+- 第一百零六次：backups 大件迁移（2026-10-27）—— 视频原片入 `assets-src/video-source/`、git 旧历史推 `backup/pre-history-cleanup-20261025` 分支 + tag，两个本地备份删除
 
 ## 项目是什么
 
@@ -9128,3 +9129,32 @@ package.json · package-lock.json · vite.config.js · wrangler.toml · .github/
 ### 六、没有做的事
 
 - 没有再动 `backups/`、`.claude/` 等保留项（沿用第一百零四次的结论）。
+
+---
+
+## 第一百零六次：backups 大件迁移 + WorkBuddy 沙箱日志蒸馏（2026-10-27）
+
+> 用户拿另一份审计报告的截图来问三个「需要拍板」项。核实后用户拍板：bundle 与视频原片都「放到 GitHub 仓库里」，沙箱日志「抽事实入库后删」。
+
+### 一、核实结果（动手前）
+
+| 项 | 报告说法 | 实测 |
+|---|---|---|
+| `self-web-before-cleanup.bundle`（46M） | 「git 历史改写前的唯一回滚包」 | **比报告说的更关键**：`c298835`（旧 master 头）与 `8ebca03`（旧 tag）在当前 `.githome` 里 `cat-file` 报 fatal——改写时旧对象已清；远端 master 前 100 祖先里也无 `c298835`。**bundle 是 2026-10-25 前全部历史的唯一副本** |
+| `backups/2026-10-26-video-precompress/`（11M） | 「压缩前原片，删了没有高质量源」 | 属实：main 7.8M + intro 3.3M，线上是 3.5M/2.1M 压缩版 |
+| 五个 WorkBuddy 沙箱 + 闲鱼 `.workbuddy`（约 112K） | 「先抽事实进仓库再删」 | 六个目录全部只有 `.workbuddy/memory/*.md` 日志；闲鱼沙箱里研究报告本体已不在（报告在 `资源/AI工作文件夹/项目文档/` 兜着） |
+
+### 二、三项处置（全部完成）
+
+1. **视频原片 → 入库**：拷到 `assets-src/video-source/`（该目录本就收纳源素材），md5 校验与原文件一致（main `73cbc27f…` / intro `c4cb8d96…`），提交 `2cbb52` 系推上远端。附 README 记大小/md5/线上对应物，并提醒不要把原片拷进 `public/`。原 backups 子目录已删。
+2. **git 旧历史 → 推远端备用 ref**：从 bundle 克隆 bare 仓库，推成 `wjsbkd/self-web` 的**分支 `backup/pre-history-cleanup-20261025`**（头 = `c298835`）与 **tag `archive-before-plan-a-20261013`**（= `8ebca03`），`gh api` 验证两边 sha 逐字一致。bundle 本地副本随后删除——**旧历史现在活在远端，想找回时 `git fetch origin backup/pre-history-cleanup-20261025` 即可**。该分支不动、不合并、不删。
+3. **沙箱日志 → 蒸馏后删**：耐用的环境/工具事实按规则 4 追加为 `D:\仓库\收件箱\claude-code\本机环境事实.md` 的「## 佐证 (2026-10-27, claude-code)」节（GitHub 镜像下载 ghfast.top + truncate 陷阱、gsudo msiexec 大括号 mangle、Scoop 代理下安装法、LLT 温度误报排查法、workbuddy logs 疯长、ego lite profile 机制等 12 条）；闲鱼 8 月的合规决策经查已在 `知识库/闲鱼自动发货.md` 完整收录，不重复落库。`lint-schema.py` 输出「合计 6 篇，不合规 0 篇」。六个目录已删（约 112K）。
+
+### 三、处理范围之外如实记录
+
+- `D:\AI工作文件夹` 顶层还有 `2026-10-23-14-12-06/`（含「产物\WorkBuddy\」——六家 Agent 规则 v2.0 的 Cursor 替换文本在里面，index.md 第 100 行引用着）与 `2026-10-24-13-57-14/`（magpie 导入脚本）两个沙箱，**不在用户拍板的清单里，未动**。
+- `backups/` 剩三个目录：`2026-10-11-film-stage/`（15M 旧版 intro 唯一副本）、`2026-10-17-holo-mock/`（8.2M 全息 GLSL 母版）、`2026-10-27-decision-log/`（决策台账归档），合计 23M，性质与本次迁移的两项不同，未动。
+
+### 四、净效果
+
+backups/ 79M → 23M；两项不可再生资产（视频源、git 旧历史）从「只在本机一块盘」变成「在 GitHub 远端」。
