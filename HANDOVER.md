@@ -9111,7 +9111,20 @@ HANDOVER 已 9000+ 行、按「第N次」逐轮追加，找网址要全文搜。
 
 文档里给三个 `github.com` 地址标的是「用 GitHub API 核对」而非「实测 200」——因为**本机代理拦截了 `github.com` 的 HTTP 抓取，curl 一律返回 000**。仓库公开性、默认分支 `master`、两个工作流 active、最新部署 `40385529961` 成功，都是用 `gh` CLI 查到的。写文档时保留这个区别，避免下次有人拿 curl 测出 000 就以为链接挂了。
 
-### 五、没有做的事
+### 五、提交与「部署没触发」是正常的
 
-- **没有提交**。`git status` 只多出这一个 untracked 文件，等用户确认后再说。
+当日用户确认后提交 `0e299ca` 并推送 `c8c052b..0e299ca  master -> master`，远端 master 头部已是 `0e299ca`。
+
+**推送后 Actions 里没有新运行，这是设计如此、不是失败**：`.github/workflows/deploy.yml` 的 `on.push` 带 `paths` 白名单，只有以下路径变更才构建部署——
+
+```
+src/** · public/** · index.html · admin.html · sanity.config.ts
+package.json · package-lock.json · vite.config.js · wrangler.toml · .github/workflows/deploy.yml
+```
+
+纯文档改动（`docs/**`、`HANDOVER.md`）不在其中，所以不构建、不重发 Pages。既然 `dist/` 的输入没变，静态产物本来也不会有任何变化——**这个过滤是省钱省时的好事，不要误以为是漏触发而去手动 `workflow_dispatch`**。
+核验：远端可见 `docs/常用地址.md`（6186 字节），主站与 `/admin` 均返回 200。
+
+### 六、没有做的事
+
 - 没有再动 `backups/`、`.claude/` 等保留项（沿用第一百零四次的结论）。
