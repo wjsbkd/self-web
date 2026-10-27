@@ -1,7 +1,7 @@
 # self web · 项目交接说明（HANDOVER）
 
 > 生成：2026-09-23 · 由 Codex 汇总本项目历史对话后生成
-> 更新：2026-10-27 · 最新到第一百零三次（前台回归修复 + 后台中文化：About.css 丢 import、能力展示白纸、Studio 中文界面与侧栏分组）
+> 更新：2026-10-27 · 最新到第一百零五次（新增 `docs\常用地址.md`：全项目地址一页清单，含实测核验与套餐结论）
 > 历史更新：2026-09-26 · Qoder 完成 git 治理（大文件排除 + 6 次分批提交），并修正本文档中过期的配色与站点结构描述
 > 用途：本项目的历史对话已归档清理（详见 `D:\AI工作文件夹\全局工作台\Codex执行记录\工具维护-三项目对话归档清理-20260923.md`）。本文档保存关键结论，供后续接手的对话快速了解项目情况。
 
@@ -139,6 +139,8 @@
 - 第一百零一次：结构整理三件事（2026-10-27）—— HANDOVER 目录、lint/tsconfig 全覆盖、去硬编码 projectId
 - 第一百零二次：仓库清理三件事（2026-10-27）—— 归档待决问题清单、删 scrape 残留、清空目录
 - 第一百零三次：前台回归修复 + 后台中文化（2026-10-27）—— About.css 丢 import、能力展示白纸、Studio 中文界面与侧栏分组
+- 第一百零四次：清理各 AI 工具在本项目的临时产物（2026-10-27）—— .research-tmp/.vtest/.sanity/dist 嵌套 .git/.workbuddy/.wrangler/qoder 元数据，约 22.3MB
+- 第一百零五次：新增 `docs\常用地址.md`（2026-10-27）—— 全部对外地址/控制台/本地端口一页清单，含实测核验与 Sanity Free 套餐结论
 
 ## 项目是什么
 
@@ -9031,3 +9033,85 @@ ego-browser 的 `page.cdp('Network.setBlockedURLs')` 能真阻断 `*apicdn.sanit
 5. **自定义 filter 的 documentList 必须 `.apiVersion()`。** 不链也能跑，但控制台每次启动都警告。
 6. **结构可以离线自检。** `createStructureBuilder` 在 Node 里给个桩 source（projectId / dataset / schema /
    document.resolveNewDocumentOptions）就能序列化整棵侧栏树，不连网也能确认 builder 调用合法。
+
+## 第一百零四次：清理各 AI 工具在本项目的临时产物（2026-10-27，仅本地、不入库）
+
+> 用户要求：「现在清理因在 Claude 里面对 self web 项目修改产生的所有垃圾（若其他 agent 对项目也有修改，
+> 请你检查哪些是他们留下来的垃圾）」。
+
+### 一、做了什么
+
+按"是否在 git 跟踪 + 是否可回收"两轴把被 `.gitignore` 忽略的目录全扫了一遍，删掉纯垃圾：
+
+| 路径 | 体积 | 来源 | 判定 |
+|---|---|---|---|
+| `.research-tmp/` | 8.3M | Claude | 各平台文档抓存（cf_/eo_/vc_/nl_/…html）、旧探针脚本、`commit-msg.txt`、`调研中间存档.md`、`structure-check.mjs`、`*.py` —— 一次性产物 |
+| `.vtest/` | 14M | Claude | 视频压缩测试片（t1–t6.mp4）、`seektest*.html`、3 个 `*.bak` 孤儿副本（已 `diff` 确认 ≠ HEAD 且 ≠ 工作区，纯遗留）、`wf-remote.yml`（deploy 工作流的重复副本）、**`deploy_ed25519` 私钥对**（仅本地遗留，CI 已走 `secrets.GH_PAGES_DEPLOY_KEY`，见下） |
+| `.sanity/` | 13K | Sanity CLI | Studio 本地构建缓存，可随时重建 |
+| `dist/.git` | 小 | Claude | 旧的"手动部署"嵌套仓库（现已用 CI 部署，死机制） |
+| `.workbuddy/` | 0 | WorkBuddy | 空的 memory 占位文件 |
+| `.wrangler/` | 0 | Cloudflare | 空的构建缓存目录 |
+| `.李纵横 · 个人作品集.qoder.site` | 10.7K | Qoder | 已弃用平台的部署元数据（base64 内联了旧 index.html） |
+
+**其他 agent 的痕迹**：`.workbuddy/`（WorkBuddy 的空 memory）、`.李纵横 · 个人作品集.qoder.site`（Qoder 元数据）——
+都是各自工具留下的私有产物，与代码无关，一并清掉。
+
+约 **22.3 MB** 已删。删前用 `git ls-files` 确认这些路径**无一处进过版本库**（安全）；删后 `git status` 仍空。
+
+### 二、明确保留（不是垃圾，未动）
+
+- `backups/`（79M）—— 5 个目录都是历史上有意归档（独有旧首片 `film-stage`、holo 母本 `holo-mock`、
+  历史清理前的安全网 git bundle `pre-history-cleanup`、压缩前原片 `video-precompress`、决策台账 `decision-log`），本地保留、不入库。
+- `dist/`（除已删的嵌套 `.git` 外）—— 合法构建产物，预览要用。
+- 根目录 `作品集.pptx` / 简历 PDF —— 用户的源文件，非 AI 产生。
+- `.claude/`（launch.json、settings.local.json）、`scripts/`、`assets-src/`、`public/`、`src/` —— 合法项目文件。
+
+### 三、⚠️ 关于 `deploy_ed25519` 私钥对
+
+`.vtest/deploy_ed25519(.pub)` 是早期把 Pages 部署私钥落在本地工具目录的遗留。**部署现在不依赖它**：
+`.github/workflows/deploy.yml` 第 96、107 行从 `secrets.GH_PAGES_DEPLOY_KEY` 现取现写 `~/.ssh/deploy_key`。
+私钥本身已存在于 GitHub Actions secret（密码学材料，不在本地文件里也安全），本地这份只是重复残留，删掉无影响。
+若日后需要本地手动推送 Pages，用 GitHub 后台的 secret 值重新 `ssh-keygen` 即可。
+
+### 四、清理后验证
+
+| 检查 | 结果 |
+|---|---|
+| `git status` | 空（无 tracked 变动） |
+| `npx tsc --noEmit` | exit 0 |
+| `npx eslint src` | exit 0 |
+| 剩余被忽略项 | `.claude/` `.env.local` `.githome/` `backups/` `dist/` 简历PDF —— 全部保留项 |
+
+---
+
+## 第一百零五次：新增 `docs\常用地址.md`（2026-10-27）
+
+> 用户原话：「你把整个项目中重要的网址都贴出来并告诉我是干嘛的，我需要收藏一下。」→ 答完后用户回「好的」，同意落成文件。
+
+### 一、做了什么
+
+新建 `docs\常用地址.md`，一页列全项目的对外地址，按「核心 / 部署 / 调试」三组分开，每条一句话说明用途。**只新增一个文件，未改动任何代码、配置或既有文档。**
+
+### 二、为什么另起一个文件而不是塞进 HANDOVER
+
+HANDOVER 已 9000+ 行、按「第N次」逐轮追加，找网址要全文搜。地址清单是**会反复查阅的常驻资料**，性质不同于变更记录，所以单独成页；HANDOVER 只在目录里留一行指针，链接由正文的「相关」小节承担。
+
+### 三、写进文档的关键结论（都已核验，不是推测）
+
+| 结论 | 依据 |
+|---|---|
+| Sanity **Free 永久 $0**，Growth 试用到期**自动降 Free、不扣费** | 官方 plans 文档 + 实测；本项目用量 12 文档 / 1 成员 / 1 数据集，低于 Free 上限两个数量级 |
+| 数据 API 匿名实测 `count(*[_id in path("drafts.**")])` = **0** | 2026-10-27 匿名 GROQ 请求 |
+| 草稿不会漏到正式站是**双保险** | Sanity 匿名请求只返回 `_id` 不含点号的文档（天然排除 `drafts.` / `versions..`）+ `client.ts` 的 `perspective: 'published'` |
+| **日常用 GitHub Pages 主站，不要主动切 Cloudflare** | 2026-10-26 八轮中位数实测：JS p50 0.77s vs 4.70s，`main.mp4` 3.6–4.9s vs 38.3–57.9s（节点 ICN vs SEA） |
+| Sanity 控制台**只有英文，无法中文化** | 那是 Sanity 自家产品后台，不属于本项目；本项目 Studio（`/admin/`）已中文化 |
+| 本项目**不存在写 token** | `.env.local` 只有 5 个配置键；写权限来自 Studio 登录会话 |
+
+### 四、核验方式的诚实说明
+
+文档里给三个 `github.com` 地址标的是「用 GitHub API 核对」而非「实测 200」——因为**本机代理拦截了 `github.com` 的 HTTP 抓取，curl 一律返回 000**。仓库公开性、默认分支 `master`、两个工作流 active、最新部署 `40385529961` 成功，都是用 `gh` CLI 查到的。写文档时保留这个区别，避免下次有人拿 curl 测出 000 就以为链接挂了。
+
+### 五、没有做的事
+
+- **没有提交**。`git status` 只多出这一个 untracked 文件，等用户确认后再说。
+- 没有再动 `backups/`、`.claude/` 等保留项（沿用第一百零四次的结论）。
