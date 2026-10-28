@@ -9,16 +9,10 @@ node_modules/
 
 # 构建产物
 dist/
-dist-verify/
 # Sanity Studio 本地构建产物（sanity build / sanity deploy 生成，可随时重出）
 .sanity/
-# dist-deploy/ 是 Qoder Sites 的发布快照，可随时 vite build --outDir dist-deploy 重出。
-# 平台侧另有 release，本地不再另存上线基线 —— 10-16 那份 backups/2026-10-16-deploy-baseline/
-# 已在第八十一次逐层验证"无当前版本缺少之物"后删除，别再照这条旧注释去找它。
-dist-deploy/
-
-# Qoder 平台的部署元数据（隐藏文件，含发布 ID 与 base64 的 index.html）
-*.qoder.site
+# dist-verify/ 与 dist-deploy/ 的规则已删（2026-10-28）：目录本体早已不在，留规则只会
+# 让人误以为它们还存在。届时谁真再建，用 git status 看得见，不需要旧规则兜底。
 
 # 编辑器/系统文件
 .vscode/
@@ -38,7 +32,8 @@ npm-debug.log*
 
 # 大体积源素材：806MB 作品集 PPT 与根目录简历副本
 # 站点实际使用的 PDF 已随 public/ 入库，根目录这两份只是编辑源文件。
-# 必须排除：一旦进入 git 历史，删除提交也无法收回体积。
+# 2026-10-28 更正：这两份源件实际已不在本地（见 HANDOVER 第一百零七次），
+# 但规则保留——它们是「将来若再放回根目录必须挡住」的体量护栏，不是死规则。
 /作品集.pptx
 /李纵横15087322631.pdf
 
@@ -51,19 +46,7 @@ npm-debug.log*
 # 重构前的手工代码快照，git 历史已覆盖同类内容
 backups/
 
-# 复现探针：档案（HANDOVER 第五十一次）点名保留在本地，但不入库
-# cf/ 是复核依据脚本，probe-af.mjs 是点名保留的复现脚本，probe-shots/ 是 12MB 截图
-cf/
-probe-af.mjs
-probe-shots/
-
-# 托管平台调研的过程产物（抓取的官方文档 HTML、解析脚本、中间存档）
-.research-tmp/
-# ego(lite) 浏览器的自动化脚本（登录 Cloudflare、性能探测）
-.ego/
-# 抓页面留下的临时 HTML
-esap.html
-# Cloudflare Wrangler 的本机凭证与构建缓存（.wrangler/ 含 OAuth token）
-.wrangler/
-# 视频压缩的 seek 延迟/画质测试产物（ego 浏览器实测用）
-.vtest/
+# 复现探针：档案（HANDOVER 第五十一次）曾点名保留在本地，但 2026-10-28 现场核对
+# cf/、probe-af.mjs、probe-shots/ 已全部不在（删除无档，目录本体与规则一起收掉）。
+# 托管平台调研的过程产物 .research-tmp/、.ego/、esap.html、.wrangler/、.vtest/、
+# *.qoder.site（Qoder 平台已弃用）同理——第一百零四次删的就是它们，规则一并收掉。

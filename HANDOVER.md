@@ -142,6 +142,7 @@
 - 第一百零四次：清理各 AI 工具在本项目的临时产物（2026-10-27）—— .research-tmp/.vtest/.sanity/dist 嵌套 .git/.workbuddy/.wrangler/qoder 元数据，约 22.3MB
 - 第一百零五次：新增 `docs\常用地址.md`（2026-10-27）—— 全部对外地址/控制台/本地端口一页清单，含实测核验与 Sanity Free 套餐结论
 - 第一百零六次：backups 大件迁移（2026-10-27）—— 视频原片入 `assets-src/video-source/`、git 旧历史推 `backup/pre-history-cleanup-20261025` 分支 + tag，两个本地备份删除
+- 第一百零七次：清理状态核对 + 档案补记（2026-10-28）—— 104 次垃圾项全数已清；两处无档消失（复现探针四件、根目录 pptx）如实入档；.gitignore 死规则收掉 11 条
 
 ## 项目是什么
 
@@ -9158,3 +9159,26 @@ package.json · package-lock.json · vite.config.js · wrangler.toml · .github/
 ### 四、净效果
 
 backups/ 79M → 23M；两项不可再生资产（视频源、git 旧历史）从「只在本机一块盘」变成「在 GitHub 远端」。
+
+---
+
+## 第一百零七次：清理状态核对 + 档案补记（2026-10-28）
+
+> 他问「这个项目里面用不到的垃圾清理干净了吗」。核完答「该清的都清了，但有两处档案没记录的消失」，他回「按你说的来」——即补记 + 收死规则，本节就是那次补记。
+
+### 一、核对结论：第一百零四次的垃圾项全数已清
+
+对 `.research-tmp/` `.vtest/` `.sanity/` `dist/.git` `.workbuddy/` `.wrangler/` `.qoder.site` 逐一 `ls` 复核，现场一个都不在；第一百零二次的 `esap.html`、空壳 `web/` 也不在，`待决问题-20261015.md` 归档在 `backups/2026-10-27-decision-log/` 属实。保留项原样：`backups/` 23M（正是第一百零六次收尾记录的 3 个目录）、`dist/` 22M、`.claude/`（launch.json + settings.local.json 两个小文件）、`.env.local`、`node_modules/`。`git status` 空；本地与远端 master 均为 `f5d58f8`（`ls-remote` 实测，非仅本地）。
+
+### 二、两处「档案没记录的消失」，如实入档
+
+1. **复现探针四件**：`cf/`、`probe-af.mjs`、`probe-shots/`、`dist-deploy/`。第五十一次曾点名保留，`.gitignore` 里规则一直留着，但 HANDOVER 全文 grep 不到删除记录。档案自己写过「可从逻辑重出」（渲染逻辑都在 `src/`），不算不可逆损失，但**下一位读者不要再按 `.gitignore` 规则或第五十一次的说法去找它们**。
+2. **根目录 `作品集.pptx`（844MB 4 月旧 deck）与简历 PDF 副本**：第一百零四次（10-27）还标着「用户源件、明确保留」，现场已不在。内容无实际损失：桌面 `作品集.pptx` 是 10-15 的 237MB 新版（本就取代旧 deck），简历 PDF 桌面在、站点下载走 Sanity CDN。**那份带错网盘链接的 4 月旧 deck 找不回来了**——好在档案早把它标记为「被 10-15 新版取代的待覆盖件」。
+
+### 三、连带动作：收掉 `.gitignore` 死规则（11 条）
+
+目录本体消失、规则还挂着，会误导下一位读者以为它们存在。删前全仓 grep 过代码与配置（`package.json` / `vite.config.js` / `eslint.config.js` / `tsconfig.json` / `sanity.config.ts` / `sanity.cli.ts` / `wrangler.toml` / `admin.html` / `index.html` / `scripts/` / `.github/` / `src/`），仅两处命中且都是**历史注释里的文字**（`index.html:31` 提及 "dist-deploy" 字样、`Media.jsx:45` 提及 "probe-diag6"），非路径引用。收掉的规则：`dist-verify/`、`dist-deploy/`、`*.qoder.site`（Qoder 平台已弃用）、`cf/`、`probe-af.mjs`、`probe-shots/`、`.research-tmp/`、`.ego/`、`esap.html`、`.wrangler/`、`.vtest/`。**保留**：`.vscode/` 等编辑器/系统件、`*.log`、`backups/`、`.mimosa/`、`/作品集.pptx` 与根目录简历 PDF 两条——前者是「规则本身有独立价值」（目录在不在都该留着），pptx/PDF 那两条则是**体量护栏**（844MB 源件若哪天再放回根目录必须挡住，详见 `.gitignore` 内注释）。真到谁再建同名目录，`git status` 看得见，不需要旧规则兜底。
+
+### 四、验证
+
+`git status` 仅 `.gitignore` 与本 HANDOVER 追记两处改动，已提交并推送远端（他点头后；正文不点名本提交哈希——提交装不下自身哈希，`git log` 末条即是）；`--ignored` 列表与核对前逐字相同（`.claude/` `.env.local` `.githome/` `backups/` `dist/` `node_modules/`），无跟踪/忽略回归。本节为纯档案改动，`docs/**` 与 `HANDOVER.md` 不在 deploy.yml 的 `paths` 白名单内，不触发部署。
